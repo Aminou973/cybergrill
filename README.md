@@ -6,8 +6,9 @@ dated file, and GitHub Actions rebuilds the season table and the shareable recap
 card on its own. No server, no cost.
 
 ```
-index.html    the dashboard — arcade, cup, UNO room, history
-data/nights/  one JSON per game night, the permanent record
+index.html          the dashboard — arcade, cup, UNO room, history
+data/nights/        one JSON per friends night, the permanent record
+data/nights-family/ same, for the family board (admin only)
 publish.yml   on push  rebuild season + render cards + deploy Pages
 check.yml     on PR    validate every night file before it lands
 ```
@@ -105,6 +106,27 @@ and everyone can edit, which is what you want while it is only on your laptop.
 somebody determined could brute-force a weak passcode offline. It stops your
 friends editing the board mid-party. It is not a security boundary — do not
 reuse a password you care about.
+
+**👨‍👩‍👦 The family board** — a second, completely separate scoreboard that only
+appears when you are unlocked as admin. Its own players, its own leaderboard, its
+own cup, its own UNO session, its own history. Nothing is shared with the friends
+board and nothing mixes.
+
+Click the **🎮 FRIENDS / 👨‍👩‍👦 FAMILY** chip in the top bar (or press **F**) to
+switch. The whole interface turns warm orange so you always know which board you
+are on. Locking the dashboard drops you back to friends and hides the chip
+entirely — a visitor never sees that the family board exists.
+
+Family nights publish to `data/nights-family/` and build into
+`site/bundle-family.json` and `site/cards-family/`. The public season page and
+the README table below are built from the **friends board only**.
+
+⚠️ Hidden in the interface is not the same as private. This repo is public, so
+family night files are readable by anyone who browses
+`data/nights-family/` on GitHub directly. The chip keeps the board out of the way
+and out of a visitor's hands — it does not encrypt anything. If the scores
+genuinely need to be private, make the repo private (you lose the free Pages URL)
+or keep family nights local and never publish them.
 
 **👥 Regulars** — the roster remembers everyone who has ever played, survives a
 reset, and offers them back as one-tap chips on the intro and next to the add
@@ -243,7 +265,8 @@ shared/card.js        the recap card renderer — browser and Node use this same
 shared/i18n.js        EN / FR / AR labels + the patterns for dynamic strings
 shared/i18n-prose.js  the UNO rulebook and the long explanations, per language
 config.yml            title, points, draw value, UNO target
-data/nights/*.json    one file per night, the permanent record
+data/nights/*.json    one file per friends night, the permanent record
+data/nights-family/   same for the family board — its own bundle and cards
 scripts/build.mjs     validate → season table → bundle.json → site → README
 scripts/render-card.mjs   headless Chromium → site/cards/*.png
 scripts/night.mjs     file tonight's export, validate, commit, push

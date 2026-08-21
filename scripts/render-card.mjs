@@ -27,9 +27,21 @@ try {
 }
 
 const only = process.argv[2];
-const files = readdirSync(NIGHTS).filter(f => f.endsWith('.json')).filter(f => !only || f === only + '.json').sort();
-if (!files.length) { console.error('✗ no night files matched'); process.exit(1); }
-if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
+/* friends and family each have their own folder of nights and of cards */
+const SCOPES = [
+  { dir: join(ROOT, 'data', 'nights'),        out: join(ROOT, 'site', 'cards') },
+  { dir: join(ROOT, 'data', 'nights-family'), out: join(ROOT, 'site', 'cards-family') }
+];
+const jobs = [];
+for (const sc of SCOPES) {
+  if (!existsSync(sc.dir)) continue;
+  for (const f of readdirSync(sc.dir).filter(f => f.endsWith('.json')).sort()) {
+    if (only && f !== only + '.json') continue;
+    jobs.push({ file: join(sc.dir, f), out: sc.out });
+  }
+}
+if (!jobs.length) { console.error('✗ no night files matched'); process.exit(1); }
+for (const sc of SCOPES) if (!existsSync(sc.out)) mkdirSync(sc.out, { recursive: true });
 
 const cardJs = readFileSync(join(ROOT, 'shared', 'card.js'), 'utf8');
 /* Prefer a plain launch (CI installs its own browser). Fall back to a
@@ -59,8 +71,8 @@ await page.setContent('<!doctype html><meta charset="utf-8"><body style="margin:
 await page.addScriptTag({ content: cardJs });
 await page.evaluate(() => document.fonts.ready);
 
-for (const f of files) {
-  const night = JSON.parse(readFileSync(join(NIGHTS, f), 'utf8'));
+for (const job of jobs) {
+  const night = JSON.parse(readFileSync(job.file, 'utf8'));
   const dataUrl = await page.evaluate((n) => {
     const cv = document.getElementById('c');
     globalThis.CyberCard.drawNightCard(cv, n);
@@ -68,8 +80,8 @@ for (const f of files) {
   }, night);
   const png = Buffer.from(dataUrl.split(',')[1], 'base64');
   const name = `${night.date}.png`;
-  writeFileSync(join(OUT, name), png);
-  console.log(`✓ site/cards/${name}  (${(png.length / 1024).toFixed(0)} KB)`);
+  writeFileSync(join(job.out, name), png);
+  console.log(`✓ ${job.out.split(/[/\\]/).slice(-2).join('/')}/${name}  (${(png.length / 1024).toFixed(0)} KB)`);
 }
 
 await browser.close();

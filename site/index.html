@@ -807,6 +807,21 @@ body.viewonly .voBanner{display:flex}
 .pubBox .st.ok{color:var(--lime)} .pubBox .st.err{color:#ff5b8a} .pubBox .st.work{color:var(--cyan)}
 .pubBox a{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.5px}
 
+
+/* ============ FAMILY BOARD ============ */
+.chip.scope{border-color:rgba(255,138,43,.5);color:var(--orange);display:none}
+body.adminOn .chip.scope{display:flex}
+.chip.scope.fam{color:#120a02;background:linear-gradient(90deg,#ff8a2b,#ffd93c);border-color:transparent;
+  box-shadow:0 0 22px -4px var(--orange)}
+body.family{--cyan:#ff8a2b;--pink:#ffd93c}
+body.family .logo{background:linear-gradient(90deg,#ff8a2b,#ffd93c 55%,#ff5b6e);
+  -webkit-background-clip:text;background-clip:text}
+.famBanner{display:none;align-items:center;gap:9px;padding:9px 13px;margin-bottom:10px;border-radius:12px;
+  border:1px solid rgba(255,138,43,.45);background:rgba(255,138,43,.1);
+  font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--orange)}
+body.family .famBanner{display:flex}
+.famBanner b{color:#fff}
+
 @media(max-width:1250px){
   #arcadeView.on,#cupView.on,#unoView.on,#histView.on{grid-template-columns:1fr;overflow-y:auto}
   .expCard{grid-template-columns:1fr}
@@ -859,6 +874,7 @@ body.viewonly .voBanner{display:flex}
     <div class="chip" id="saveBtn">💾 SAVE NIGHT</div>
     <div class="chip" id="langBtn">🇬🇧 EN</div>
     <div class="chip lock" id="lockBtn" style="display:none">🔒 VIEW ONLY</div>
+    <div class="chip scope" id="scopeBtn">👨‍👩‍👦 FAMILY</div>
     <div class="chip on" id="sndBtn">🔊 SFX</div>
     <div class="chip" id="musBtn">♪ MUSIC OFF</div>
     <div class="chip" id="fsBtn">⛶ FULL</div>
@@ -873,6 +889,7 @@ body.viewonly .voBanner{display:flex}
       <div class="ph"><div class="accent"></div><h2>CYBERGRILL CHAMPION</h2></div>
       <div class="pb">
         <div class="voBanner">🔒 VIEW ONLY — THE BOARD IS LOCKED<button id="voUnlock">UNLOCK</button></div>
+        <div class="famBanner">👨‍👩‍👦 <b>FAMILY BOARD</b> — SEPARATE PLAYERS, SEPARATE SCORES</div>
         <div class="lb" id="globalLb"></div>
       </div>
       <div class="mini">
@@ -2029,13 +2046,55 @@ const KEYS=['1','2','3','4','5','6','7','8','9','0'];
 const K='cybergrill_v3';
 
 /* ================= STATE ================= */
-let S={players:[],results:[],game:'uno',sound:true,music:false,cup:null,uno:null,mode:'arcade',lang:'en',admin:false,roster:[]};
+let S={players:[],results:[],game:'uno',sound:true,music:false,cup:null,uno:null,mode:'arcade',lang:'en',admin:false,roster:[],
+  scope:'friends',worlds:null};
+
+/* ---------------------------------------------------------------------------
+   TWO BOARDS. 'friends' is the public one; 'family' is the same machinery with
+   its own players, results, cup, UNO session, roster and history. The live
+   S.players / S.results / … always point at the active board; switching stashes
+   one and loads the other. Nothing is shared.
+   --------------------------------------------------------------------------- */
+const WORLD_KEYS=['players','results','cup','uno','roster','game'];
+function blankWorld(){return {players:[],results:[],cup:null,uno:null,roster:[],game:'uno'};}
+function stashWorld(){
+  if(!S.worlds)S.worlds={};
+  const w=S.worlds[S.scope]||(S.worlds[S.scope]=blankWorld());
+  WORLD_KEYS.forEach(k=>{w[k]=S[k];});
+}
+function loadWorld(){
+  if(!S.worlds)S.worlds={};
+  const w=S.worlds[S.scope]||(S.worlds[S.scope]=blankWorld());
+  const d=blankWorld();
+  WORLD_KEYS.forEach(k=>{S[k]=(w[k]===undefined)?d[k]:w[k];});
+  if(!Array.isArray(S.players))S.players=[];
+  if(!Array.isArray(S.results))S.results=[];
+  if(!Array.isArray(S.roster))S.roster=[];
+  if(!S.game)S.game='uno';
+}
+function isFamily(){return S.scope==='family';}
+function scopeLabel(){return isFamily()?'FAMILY':'FRIENDS';}
 let sel=[],selDraw=false,expanded=new Set(),prevRank={},prevPts={};
 let cupSetupState={entrants:null,format:'ucl',gameMode:'mixed'};
 let modalFx=null;
 
-function save(){try{localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
-function load(){try{const r=localStorage.getItem(K);if(r){const p=JSON.parse(r);if(p&&p.players)S=Object.assign(S,p);}}catch(e){}}
+function save(){try{stashWorld();localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
+function load(){
+  try{
+    const r=localStorage.getItem(K);
+    if(r){const p=JSON.parse(r);if(p&&(p.players||p.worlds))S=Object.assign(S,p);}
+  }catch(e){}
+  /* a save from before the family board existed belongs to friends */
+  if(!S.worlds){
+    S.worlds={friends:blankWorld(),family:blankWorld()};
+    WORLD_KEYS.forEach(k=>{S.worlds.friends[k]=S[k];});
+    S.scope='friends';
+  }
+  if(!S.worlds.friends)S.worlds.friends=blankWorld();
+  if(!S.worlds.family)S.worlds.family=blankWorld();
+  if(S.scope!=='family')S.scope='friends';
+  loadWorld();
+}
 
 /* ================= AUDIO ================= */
 let AC=null;
@@ -2330,7 +2389,7 @@ function undo(){
 }
 function resetAll(){
   if(!guard())return;
-  if(!confirm('Reset the whole night? Players, scores and the cup will be erased.'))return;
+  if(!confirm('Reset the '+scopeLabel().toLowerCase()+' board? Its players, scores and cup will be erased. The other board is untouched.'))return;
   S.results=[];S.players=[];S.cup=null;S.uno=null;sel=[];  /* S.roster is deliberately kept */selDraw=false;expanded.clear();prevRank={};prevPts={};
   save();renderAll();setMode('arcade');SFX.undo();toast('BOARD WIPED — NEW CYBERGRILL NIGHT');
 }
@@ -3538,6 +3597,7 @@ function buildNightRecord(){
     title:($('#expTitle').value||'CyberGrill Night').trim(),
     generatedBy:'cybergrill dashboard',
     lang:lang(),
+    scope:S.scope,
     startedAt:times[0]||'',
     endedAt:times[times.length-1]||'',
     games:games.length?games:['uno'],
@@ -3719,14 +3779,20 @@ function applyLockUI(){
   const btn=$('#lockBtn'),ib=$('#introLock');
   if(!lockEnabled()){
     btn.style.display='none';if(ib)ib.style.display='none';
-    document.body.classList.remove('viewonly');return;
+    document.body.classList.remove('viewonly');
+    document.body.classList.add('adminOn');
+    return;
   }
   btn.style.display='';
   const admin=isAdmin();
   if(ib){ib.style.display='';ib.textContent=admin?'🔓 ADMIN':'🔒 ADMIN';}
   document.body.classList.toggle('viewonly',!admin);
+  document.body.classList.toggle('adminOn',admin);
   btn.classList.toggle('open',admin);
   btn.textContent=admin?'🔓 ADMIN':'🔒 VIEW ONLY';
+  /* locking while on the family board drops you back to friends */
+  if(!admin&&S.scope==='family'){stashWorld();S.scope='friends';loadWorld();renderAll();}
+  applyScopeUI();
 }
 function flashLock(){const b=$('#lockBtn');if(!b)return;b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),480);}
 function guard(){
@@ -3751,6 +3817,7 @@ async function tryUnlock(){
     if(ok){
       S.admin=true;save();applyLockUI();
       m.className='msg ok';m.textContent='UNLOCKED';
+      applyScopeUI();
       SFX.add();burst(innerWidth*.5,innerHeight*.4,34);
       setTimeout(()=>$('#lockOvl').classList.remove('show'),450);
       renderAll();
@@ -3758,6 +3825,31 @@ async function tryUnlock(){
   }catch(e){
     m.textContent=e.message==='no-crypto'?'THIS BROWSER CANNOT CHECK THE PASSCODE':'SOMETHING WENT WRONG';
     SFX.err();
+  }
+}
+
+/* ---------- switching boards ---------- */
+function setScope(sc){
+  if(sc===S.scope)return;
+  if(sc==='family'&&!isAdmin()){guard();return;}
+  stashWorld();
+  S.scope=sc;
+  loadWorld();
+  sel=[];selDraw=false;expanded.clear();prevRank={};prevPts={};resetRound();
+  applyScopeUI();
+  save();
+  renderAll();
+  if(S.mode==='hist')loadHistory();
+  SFX.whoosh();flashScreen();
+  toast(isFamily()?'FAMILY BOARD':'FRIENDS BOARD');
+}
+function applyScopeUI(){
+  document.body.classList.toggle('family',isFamily());
+  document.body.classList.toggle('adminOn',isAdmin());
+  const b=$('#scopeBtn');
+  if(b){
+    b.classList.toggle('fam',isFamily());
+    b.textContent=isFamily()?'👨‍👩‍👦 FAMILY':'🎮 FRIENDS';
   }
 }
 
@@ -3789,33 +3881,37 @@ function renderRegulars(host,compact){
 }
 
 /* ---------- history ---------- */
-let HIST=null,histState='idle',histOpen={};
+const HISTS={friends:null,family:null};
+const HSTATE={friends:'idle',family:'idle'};
+let histOpen={};
 function bundleURL(){
   const u=location.href.replace(/[?#].*$/,'').replace(/[^/]*$/,'');
-  return u+'bundle.json';
+  return u+(isFamily()?'bundle-family.json':'bundle.json');
 }
 async function loadHistory(force){
-  if(histState==='loading')return;
-  if(HIST&&!force){renderHistory();return;}
-  histState='loading';renderHistory();
+  const sc=S.scope;
+  if(HSTATE[sc]==='loading')return;
+  if(HISTS[sc]&&!force){renderHistory();return;}
+  HSTATE[sc]='loading';renderHistory();
   try{
     const r=await fetch(bundleURL(),{cache:'no-store'});
     if(!r.ok)throw new Error(String(r.status));
-    HIST=await r.json();
-    histState='ok';
-    (HIST.season||[]).forEach(p=>rememberPlayer(p.name,p.color));
+    HISTS[sc]=await r.json();
+    HSTATE[sc]='ok';
+    ((HISTS[sc]||{}).season||[]).forEach(p=>rememberPlayer(p.name,p.color));
     save();
     renderRegulars($('#regBar'),true);
     if(!$('#app').classList.contains('live'))renderRegulars($('#introReg'),false);
-  }catch(e){histState='fail';}
+  }catch(e){HSTATE[sc]='fail';}
   renderHistory();
 }
 function renderHistory(){
   if(S.mode!=='hist')return;
+  const HIST=HISTS[S.scope],histState=HSTATE[S.scope];
   const v=$('#histView');v.innerHTML='';
 
   const left=el('div','panel');
-  left.innerHTML='<div class="ph"><div class="accent"></div><h2>ALL-TIME TABLE</h2></div>';
+  left.innerHTML='<div class="ph"><div class="accent"></div><h2>ALL-TIME TABLE'+(isFamily()?' · FAMILY':'')+'</h2></div>';
   const lb=el('div','pb');
   if(histState==='ok'&&HIST&&HIST.season&&HIST.season.length){
     const max=Math.max(1,...HIST.season.map(r=>r.pts));
@@ -3832,7 +3928,7 @@ function renderHistory(){
     });
     lb.appendChild(list);
   }else{
-    lb.appendChild(el('div','histNote',histNoteText()));
+    lb.appendChild(el('div','histNote',histNoteText(histState)));
   }
   left.appendChild(lb);
   const bar=el('div','addbar');
@@ -3875,15 +3971,15 @@ function renderHistory(){
       rb.appendChild(c);
     });
   }else{
-    rb.appendChild(el('div','histNote',histNoteText()));
+    rb.appendChild(el('div','histNote',histNoteText(histState)));
   }
   right.appendChild(rb);
   v.appendChild(right);
 }
-function histNoteText(){
+function histNoteText(histState){
   if(histState==='loading')return 'LOADING THE ARCHIVE…';
   if(histState==='fail')
-    return 'NO ARCHIVE HERE YET.<br><br>History reads <code>bundle.json</code> from the same folder as this page — '+
+    return 'NO ARCHIVE HERE YET.<br><br>History reads <code>'+(isFamily()?'bundle-family.json':'bundle.json')+'</code> from the same folder as this page — '+
       'it only exists on the <b>published site</b>, not when you open the file straight off your disk.<br><br>'+
       'Open the GitHub Pages URL, or push a night and let the Action build it.';
   return 'NO NIGHTS PUBLISHED YET.<br><br>Press <b>S</b>, publish a night, and it lands here.';
@@ -3909,7 +4005,7 @@ async function publishNight(){
   const owner=m[1],repo=m[2],branch=(CFG.repo&&CFG.repo.branch)||'main';
   const token=($('#ghToken').value||'').trim();
   if(!token){pubStatus('PASTE A TOKEN FIRST','err');SFX.err();return;}
-  const path='data/nights/'+rec.date+'.json';
+  const path=(isFamily()?'data/nights-family/':'data/nights/')+rec.date+'.json';
   const api='https://api.github.com/repos/'+owner+'/'+repo+'/contents/'+path;
   const headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
   try{
@@ -3922,7 +4018,7 @@ async function publishNight(){
     else if(g.status!==404){pubStatus('GITHUB SAID '+g.status,'err');SFX.err();return;}
 
     pubStatus(sha?'UPDATING '+rec.date+'…':'CREATING '+rec.date+'…','work');
-    const body={message:'night: '+rec.date+(sha?' (update)':''),content:b64utf8(JSON.stringify(rec,null,2)),branch};
+    const body={message:(isFamily()?'family night: ':'night: ')+rec.date+(sha?' (update)':''),content:b64utf8(JSON.stringify(rec,null,2)),branch};
     if(sha)body.sha=sha;
     const r=await fetch(api,{method:'PUT',headers,body:JSON.stringify(body)});
     if(r.ok){
@@ -4107,6 +4203,7 @@ $('#mArcade').onclick=()=>setMode('arcade');
 $('#mCup').onclick=()=>setMode('cup');
 $('#mUno').onclick=()=>setMode('uno');
 $('#mHist').onclick=()=>setMode('hist');
+$('#scopeBtn').onclick=()=>setScope(isFamily()?'friends':'family');
 $('#lockBtn').onclick=openLock;
 $('#introLock').onclick=openLock;
 $('#voUnlock').onclick=openLock;
@@ -4142,6 +4239,7 @@ document.addEventListener('keydown',e=>{
   if(k==='c'){setMode(S.mode==='cup'?'arcade':'cup');return;}
   if(k==='n'){setMode(S.mode==='uno'?'arcade':'uno');return;}
   if(k==='h'){setMode(S.mode==='hist'?'arcade':'hist');return;}
+  if(k==='f'&&isAdmin()){setScope(isFamily()?'friends':'family');return;}
   if(k==='p'){podium();return;}
   if(k==='u'){undo();return;}
   if(k==='m'){$('#sndBtn').click();return;}
@@ -4189,6 +4287,7 @@ $('#sndBtn').classList.toggle('on',S.sound);
 $('#sndBtn').innerHTML=S.sound?'🔊 SFX':'🔇 MUTED';
 S.music=false;$('#musBtn').innerHTML='♪ MUSIC OFF';
 applyLockUI();
+applyScopeUI();
 _mo.observe(document.body,{childList:true,subtree:true,characterData:true});
 applyLang();
 buildLogo();revealGames();

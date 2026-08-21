@@ -17,6 +17,13 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+/* Two worlds. 'friends' is the public board; 'family' is the same pipeline
+   over its own folder, its own bundle and its own cards. The season page and
+   the README table are built from friends only — they are the public face. */
+const SCOPES = [
+  { id: 'friends', dir: 'nights',        bundle: 'bundle.json',        cards: 'cards' },
+  { id: 'family',  dir: 'nights-family', bundle: 'bundle-family.json', cards: 'cards-family' }
+];
 const NIGHTS = join(ROOT, 'data', 'nights');
 const SITE = join(ROOT, 'site');
 const CHECK_ONLY = process.argv.includes('--check');
@@ -50,15 +57,19 @@ function ptsFor(rank, draw) {
 }
 
 /* ---------- load + validate ---------- */
-function loadNights() {
-  if (!existsSync(NIGHTS)) { console.error('✗ data/nights/ does not exist'); process.exit(1); }
-  const files = readdirSync(NIGHTS).filter(f => f.endsWith('.json')).sort();
+function loadNights(scope) {
+  const DIR = join(ROOT, 'data', scope.dir);
+  if (!existsSync(DIR)) {
+    if (scope.id === 'friends') { console.error(`✗ data/${scope.dir}/ does not exist`); process.exit(1); }
+    return [];   /* family is optional until the first family night is played */
+  }
+  const files = readdirSync(DIR).filter(f => f.endsWith('.json')).sort();
   const nights = [];
   let problems = 0;
 
   for (const f of files) {
     let n;
-    try { n = JSON.parse(readFileSync(join(NIGHTS, f), 'utf8')); }
+    try { n = JSON.parse(readFileSync(join(DIR, f), 'utf8')); }
     catch (e) { console.error(`✗ ${f} is not valid JSON — ${e.message}`); problems++; continue; }
 
     if (!n.date) { console.error(`✗ ${f} has no "date"`); problems++; continue; }
@@ -97,7 +108,7 @@ function loadNights() {
       ...table[id]
     })).sort((a, b) => b.pts - a.pts || b.wins - a.wins || a.played - b.played);
     nights.push(n);
-    console.log(`✓ ${f}  ${n._rows.length} players · ${n.matches.length} matches · winner ${n._rows[0] ? n._rows[0].name : '—'}`);
+    console.log(`✓ ${scope.id}/${f}  ${n._rows.length} players · ${n.matches.length} matches · winner ${n._rows[0] ? n._rows[0].name : '—'}`);
   }
 
   if (problems) { console.error(`\n✗ ${problems} problem${problems === 1 ? '' : 's'} — nothing was written.`); process.exit(1); }
@@ -294,32 +305,40 @@ function updateReadme(nights, season) {
 }
 
 /* ---------- go ---------- */
-const nights = loadNights();
-if (CHECK_ONLY) { console.log(`\n✓ ${nights.length} night file${nights.length === 1 ? '' : 's'} valid.`); process.exit(0); }
+const loaded = SCOPES.map(sc => ({ scope: sc, nights: loadNights(sc) }));
+const total = loaded.reduce((a, x) => a + x.nights.length, 0);
+if (CHECK_ONLY) { console.log(`\n✓ ${total} night file${total === 1 ? '' : 's'} valid across ${loaded.filter(x => x.nights.length).length} board(s).`); process.exit(0); }
 
 if (!existsSync(SITE)) mkdirSync(SITE, { recursive: true });
-if (!existsSync(join(SITE, 'cards'))) mkdirSync(join(SITE, 'cards'), { recursive: true });
 
-const season = buildSeason(nights);
+for (const { scope, nights } of loaded) {
+  if (!existsSync(join(SITE, scope.cards))) mkdirSync(join(SITE, scope.cards), { recursive: true });
+  const season = buildSeason(nights);
 
-writeFileSync(join(SITE, 'bundle.json'), JSON.stringify({
-  generated: new Date().toISOString(),
-  title: CFG.title,
-  scoring: { points: CFG.points, tail: CFG.tail, draw: CFG.draw },
-  season,
-  nights: nights.map(n => ({
-    date: n.date, title: n.title || '', games: n.games || [],
-    startedAt: n.startedAt || '', endedAt: n.endedAt || '',
-    matches: n.matches.length,
-    standings: n._rows,
-    card: `cards/${n.date}.png`,
-    uno: n.uno || null, cup: n.cup || null
-  }))
-}, null, 2));
-console.log(`✓ site/bundle.json  (${nights.length} nights, ${season.length} players)`);
+  writeFileSync(join(SITE, scope.bundle), JSON.stringify({
+    generated: new Date().toISOString(),
+    title: CFG.title,
+    scope: scope.id,
+    scoring: { points: CFG.points, tail: CFG.tail, draw: CFG.draw },
+    season,
+    nights: nights.map(n => ({
+      date: n.date, title: n.title || '', games: n.games || [],
+      startedAt: n.startedAt || '', endedAt: n.endedAt || '',
+      matches: n.matches.length,
+      standings: n._rows,
+      card: `${scope.cards}/${n.date}.png`,
+      uno: n.uno || null, cup: n.cup || null
+    }))
+  }, null, 2));
+  console.log(`✓ site/${scope.bundle}  (${nights.length} nights, ${season.length} players)`);
+
+  /* the public face is the friends board only */
+  if (scope.id === 'friends') {
+    buildSeasonPage(nights, season);
+    updateReadme(nights, season);
+    console.log(`  all-time leader: ${season[0] ? season[0].name + ' on ' + season[0].pts + ' points' : 'nobody yet'}`);
+  }
+}
 
 buildDashboard();
-buildSeasonPage(nights, season);
-updateReadme(nights, season);
-
-console.log(`\n✓ done — all-time leader is ${season[0] ? season[0].name + ' on ' + season[0].pts + ' points' : 'nobody yet'}`);
+console.log('\n✓ done');

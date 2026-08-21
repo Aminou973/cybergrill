@@ -8,7 +8,7 @@
    Copies it into data/nights/, revalidates, commits, pushes. The publish
    Action takes it from there.
    ========================================================================== */
-import { readdirSync, statSync, copyFileSync, existsSync, readFileSync } from 'node:fs';
+import { readdirSync, statSync, copyFileSync, existsSync, readFileSync, mkdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
@@ -52,10 +52,15 @@ try { night = JSON.parse(readFileSync(src, 'utf8')); }
 catch (e) { console.error(`✗ ${src} is not valid JSON — ${e.message}`); process.exit(1); }
 if (!night.date) { console.error('✗ that file has no "date" field — is it a night export?'); process.exit(1); }
 
-const dest = join(NIGHTS, `${night.date}.json`);
+/* a family night carries scope:"family" and goes to its own folder */
+const NIGHTS_FAM = join(ROOT, 'data', 'nights-family');
+const isFam = night.scope === 'family';
+const targetDir = isFam ? NIGHTS_FAM : NIGHTS;
+if (!existsSync(targetDir)) mkdirSync(targetDir, { recursive: true });
+const dest = join(targetDir, `${night.date}.json`);
 const existed = existsSync(dest);
 copyFileSync(src, dest);
-console.log(`${existed ? '· replaced' : '✓ added'} data/nights/${night.date}.json`);
+console.log(`${existed ? '· replaced' : '✓ added'} data/${isFam ? 'nights-family' : 'nights'}/${night.date}.json`);
 
 console.log('· validating…');
 try { run(process.execPath, [join(ROOT, 'scripts', 'build.mjs'), '--check'], { quiet: true }); }
@@ -67,10 +72,10 @@ catch (e) {
 console.log('✓ valid');
 
 try {
-  run('git', ['add', 'data/nights'], { quiet: true });
+  run('git', ['add', 'data'], { quiet: true });
   const staged = run('git', ['diff', '--staged', '--name-only'], { quiet: true }).trim();
   if (!staged) { console.log('· nothing changed, already up to date'); process.exit(0); }
-  run('git', ['commit', '-m', `night: ${night.date}`], { quiet: true });
+  run('git', ['commit', '-m', `${isFam ? 'family night' : 'night'}: ${night.date}`], { quiet: true });
   console.log('· pushing…');
   run('git', ['push']);
   console.log(`\n✓ pushed. Watch it build:  gh run watch`);
