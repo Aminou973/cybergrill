@@ -1,0 +1,18 @@
+name: check
+
+# Cheap guard for pull requests: every night file must parse, every player named
+# in a match must exist, and any verifiedStandings block must match what the
+# matches actually add up to.
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Validate data/nights
+        run: node scripts/build.mjs --check
