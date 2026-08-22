@@ -201,6 +201,18 @@ away from what actually happened.
 
 ---
 
+## Updating
+
+One command. It repairs a broken `.git`, finds a nested folder if you extracted
+into one, discards any local mess, pulls what the Action committed, copies the
+update in, validates, commits, pushes and kicks off the rebuild:
+
+```powershell
+.\update.ps1 -From C:\Users\oaak2\Downloads\<extracted-update-folder>
+```
+
+It never merges, so there is never a conflict to resolve by hand.
+
 ## Setup — one command
 
 From inside this folder:

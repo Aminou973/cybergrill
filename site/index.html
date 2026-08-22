@@ -3349,6 +3349,16 @@ function unoLeftPanel(u){
   btns.appendChild(d);btns.appendChild(f);btns.appendChild(g);
   ts.appendChild(btns);
   b.appendChild(ts);
+
+  /* the playable table lives beside the dashboard on the same site */
+  const ps=el('div','uSec','<h3><b>③</b> OR ACTUALLY PLAY IT</h3>');
+  const link=el('a','uBtn prim','🎮 OPEN THE UNO TABLE');
+  link.href='game/';
+  link.style.cssText+='display:block;text-align:center;text-decoration:none;line-height:1.4';
+  ps.appendChild(link);
+  ps.appendChild(el('div','houseNote','Full rules, bots to practise against, and your house-rule toggles live in the game. Scores there are separate from the board above — for now.'));
+  b.appendChild(ps);
+
   p.appendChild(b);
   return p;
 }

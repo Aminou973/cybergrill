@@ -181,6 +181,24 @@ function buildDashboard() {
   console.log(`✓ site/index.html  (${(html.length / 1024).toFixed(0)} KB, self-contained)`);
 }
 
+/* ---------- site/game/index.html — the playable UNO table ----------
+   The engine is inlined so the single file works both from GitHub Pages and
+   from a file:// double-click (an external module src would be CORS-blocked). */
+function buildGame() {
+  const src = join(ROOT, 'game', 'index.html');
+  const eng = join(ROOT, 'game', 'engine.js');
+  if (!existsSync(src) || !existsSync(eng)) { console.log('· no game/ folder, skipping the UNO table'); return; }
+  let html = readFileSync(src, 'utf8');
+  const engine = readFileSync(eng, 'utf8');
+  const re = /\/\* ENGINE:BEGIN \*\/[\s\S]*?\/\* ENGINE:END \*\//;
+  if (re.test(html)) html = html.replace(re, '/* ---- engine.js, inlined at build time ---- */\n' + engine);
+  else console.log('· ENGINE markers missing in game/index.html');
+  const out = join(SITE, 'game');
+  if (!existsSync(out)) mkdirSync(out, { recursive: true });
+  writeFileSync(join(out, 'index.html'), html);
+  console.log(`✓ site/game/index.html  (${(html.length / 1024).toFixed(0)} KB, self-contained)`);
+}
+
 /* ---------- site/season.html ---------- */
 function buildSeasonPage(nights, season) {
   const totalMatches = nights.reduce((a, n) => a + n.matches.length, 0);
@@ -341,4 +359,5 @@ for (const { scope, nights } of loaded) {
 }
 
 buildDashboard();
+buildGame();
 console.log('\n✓ done');
