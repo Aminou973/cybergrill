@@ -1,4 +1,4 @@
-# CyberGrill - create the repo, push it, switch on Pages, run the first build.
+﻿# CyberGrill - create the repo, push it, switch on Pages, run the first build.
 # Needs: git and the GitHub CLI (gh).
 param([string]$Name = "cybergrill")
 $ErrorActionPreference = "Stop"

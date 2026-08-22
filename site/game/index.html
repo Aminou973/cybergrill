@@ -57,6 +57,20 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   font-family:inherit;font-weight:900;letter-spacing:5px;font-size:15px;transition:.18s}
 .go:hover{background:var(--lime);color:#04120a;transform:scale(1.02)}
 
+/* mode picker */
+.modeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modeCard{padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+  cursor:pointer;transition:.16s}
+.modeCard:hover{transform:translateY(-2px);border-color:var(--cyan)}
+.modeCard.on{border-color:var(--cyan);background:rgba(34,230,255,.12);box-shadow:0 0 22px -7px var(--cyan)}
+.modeCard b{display:block;font-size:12px;font-weight:900;letter-spacing:1px}
+.modeCard span{display:block;font-size:10px;color:var(--dim);font-weight:700;line-height:1.5;margin-top:4px}
+.queueBox{display:none;margin-top:10px}
+.queueBox.on{display:block}
+.qTags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.qTag{padding:7px 11px;border-radius:10px;background:var(--gold);color:#120a02;font-size:11px;font-weight:900;cursor:pointer}
+.qTag em{font-style:normal;opacity:.6;margin-left:5px}
+
 /* ---------------- table ---------------- */
 #table{position:fixed;inset:0;display:none;flex-direction:column}
 #table.live{display:flex}
@@ -89,6 +103,54 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 .seat .uno{position:absolute;top:-8px;right:2px;font-size:9px;font-weight:900;letter-spacing:1px;
   padding:3px 6px;border-radius:6px;background:var(--gold);color:#120a02;animation:gpop .3s}
 .seat .danger{color:var(--gold)}
+.seat.out{opacity:.32;filter:grayscale(1)}
+.seat.out .av::after{content:'💀';position:absolute;inset:0;display:grid;place-items:center;font-size:22px}
+.seat .team{position:absolute;top:-7px;left:-4px;font-size:8px;font-weight:900;letter-spacing:1px;
+  padding:2px 6px;border-radius:6px;color:#04060f}
+.seat.mate .av{box-shadow:0 0 0 2px var(--lime),0 0 18px -4px currentColor}
+
+/* blitz countdown ring */
+.ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:74px;height:74px;pointer-events:none}
+.ring circle{fill:none;stroke-width:4;stroke-linecap:round}
+.ring .bg{stroke:rgba(255,255,255,.1)}
+.ring .fg{stroke:var(--lime);transition:stroke-dashoffset .25s linear,stroke .3s}
+.ring.warn .fg{stroke:var(--gold)}
+.ring.crit .fg{stroke:#ff4d5e;animation:critPulse .5s ease-in-out infinite}
+@keyframes critPulse{50%{opacity:.4}}
+.blitzNum{position:absolute;left:50%;top:-30px;transform:translateX(-50%);font-size:15px;font-weight:900;
+  color:var(--lime);text-shadow:0 0 12px currentColor}
+.blitzNum.warn{color:var(--gold)} .blitzNum.crit{color:#ff4d5e}
+
+/* a card flying from a hand to the discard */
+.flyer{position:fixed;z-index:75;pointer-events:none;border-radius:10px;border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 10px 30px rgba(0,0,0,.6);display:grid;place-items:center;font-weight:900;color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,.4)}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+  cursor:pointer;text-align:center;font-size:12px;font-weight:900;letter-spacing:1px;transition:.18s}
+.tab.on{border-color:var(--gold);background:rgba(255,217,60,.12);color:var(--gold);box-shadow:0 0 22px -8px var(--gold)}
+.netBox{display:none} .netBox.on{display:block}
+.soloOnly.hide{display:none}
+.codeBig{font-size:min(17vw,64px);font-weight:900;letter-spacing:10px;text-align:center;margin:6px 0 2px;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.codeHint{text-align:center;font-size:10px;letter-spacing:2px;color:var(--dim);font-weight:800;margin-bottom:14px}
+.lobList{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}
+.lobList div{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;background:rgba(255,255,255,.05);font-size:13px;font-weight:800}
+.lobList .dot{width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
+.lobList .dot.off{background:#666;box-shadow:none}
+.lobList .tagH{margin-left:auto;font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:var(--gold);color:#120a02}
+.lobList .tagB{margin-left:auto;font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:var(--dim)}
+.netPill{position:fixed;left:12px;bottom:12px;z-index:80;font-size:10px;font-weight:900;letter-spacing:1.5px;
+  padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.6);border:1px solid var(--line);color:var(--dim);display:none}
+.netPill.on{display:block}
+.netPill.live{color:var(--lime);border-color:rgba(156,255,46,.4)}
+.netPill.down{color:#ff4d5e;border-color:rgba(255,77,94,.4);animation:critPulse 1s ease-in-out infinite}
+.seat.gone{opacity:.5}
+.seat.gone .nm::after{content:' 📴'}
+.teamBar{display:flex;gap:8px;align-items:center;font-size:11px;font-weight:900;letter-spacing:1px}
+.teamBar span{padding:5px 10px;border-radius:9px}
+.tA{background:rgba(34,230,255,.18);color:var(--cyan)}
+.tB{background:rgba(255,138,43,.18);color:var(--orange)}
 
 .center{position:relative;display:flex;align-items:center;gap:20px;z-index:2}
 .pile{width:78px;height:116px;border-radius:11px;display:grid;place-items:center;cursor:pointer;
@@ -182,10 +244,44 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   <h1>CYBERGRILL UNO</h1>
   <div class="sub">P L A Y A B L E</div>
 
+  <div class="tabs">
+    <div class="tab on" id="tabSolo">🤖 SOLO VS BOTS</div>
+    <div class="tab" id="tabNet">🌍 ONLINE</div>
+  </div>
+
   <div class="fld"><label>YOUR NAME</label><input id="myName" maxlength="14" placeholder="AMIN" autocomplete="off"></div>
 
-  <div class="fld"><label>OPPONENTS</label>
+  <div class="netBox" id="netBox">
+    <div class="fld"><label>START A TABLE, OR JOIN ONE</label>
+      <button class="go" id="createBtn" style="margin:0 0 10px">🎲 CREATE A ROOM</button>
+      <div class="rin" style="display:flex;gap:8px">
+        <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off"
+          style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;font-family:inherit;font-weight:900;font-size:20px;letter-spacing:6px;text-align:center;text-transform:uppercase">
+        <button id="joinBtn" style="padding:0 22px;border-radius:12px;border:0;cursor:pointer;font-weight:900;font-size:13px;letter-spacing:1px;background:linear-gradient(135deg,var(--cyan),#1e9bff);color:#02121a">JOIN</button>
+      </div>
+      <div id="netMsg" style="font-size:11px;font-weight:800;color:var(--dim);margin-top:9px;min-height:15px"></div>
+    </div>
+  </div>
+
+  <div class="fld"><label>MODE</label>
+    <div class="modeGrid" id="modeGrid"></div>
+    <div class="queueBox" id="queueBox">
+      <label style="margin-top:10px">WHO IS WAITING FOR A SEAT</label>
+      <div class="rin" style="display:flex;gap:8px">
+        <input id="qName" maxlength="14" placeholder="NAME" autocomplete="off"
+          style="flex:1;padding:11px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;font-family:inherit;font-weight:800;font-size:16px">
+        <button id="qAdd" style="padding:0 18px;border-radius:11px;border:0;cursor:pointer;font-weight:900;font-size:18px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#120a02">+</button>
+      </div>
+      <div class="qTags" id="qTags"></div>
+    </div>
+  </div>
+
+  <div class="fld soloOnly" id="botFld"><label>OPPONENTS</label>
     <div class="row2" id="botCount"></div>
+  </div>
+
+  <div class="fld"><label>TURN CLOCK</label>
+    <div class="row2" id="blitzSel"></div>
   </div>
 
   <div class="fld"><label>PLAY TO</label>
@@ -199,10 +295,14 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   <button class="go" id="startBtn">DEAL ▶</button>
 </div></div>
 
+<div class="ovl" id="lobbyOvl"><div class="oCard" id="lobbyCard"></div></div>
+<div class="netPill" id="netPill"></div>
+
 <div id="table">
   <div class="topline">
     <div class="logo">CYBERGRILL UNO</div>
     <span class="dirBadge" id="dirBadge">↻</span>
+    <div class="teamBar" id="teamBar" style="display:none"></div>
     <div class="spacer"></div>
     <div class="chip" id="scoresChip">SCORES</div>
     <div class="chip" id="rulesChip">RULES</div>
@@ -238,6 +338,10 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 <div class="ovl" id="roundOvl"><div class="oCard" id="roundCard"></div></div>
 <div class="ovl" id="pickOvl"><div class="oCard" id="pickCard"></div></div>
 
+<script>
+/* GAMECFG — written by scripts/build.mjs from config.yml */
+window.CG_SERVER = "";
+</script>
 <script type="module">
 /* ---- engine.js, inlined at build time ---- */
 /* ==========================================================================
@@ -305,6 +409,13 @@ export function buildDeck() {
   return deck;                       /* 4*(1+18+6) + 8 = 108 */
 }
 
+/* Game modes.
+   classic     — the winner banks the losers' cards, first to the target wins.
+   teams       — 2v2, partners opposite each other, the team banks together.
+   elimination — nobody banks. Each round the biggest hand left is knocked out
+                 and you keep dealing until one player is standing. */
+export const MODES = ['classic', 'teams', 'elimination'];
+
 export const DEFAULT_HOUSE = {
   stack: false,        /* answer a +2 with a +2 (or +4 with +4) */
   jumpIn: false,       /* identical card out of turn */
@@ -329,6 +440,9 @@ export function createGame(opts = {}) {
   if (players.length < 2) throw new Error('need at least 2 players');
   if (players.length > 10) throw new Error('at most 10 players');
 
+  const mode = MODES.includes(opts.mode) ? opts.mode : 'classic';
+  if (mode === 'teams' && players.length % 2 !== 0) throw new Error('teams needs an even number of players');
+  if (mode === 'teams' && players.length < 4) throw new Error('teams needs at least 4 players');
   const house = Object.assign({}, DEFAULT_HOUSE, opts.house || {});
   const seed = (opts.seed === undefined ? 1 : opts.seed) | 0;
   const rnd = mulberry32(seed);
@@ -338,6 +452,13 @@ export function createGame(opts = {}) {
     rnd: seed,                 /* current rng cursor is re-derived, see nextRnd */
     rngCalls: 0,
     house,
+    mode,
+    /* seats alternate, so partners always sit opposite each other */
+    teamOf: mode === 'teams'
+      ? players.reduce((m, p, i) => { m[p.id] = i % 2 === 0 ? 'A' : 'B'; return m; }, {})
+      : null,
+    teamScores: mode === 'teams' ? { A: opts.teamScores ? opts.teamScores.A : 0, B: opts.teamScores ? opts.teamScores.B : 0 } : null,
+    eliminated: (opts.eliminated || []).slice(),
     target: opts.target || 500,
     players,
     order: players.map(p => p.id),
@@ -521,16 +642,52 @@ export function handValue(player) {
 }
 function endRound(state, winner, events) {
   const detail = {};
-  let total = 0;
-  for (const p of state.players) {
-    if (p.id === winner.id) continue;
-    const v = handValue(p);
-    detail[p.id] = v;
-    total += v;
-  }
-  winner.score += total;
+  for (const p of state.players) if (p.id !== winner.id) detail[p.id] = handValue(p);
   state.roundWinner = winner.id;
   state.phase = 'roundEnd';
+
+  if (state.mode === 'elimination') {
+    /* nobody banks — whoever is left holding the most goes out */
+    let worst = null, worstV = -1;
+    for (const p of state.players) {
+      if (p.id === winner.id) continue;
+      const v = handValue(p);
+      if (v > worstV || (v === worstV && worst && p.hand.length > worst.hand.length)) { worst = p; worstV = v; }
+    }
+    if (worst) {
+      state.eliminated.push(worst.id);
+      events.push({ t: 'eliminated', who: worst.id, value: worstV });
+    }
+    const left = state.players.filter(p => state.eliminated.indexOf(p.id) === -1);
+    events.push({ t: 'roundEnd', winner: winner.id, total: 0, detail, eliminated: worst ? worst.id : null });
+    if (left.length <= 1) {
+      state.winner = left.length ? left[0].id : winner.id;
+      state.phase = 'gameEnd';
+      events.push({ t: 'gameEnd', winner: state.winner });
+    }
+    return;
+  }
+
+  if (state.mode === 'teams') {
+    const team = state.teamOf[winner.id];
+    let total = 0;
+    for (const p of state.players) if (state.teamOf[p.id] !== team) total += handValue(p);
+    state.teamScores[team] += total;
+    /* mirror it onto the members so existing score displays keep working */
+    for (const p of state.players) if (state.teamOf[p.id] === team) p.score = state.teamScores[team];
+    events.push({ t: 'roundEnd', winner: winner.id, team, total, detail });
+    if (state.teamScores[team] >= state.target) {
+      state.winner = winner.id;
+      state.winningTeam = team;
+      state.phase = 'gameEnd';
+      events.push({ t: 'gameEnd', winner: winner.id, team, score: state.teamScores[team] });
+    }
+    return;
+  }
+
+  let total = 0;
+  for (const id of Object.keys(detail)) total += detail[id];
+  winner.score += total;
   events.push({ t: 'roundEnd', winner: winner.id, total, detail });
   if (winner.score >= state.target) {
     state.winner = winner.id;
@@ -752,11 +909,19 @@ function clone(s) {
 /* ==========================================================================
    start the next round — same players, scores carried, fresh deal
    ========================================================================== */
-export function nextRound(state) {
+export function nextRound(state, opts = {}) {
+  /* winner-stays-on hands us a new roster; elimination just drops the fallen */
+  let roster = opts.players
+    ? opts.players.map(p => ({ id: p.id, name: p.name, score: p.score || 0 }))
+    : state.players
+        .filter(p => state.eliminated.indexOf(p.id) === -1)
+        .map(p => ({ id: p.id, name: p.name, score: p.score }));
   const s = createGame({
-    players: state.players.map(p => ({ id: p.id, name: p.name, score: p.score })),
+    players: roster,
     seed: (state.seed * 1103515245 + 12345) >>> 0,
     house: state.house,
+    mode: opts.players ? 'classic' : state.mode,
+    teamScores: state.teamScores,
     target: state.target,
     round: state.round + 1
   });
@@ -778,6 +943,11 @@ export function viewFor(state, playerId) {
     phase: state.phase,
     target: state.target,
     house: state.house,
+    mode: state.mode,
+    teamOf: state.teamOf,
+    teamScores: state.teamScores,
+    eliminated: state.eliminated,
+    winningTeam: state.winningTeam || null,
     turn: state.order[state.turn],
     dir: state.dir,
     color: state.color,
@@ -893,15 +1063,65 @@ const HOUSE_UI = [
   ['noBluff', 'NO-BLUFF +4', 'No challenges, +4 always just works'],
   ['randomDir', 'RANDOM DIRECTION', 'Start anti-clockwise sometimes']
 ];
-let cfg = { bots: 3, target: 500, house: {} };
+/* The five ways to play. `engine` is what the rules engine is told; the two
+   that map to 'classic' change the shape of the night, not the rules. */
+const MODE_UI = [
+  ['classic',     'classic',     '🎴', 'CLASSIC',       'Rounds until someone reaches the target score'],
+  ['stayson',     'classic',     '🏆', 'WINNER STAYS ON', 'Last place gives up their seat to whoever is waiting'],
+  ['blitz',       'classic',     '⚡', 'BLITZ',          'A turn clock. Run out and you draw and pass'],
+  ['teams',       'teams',       '🤝', 'TEAMS 2v2',      'Alternate seats, one score per team'],
+  ['elimination', 'elimination', '💀', 'ELIMINATION',    'Nobody scores — the biggest hand goes out each round']
+];
+const BLITZ_UI = [[0, 'OFF'], [20, '20s'], [12, '12s'], [7, '7s'], [5, '5s']];
+const MODE_DEFAULT_CLOCK = { blitz: 7 };
+let cfg = { bots: 3, target: 500, house: {}, mode: 'classic', blitz: 0, queue: [] };
 HOUSE_UI.forEach(([k]) => cfg.house[k] = false);
+const engineMode = () => (MODE_UI.find(m => m[0] === cfg.mode) || MODE_UI[0])[1];
 
 function buildSetup() {
+  /* --- mode picker --- */
+  const mg = $('#modeGrid'); mg.innerHTML = '';
+  MODE_UI.forEach(([key, , icon, name, desc]) => {
+    const d = el('div', 'modeCard' + (cfg.mode === key ? ' on' : ''),
+      '<b>' + icon + ' ' + name + '</b><span>' + desc + '</span>');
+    d.onclick = () => {
+      cfg.mode = key;
+      if (MODE_DEFAULT_CLOCK[key]) cfg.blitz = MODE_DEFAULT_CLOCK[key];
+      else if (key !== 'blitz' && cfg.blitz === 7) cfg.blitz = 0;
+      if (key === 'teams') { if (cfg.bots % 2 === 0) cfg.bots = Math.max(3, cfg.bots - 1); }
+      buildSetup(); SFX.tick();
+    };
+    mg.appendChild(d);
+  });
+  $('#queueBox').classList.toggle('on', cfg.mode === 'stayson');
+  const qt = $('#qTags'); qt.innerHTML = '';
+  cfg.queue.forEach((nm, i) => {
+    const t = el('div', 'qTag', esc(nm) + '<em>&times;</em>');
+    t.onclick = () => { cfg.queue.splice(i, 1); buildSetup(); SFX.tick(); };
+    qt.appendChild(t);
+  });
+  if (cfg.mode === 'stayson' && !cfg.queue.length)
+    qt.appendChild(el('div', null, '<span style="font-size:10px;color:var(--dim);font-weight:700">' +
+      'Nobody waiting — add a name and the last-place seat goes to them.</span>'));
+
+  /* --- opponents (teams needs an even table) --- */
+  const teams = cfg.mode === 'teams';
   const bc = $('#botCount'); bc.innerHTML = '';
-  [1, 2, 3, 4, 5].forEach(n => {
+  (teams ? [3, 5] : [1, 2, 3, 4, 5]).forEach(n => {
     const p = el('div', 'pill' + (cfg.bots === n ? ' on' : ''), n + ' BOT' + (n > 1 ? 'S' : ''));
     p.onclick = () => { cfg.bots = n; buildSetup(); SFX.tick(); };
     bc.appendChild(p);
+  });
+  if (teams) bc.appendChild(el('div', null,
+    '<span style="font-size:10px;color:var(--dim);font-weight:700;line-height:2.6;display:block">' +
+    'Teams need an even table — you and the seat opposite are partners.</span>'));
+
+  /* --- turn clock --- */
+  const bs = $('#blitzSel'); bs.innerHTML = '';
+  BLITZ_UI.forEach(([n, lbl]) => {
+    const p = el('div', 'pill' + (cfg.blitz === n ? ' on' : ''), lbl);
+    p.onclick = () => { cfg.blitz = n; buildSetup(); SFX.tick(); };
+    bs.appendChild(p);
   });
   const ts = $('#targetSel'); ts.innerHTML = '';
   [200, 300, 500].forEach(n => {
@@ -918,10 +1138,24 @@ function buildSetup() {
   });
 }
 buildSetup();
+function addQueued() {
+  const i = $('#qName'), nm = (i.value || '').trim().slice(0, 14).toUpperCase();
+  if (!nm) return;
+  if (cfg.queue.indexOf(nm) === -1) cfg.queue.push(nm);
+  i.value = ''; buildSetup(); SFX.tick(); i.focus();
+}
+$('#qAdd').onclick = addQueued;
+$('#qName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addQueued(); } });
 try { const n = localStorage.getItem('cybergrill_uno_name'); if (n) $('#myName').value = n; } catch (e) { }
 
 const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU', 'BILLAL', 'SARA'];
 let G = null, ME = 'you', busy = false, pendingWild = null;
+let NET = null;       /* null while playing solo; otherwise the live connection */
+let KO = [];          /* players knocked out in elimination — kept as ghost seats */
+let QUEUE = [];       /* winner-stays-on waiting list */
+let seatColor = {};   /* id -> colour, stable even as the roster changes */
+let nextSeatIx = 0;
+function assignColors(ids) { ids.forEach(id => { if (!(id in seatColor)) seatColor[id] = PALETTE[nextSeatIx++ % PALETTE.length]; }); }
 
 $('#startBtn').onclick = () => {
   ac();
@@ -929,22 +1163,48 @@ $('#startBtn').onclick = () => {
   try { localStorage.setItem('cybergrill_uno_name', name); } catch (e) { }
   const players = [{ id: ME, name }];
   for (let i = 0; i < cfg.bots; i++) players.push({ id: 'bot' + i, name: BOT_NAMES[i] });
-  G = createGame({ players, seed: (Math.random() * 1e9) | 0, house: cfg.house, target: cfg.target });
+  KO = []; QUEUE = cfg.queue.slice(); seatColor = {}; nextSeatIx = 0;
+  assignColors(players.map(p => p.id));
+  try {
+    G = createGame({
+      players, seed: (Math.random() * 1e9) | 0, house: cfg.house,
+      target: cfg.target, mode: engineMode()
+    });
+  } catch (err) { alert(err.message); return; }
   $('#setup').classList.add('gone');
   $('#table').classList.add('live');
   $('#log').innerHTML = '';
+  logLine(MODE_LINE[cfg.mode] || '');
   logLine('Cards dealt. ' + playerById(G, G.order[G.turn]).name + ' starts.');
   render(); tickBots();
 };
-$('#quitChip').onclick = () => { if (confirm('Leave the game?')) location.reload(); };
+const MODE_LINE = {
+  classic: '🎴 Classic UNO. First to the target takes it.',
+  stayson: '🏆 Winner stays on — last place gives up the seat.',
+  blitz: '⚡ Blitz. Watch the clock.',
+  teams: '🤝 Teams 2v2 — you and the seat opposite share a score.',
+  elimination: '💀 Elimination. Biggest hand left goes out every round.'
+};
+$('#quitChip').onclick = () => { if (confirm('Leave the game?')) { if (NET) netLeave(); location.reload(); } };
 $('#rulesChip').onclick = () => {
   const on = HOUSE_UI.filter(([k]) => G.house[k]).map(([, n]) => n);
-  alert('Playing to ' + G.target + '.\n\nHouse rules: ' + (on.length ? on.join(', ') : 'none — official rules'));
+  const m = MODE_UI.find(x => x[0] === cfg.mode) || MODE_UI[0];
+  alert(m[2] + ' ' + m[3] + '\n' + m[4] + '\n\n' +
+    (cfg.mode === 'elimination' ? 'Last one standing wins.\n' : 'Playing to ' + G.target + '.\n') +
+    (cfg.blitz ? 'Turn clock: ' + cfg.blitz + ' seconds.\n' : '') +
+    '\nHouse rules: ' + (on.length ? on.join(', ') : 'none — official rules'));
 };
 $('#scoresChip').onclick = showScores;
 
 /* ---------------- render ---------------- */
-function colorOf(pid) { const i = G.order.indexOf(pid); return PALETTE[i % PALETTE.length]; }
+function colorOf(pid) { return seatColor[pid] || PALETTE[Math.max(0, G.order.indexOf(pid)) % PALETTE.length]; }
+function teamOf(pid) { return G && G.teamOf ? G.teamOf[pid] : null; }
+function isMate(pid) { const t = teamOf(pid); return !!t && pid !== ME && t === teamOf(ME); }
+function teamTag(pid) {
+  const t = teamOf(pid); if (!t) return '';
+  return '<div class="team ' + (t === 'A' ? 'tA' : 'tB') + '" style="background:' +
+    (t === 'A' ? 'var(--cyan)' : 'var(--orange)') + '">' + t + '</div>';
+}
 function initials(n) { return String(n).slice(0, 2).toUpperCase(); }
 
 function cardFace(card, cls) {
@@ -959,46 +1219,73 @@ function cardFace(card, cls) {
 }
 
 function render() {
-  if (!G) return;
-  const v = viewFor(G, ME);
+  if (!G || !playerById(G, ME)) return;
+  const v = NET ? NET.view : viewFor(G, ME);
+  if (!v) return;
 
-  /* seats around an ellipse, me at the bottom */
+  /* Seats around an ellipse, me at the bottom. Knocked-out players stay at the
+     table as greyed ghosts so the night reads as a story, not a shrinking list. */
   const seats = $('#seats'); seats.innerHTML = '';
-  const n = G.order.length;
-  const myIdx = G.order.indexOf(ME);
-  G.order.forEach((pid, i) => {
-    if (pid === ME) return;
-    const rel = ((i - myIdx) + n) % n;
-    /* rel 0 is the bottom seat — mine, drawn separately — so the others
-       walk round the rim from there: left, top, right. */
+  const live = G.order.filter(id => id !== ME);
+  const ring = live.concat(KO.map(k => k.id));   /* ghosts sit last, next to me */
+  const n = ring.length + 1;
+  const scoreLine = p => (G.mode === 'elimination'
+    ? p.hand.length + ' CARD' + (p.hand.length === 1 ? '' : 'S')
+    : p.hand.length + ' CARD' + (p.hand.length === 1 ? '' : 'S') + ' · ' + p.score + 'p');
+
+  ring.forEach((pid, k) => {
+    const ghost = KO.find(x => x.id === pid);
+    const rel = k + 1;
     const ang = Math.PI / 2 + (rel / n) * Math.PI * 2;
-    const p = playerById(G, pid);
-    const s = el('div', 'seat' + (G.order[G.turn] === pid ? ' turn' : ''));
+    const s = el('div', 'seat' +
+      (!ghost && G.order[G.turn] === pid ? ' turn' : '') +
+      (ghost ? ' out' : '') + (isMate(pid) ? ' mate' : '') +
+      (!ghost && NET && playerById(G, pid) && playerById(G, pid).connected === false ? ' gone' : ''));
+    s.dataset.pid = pid;
     s.style.left = (50 + Math.cos(ang) * 34) + '%';
     s.style.top = (50 + Math.sin(ang) * 30) + '%';
-    const backs = Math.min(p.hand.length, 7);
-    s.innerHTML =
-      '<div class="av" style="background:' + colorOf(pid) + '">' + esc(initials(p.name)) +
-      (p.hand.length === 1 && p.said ? '<span class="uno">UNO</span>' : '') + '</div>' +
-      '<div class="nm">' + esc(p.name) + '</div>' +
-      '<div class="cnt' + (p.hand.length === 1 ? ' danger' : '') + '">' + p.hand.length + ' CARD' + (p.hand.length === 1 ? '' : 'S') + ' · ' + p.score + 'p</div>' +
-      '<div class="backs">' + '<i></i>'.repeat(backs) + '</div>';
+    if (ghost) {
+      s.innerHTML =
+        '<div class="av" style="background:' + colorOf(pid) + '">' + esc(initials(ghost.name)) + '</div>' +
+        '<div class="nm">' + esc(ghost.name) + '</div>' +
+        '<div class="cnt">OUT · ROUND ' + ghost.round + '</div>';
+    } else {
+      const p = playerById(G, pid);
+      const backs = Math.min(p.hand.length, 7);
+      s.innerHTML = teamTag(pid) +
+        '<div class="av" style="background:' + colorOf(pid) + '">' + esc(initials(p.name)) +
+        (p.hand.length === 1 && p.said ? '<span class="uno">UNO</span>' : '') + '</div>' +
+        '<div class="nm">' + esc(p.name) + '</div>' +
+        '<div class="cnt' + (p.hand.length === 1 ? ' danger' : '') + '">' + scoreLine(p) + '</div>' +
+        '<div class="backs">' + '<i></i>'.repeat(backs) + '</div>';
+    }
     seats.appendChild(s);
   });
 
   /* my own seat on the rim, so the table reads as a full circle */
   {
     const me0 = playerById(G, ME);
-    const s0 = el('div', 'seat' + (G.order[G.turn] === ME ? ' turn' : ''));
+    const myTurnNow = G.order[G.turn] === ME;
+    const s0 = el('div', 'seat' + (myTurnNow ? ' turn' : ''));
+    s0.id = 'mySeat'; s0.dataset.pid = ME;
     s0.style.left = '50%'; s0.style.top = '82%';
-    s0.innerHTML =
+    s0.innerHTML = teamTag(ME) +
       '<div class="av" style="background:' + colorOf(ME) + '">' + esc(initials(me0.name)) +
       (me0.hand.length === 1 && me0.said ? '<span class="uno">UNO</span>' : '') + '</div>' +
       '<div class="nm">' + esc(me0.name) + '</div>' +
-      '<div class="cnt' + (me0.hand.length === 1 ? ' danger' : '') + '">' + me0.hand.length +
-      ' CARD' + (me0.hand.length === 1 ? '' : 'S') + ' · ' + me0.score + 'p</div>';
+      '<div class="cnt' + (me0.hand.length === 1 ? ' danger' : '') + '">' + scoreLine(me0) + '</div>';
     seats.appendChild(s0);
   }
+
+  /* team scoreboard in the topline */
+  const tb = $('#teamBar');
+  if (G.teamScores) {
+    tb.style.display = '';
+    const mine = teamOf(ME);
+    tb.innerHTML =
+      '<span class="tA">A ' + G.teamScores.A + (mine === 'A' ? ' ★' : '') + '</span>' +
+      '<span class="tB">B ' + G.teamScores.B + (mine === 'B' ? ' ★' : '') + '</span>';
+  } else tb.style.display = 'none';
 
   /* discard */
   const dis = $('#discard'); dis.innerHTML = '';
@@ -1009,6 +1296,7 @@ function render() {
     tag.style.background = CVAR[v.color]; tag.style.color = '#fff';
     face.appendChild(tag);
   }
+  if (landed) { face.style.animation = 'gpop .3s'; landed = false; }
   dis.appendChild(face);
   $('#drawCount').textContent = v.drawCount;
   $('#dirBadge').textContent = G.dir === 1 ? '↻' : '↺';
@@ -1020,7 +1308,7 @@ function render() {
   const playable = new Set(v.moves.filter(m => m.type === 'play').map(m => m.cardId));
   me.hand.forEach(card => {
     const c = cardFace(card, 'hcard ' + (playable.has(card.id) ? 'ok' : 'no'));
-    if (playable.has(card.id)) c.onclick = () => tryPlay(card);
+    if (playable.has(card.id)) c.onclick = () => { flySrc = c.getBoundingClientRect(); tryPlay(card); };
     hw.appendChild(c);
   });
 
@@ -1055,9 +1343,120 @@ function render() {
     a.onclick = () => doMove(m); acts.appendChild(a);
   });
   $('#drawPile').onclick = () => { if (has('draw')) doMove({ type: 'draw' }); };
+  syncClock();
+}
+
+/* ---------------- a card flying to the discard ---------------- */
+let landed = false;
+function rectOf(sel) { const e = typeof sel === 'string' ? document.querySelector(sel) : sel; return e ? e.getBoundingClientRect() : null; }
+function seatRect(pid) {
+  const s = document.querySelector('#seats [data-pid="' + pid + '"]');
+  return (s && s.querySelector('.av') ? s.querySelector('.av') : s || $('#drawPile')).getBoundingClientRect();
+}
+function flyCard(from, card) {
+  const to = rectOf('#discard');
+  if (!from || !to || !to.width) return;
+  const w = to.width, h = to.height;
+  const f = el('div', 'flyer', esc(cardLabel(card)));
+  f.style.width = w + 'px'; f.style.height = h + 'px';
+  f.style.fontSize = Math.round(h / 4) + 'px';
+  f.style.left = (from.left + from.width / 2 - w / 2) + 'px';
+  f.style.top = (from.top + from.height / 2 - h / 2) + 'px';
+  f.style.background = isWild(card.kind)
+    ? 'conic-gradient(from 210deg,#ff2fb9,#ffd93c,#9cff2e,#22e6ff,#ff2fb9)'
+    : (CVAR[card.color] || '#333');
+  f.style.transform = 'scale(.72) rotate(-12deg)';
+  f.style.transition = 'transform .32s cubic-bezier(.25,.9,.3,1),opacity .32s ease-in';
+  document.body.appendChild(f);
+  const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+  const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+  requestAnimationFrame(() => {
+    f.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (((Math.random() * 24) | 0) - 12) + 'deg) scale(1)';
+  });
+  setTimeout(() => f.remove(), 340);
+}
+
+/* ---------------- blitz turn clock ---------------- */
+const RING_C = 2 * Math.PI * 33;
+let clockKey = null, clockT = null, clockLeft = 0, lastBeep = -1;
+function stopClock() {
+  if (clockT) { clearInterval(clockT); clockT = null; }
+  clockKey = null; lastBeep = -1;
+  document.querySelectorAll('.ring,.blitzNum').forEach(e => e.remove());
+}
+function mountRing() {
+  const seat = $('#mySeat'); if (!seat) return null;
+  let r = seat.querySelector('.ring');
+  if (!r) {
+    seat.insertAdjacentHTML('afterbegin',
+      '<div class="blitzNum"></div>' +
+      '<svg class="ring" viewBox="0 0 74 74" style="top:23px">' +
+      '<circle class="bg" cx="37" cy="37" r="33"></circle>' +
+      '<circle class="fg" cx="37" cy="37" r="33" transform="rotate(-90 37 37)" ' +
+      'stroke-dasharray="' + RING_C.toFixed(1) + '"></circle></svg>');
+    r = seat.querySelector('.ring');
+  }
+  return r;
+}
+function paintClock() { paintClockWith(cfg.blitz); }
+function paintClockWith(limit) {
+  const r = $('#mySeat') && $('#mySeat').querySelector('.ring');
+  const num = $('#mySeat') && $('#mySeat').querySelector('.blitzNum');
+  if (!r || !limit) return;
+  const frac = Math.max(0, clockLeft / limit);
+  const cls = frac < .25 ? 'crit' : frac < .5 ? 'warn' : '';
+  r.setAttribute('class', 'ring ' + cls);
+  r.querySelector('.fg').setAttribute('stroke-dashoffset', (RING_C * (1 - frac)).toFixed(1));
+  if (num) {
+    num.className = 'blitzNum ' + cls;
+    num.textContent = Math.ceil(clockLeft) + 's';
+  }
+  const whole = Math.ceil(clockLeft);
+  if (whole <= 3 && whole !== lastBeep) { lastBeep = whole; SFX.tick(); }
+}
+function syncClock() {
+  const limit = NET ? (NET.blitz || 0) : cfg.blitz;
+  const active = G && G.phase === 'playing' && limit > 0 && G.order[G.turn] === ME;
+  if (!active) { stopClock(); return; }
+  if (NET) {
+    /* the deadline is the server's, shifted by our measured clock offset */
+    const left = (NET.deadline - (Date.now() + NET.skew)) / 1000;
+    if (clockKey !== 'net' + NET.deadline) { clockKey = 'net' + NET.deadline; lastBeep = -1; }
+    clockLeft = Math.max(0, Math.min(limit, left));
+    mountRing(); paintClockWith(limit);
+    if (!clockT) clockT = setInterval(() => {
+      clockLeft = Math.max(0, (NET.deadline - (Date.now() + NET.skew)) / 1000);
+      paintClockWith(limit);
+    }, 100);
+    return;
+  }
+  if (clockKey !== G.round + '|' + G.turn) { clockKey = G.round + '|' + G.turn; clockLeft = cfg.blitz; lastBeep = -1; }
+  mountRing(); paintClock();
+  if (!clockT) clockT = setInterval(() => {
+    clockLeft -= .1;
+    if (clockLeft <= 0) { stopClock(); blitzTimeout(); return; }
+    paintClock();
+  }, 100);
+}
+function blitzTimeout() {
+  if (!G || G.phase !== 'playing' || G.order[G.turn] !== ME) return;
+  SFX.bad(); logLine('⏱️ out of time — drawing and passing');
+  const has = t => legalMoves(G, ME).some(m => m.type === t);
+  if (has('takeStack')) return doMove({ type: 'takeStack' });
+  if (has('accept')) return doMove({ type: 'accept' });
+  if (has('draw')) {
+    doMove({ type: 'draw' });
+    setTimeout(() => {
+      if (G && G.phase === 'playing' && G.order[G.turn] === ME &&
+          legalMoves(G, ME).some(m => m.type === 'pass')) doMove({ type: 'pass' });
+    }, 300);
+    return;
+  }
+  if (has('pass')) doMove({ type: 'pass' });
 }
 
 /* ---------------- moves ---------------- */
+let flySrc = null;
 function tryPlay(card) {
   if (busy) return;
   if (isWild(card.kind)) { pendingWild = card; $('#colorOvl').classList.add('show'); return; }
@@ -1087,6 +1486,7 @@ function pickSwapTarget(card) {
 
 function doMove(move) {
   if (busy || !G) return;
+  if (NET) { netSend({ t: 'move', move }); return; }
   try {
     const r = applyMove(G, ME, move);
     G = r.state;
@@ -1098,6 +1498,7 @@ function doMove(move) {
 }
 
 function tickBots() {
+  if (NET) return;            /* the server plays the bots, and plays fair */
   if (!G || G.phase !== 'playing') return;
   const actor = G.order[G.turn];
   /* a bot may also need to catch or challenge out of turn */
@@ -1110,6 +1511,7 @@ function tickBots() {
     if (!G || G.phase !== 'playing') { busy = false; return; }
     const m = botMove(G, who);
     if (!m) { busy = false; return; }
+    if (m.type === 'play') flySrc = seatRect(who);
     try {
       const r = applyMove(G, who, m);
       G = r.state; showEvents(r.events); render();
@@ -1144,7 +1546,12 @@ function logLine(t) {
 function showEvents(evs) {
   evs.forEach(e => {
     switch (e.t) {
-      case 'played': SFX.play(); logLine(nameOf(e.who) + ' played ' + (e.color !== 'w' ? COLOR_NAME[e.color] + ' ' : '') + cardLabel({ kind: e.kind })); break;
+      case 'played':
+        SFX.play(); landed = true;
+        flyCard(flySrc, { kind: e.kind, color: e.color }); flySrc = null;
+        logLine(nameOf(e.who) + ' played ' + (e.color !== 'w' ? COLOR_NAME[e.color] + ' ' : '') + cardLabel({ kind: e.kind }));
+        break;
+      case 'eliminated': SFX.hit(); logLine('💀 ' + nameOf(e.who) + ' is out — ' + e.value + ' left in hand'); break;
       case 'color': logLine(nameOf(e.who) + ' called ' + COLOR_NAME[e.color]); break;
       case 'drew': SFX.draw(); logLine(nameOf(e.who) + ' drew a card'); break;
       case 'drewUntil': SFX.draw(); logLine(nameOf(e.who) + ' drew ' + e.n + ' until playable'); break;
@@ -1165,28 +1572,124 @@ function showEvents(evs) {
 }
 
 /* ---------------- round / game end ---------------- */
+const handVal = p => p.hand.reduce((t, c) => t + cardValue(c.kind), 0);
+/* Online we never hold other people's cards, so the round-end totals come from
+   the server's own roundEnd event rather than from a hand we cannot see. */
+const valOf = p => (NET && NET.detail && p.id in NET.detail) ? NET.detail[p.id] : handVal(p);
+let guestIx = 0;
+
 function showRoundEnd() {
-  const winner = playerById(G, G.roundWinner);
+  stopClock();
+  const winner = playerById(G, G.roundWinner) || playerById(G, G.winner);
   SFX.win();
   for (let i = 0; i < 6; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 140);
+
+  /* elimination: remember the fallen so they stay at the table as ghosts */
+  let justOut = null;
+  if (G.mode === 'elimination') {
+    G.eliminated.forEach(id => {
+      if (KO.some(k => k.id === id)) return;
+      const p = playerById(G, id);
+      if (p) { justOut = p; KO.push({ id, name: p.name, round: G.round }); }
+    });
+  }
+
+  /* winner-stays-on: last place gives up the seat */
+  let swap = null;
+  if (!NET && cfg.mode === 'stayson' && G.phase !== 'gameEnd') {
+    const losers = G.order.filter(id => id !== G.roundWinner).map(id => playerById(G, id))
+      .sort((a, b) => valOf(b) - valOf(a) || b.hand.length - a.hand.length);
+    if (losers.length && QUEUE.length) swap = { out: losers[0], in: QUEUE[0] };
+  }
+
   const box = $('#roundCard');
   const gameOver = G.phase === 'gameEnd';
+  const teamWin = G.winningTeam;
+  let crown = gameOver ? '🏆' : '🎉', head = gameOver ? 'WINS THE GAME' : 'WINS THE ROUND', big = winner.name;
+  if (G.teamScores) {
+    const t = teamOf(winner.id);
+    head = gameOver ? 'TAKE THE GAME' : 'TAKE THE ROUND';
+    big = 'TEAM ' + (gameOver ? (teamWin || t) : t);
+    crown = gameOver ? '🏆' : '🤝';
+  }
+  if (gameOver && G.mode === 'elimination') { crown = '👑'; head = 'IS THE LAST ONE STANDING'; }
+
   box.innerHTML =
-    '<div style="font-size:52px">' + (gameOver ? '🏆' : '🎉') + '</div>' +
-    '<div class="bigName">' + esc(winner.name) + '</div>' +
-    '<h2>' + (gameOver ? 'WINS THE GAME' : 'WINS THE ROUND') + '</h2>';
+    '<div style="font-size:52px">' + crown + '</div>' +
+    '<div class="bigName">' + esc(big) + '</div>' +
+    '<h2>' + head + '</h2>' +
+    (G.teamScores && !gameOver ? '<div style="font-size:11px;color:var(--dim);font-weight:800;letter-spacing:1px">' +
+      esc(winner.name) + ' WENT OUT FIRST</div>' : '') +
+    (justOut ? '<div style="margin-top:12px;font-size:14px;font-weight:900;color:#ff4d5e">💀 ' +
+      esc(justOut.name) + ' IS ELIMINATED</div>' : '');
+
   const list = el('div', 'scoreList');
-  G.order.map(id => playerById(G, id)).sort((a, b) => b.score - a.score).forEach(p => {
-    list.appendChild(el('div', null,
-      '<span style="width:10px;height:10px;border-radius:3px;background:' + colorOf(p.id) + ';display:inline-block"></span>' +
-      '<span>' + esc(p.name) + '</span><span>' + p.score + '</span>'));
-  });
+  if (G.teamScores) {
+    [['A', G.teamScores.A], ['B', G.teamScores.B]].sort((a, b) => b[1] - a[1]).forEach(([t, sc]) => {
+      const mates = G.order.filter(id => teamOf(id) === t).map(id => playerById(G, id).name).join(' + ');
+      list.appendChild(el('div', null,
+        '<span style="width:10px;height:10px;border-radius:3px;background:' +
+        (t === 'A' ? 'var(--cyan)' : 'var(--orange)') + ';display:inline-block"></span>' +
+        '<span>TEAM ' + t + ' &middot; ' + esc(mates) + '</span><span>' + sc + '</span>'));
+    });
+  } else if (G.mode === 'elimination') {
+    G.order.map(id => playerById(G, id))
+      .filter(p => G.eliminated.indexOf(p.id) === -1)
+      .sort((a, b) => valOf(a) - valOf(b)).forEach(p => {
+        list.appendChild(el('div', null,
+          '<span style="width:10px;height:10px;border-radius:3px;background:' + colorOf(p.id) + ';display:inline-block"></span>' +
+          '<span>' + esc(p.name) + '</span><span>' + (p.id === winner.id ? '✅' : valOf(p)) + '</span>'));
+      });
+    KO.slice().reverse().forEach(k => {
+      list.appendChild(el('div', null,
+        '<span style="width:10px;height:10px;border-radius:3px;background:' + colorOf(k.id) + ';opacity:.4;display:inline-block"></span>' +
+        '<span style="opacity:.45">' + esc(k.name) + '</span><span style="opacity:.45">OUT R' + k.round + '</span>'));
+    });
+  } else {
+    G.order.map(id => playerById(G, id)).sort((a, b) => b.score - a.score).forEach(p => {
+      list.appendChild(el('div', null,
+        '<span style="width:10px;height:10px;border-radius:3px;background:' + colorOf(p.id) + ';display:inline-block"></span>' +
+        '<span>' + esc(p.name) + '</span><span>' + p.score + '</span>'));
+    });
+  }
   box.appendChild(list);
+
+  if (swap) box.appendChild(el('div', null,
+    '<div style="font-size:12px;font-weight:900;letter-spacing:1px;color:var(--gold);margin-top:4px">' +
+    '🔁 ' + esc(swap.out.name) + ' STEPS OUT &nbsp;·&nbsp; ' + esc(swap.in) + ' SITS DOWN</div>' +
+    (swap.out.id === ME
+      ? '<div style="font-size:10px;color:var(--dim);font-weight:700;margin-top:5px">' +
+        'That is your seat — hand the device over. You are ' + esc(swap.in) + ' from now on.</div>'
+      : '')));
+
   const b = el('button', 'go', gameOver ? 'PLAY AGAIN' : 'NEXT ROUND ▶');
+  if (NET && !NET.isHost) {
+    b.textContent = 'WAITING FOR THE HOST…';
+    b.style.opacity = '.55'; b.style.cursor = 'default';
+    box.appendChild(b);
+    $('#roundOvl').classList.add('show');
+    return;
+  }
   b.onclick = () => {
     $('#roundOvl').classList.remove('show');
+    if (NET) { netSend({ t: gameOver ? 'again' : 'next' }); return; }
     if (gameOver) { location.reload(); return; }
-    G = nextRound(G);
+    if (swap) {
+      const roster = G.order.map(id => {
+        const p = playerById(G, id);
+        if (id !== swap.out.id) return { id: p.id, name: p.name, score: p.score };
+        /* If the seat that goes is yours, you keep the device and become the
+           person sitting down — otherwise there would be nobody to play. */
+        if (id === ME) return { id: ME, name: swap.in, score: 0 };
+        return { id: 'guest' + (guestIx++), name: swap.in, score: 0 };
+      });
+      QUEUE.shift(); QUEUE.push(swap.out.name);
+      assignColors(roster.map(p => p.id));
+      G = nextRound(G, { players: roster });
+      logLine('🔁 ' + swap.out.name + ' out, ' + swap.in + ' in. Waiting: ' + (QUEUE.join(', ') || 'nobody'));
+    } else {
+      G = nextRound(G);
+    }
     logLine('— round ' + G.round + ' —');
     render(); tickBots();
   };
@@ -1195,21 +1698,297 @@ function showRoundEnd() {
 }
 function showScores() {
   const box = $('#pickCard');
-  box.innerHTML = '<h2>SCORES · PLAYING TO ' + G.target + '</h2>';
+  box.innerHTML = '<h2>' + (G.mode === 'elimination' ? 'STILL IN · ROUND ' + G.round
+    : 'SCORES · PLAYING TO ' + G.target) + '</h2>';
   const list = el('div', 'scoreList');
-  G.order.map(id => playerById(G, id)).sort((a, b) => b.score - a.score).forEach(p => {
-    list.appendChild(el('div', null,
-      '<span style="width:10px;height:10px;border-radius:3px;background:' + colorOf(p.id) + ';display:inline-block"></span>' +
-      '<span>' + esc(p.name) + '</span><span>' + p.score + '</span>'));
-  });
+  const row = (color, name, val, dim) => list.appendChild(el('div', null,
+    '<span style="width:10px;height:10px;border-radius:3px;background:' + color +
+    (dim ? ';opacity:.4' : '') + ';display:inline-block"></span>' +
+    '<span' + (dim ? ' style="opacity:.45"' : '') + '>' + esc(name) + '</span>' +
+    '<span' + (dim ? ' style="opacity:.45"' : '') + '>' + val + '</span>'));
+  if (G.teamScores) {
+    [['A', G.teamScores.A], ['B', G.teamScores.B]].sort((a, b) => b[1] - a[1]).forEach(([t, sc]) =>
+      row(t === 'A' ? 'var(--cyan)' : 'var(--orange)',
+        'TEAM ' + t + ' · ' + G.order.filter(id => teamOf(id) === t).map(id => playerById(G, id).name).join(' + '), sc));
+  } else if (G.mode === 'elimination') {
+    G.order.map(id => playerById(G, id)).forEach(p => row(colorOf(p.id), p.name, p.hand.length + ' cards'));
+    KO.slice().reverse().forEach(k => row(colorOf(k.id), k.name, 'OUT R' + k.round, true));
+  } else {
+    G.order.map(id => playerById(G, id)).sort((a, b) => b.score - a.score)
+      .forEach(p => row(colorOf(p.id), p.name, p.score));
+  }
+  if (!NET && cfg.mode === 'stayson') row('var(--gold)', 'WAITING', QUEUE.join(', ') || '—', true);
+  if (NET) row('var(--cyan)', 'ROOM CODE', NET.code, true);
   box.appendChild(list);
   const b = el('button', 'act', 'CLOSE');
   b.onclick = () => $('#pickOvl').classList.remove('show');
   box.appendChild(b);
   $('#pickOvl').classList.add('show');
 }
+
+/* ==========================================================================
+   ONLINE
+   --------------------------------------------------------------------------
+   The server is the only place that holds a full game. We send moves and get
+   back a redacted view — the same shape the solo engine produces, so almost
+   all of the table code above is shared. `G` here is a shadow: real cards for
+   my own hand, face-down placeholders for everybody else's, which is exactly
+   what the render code needs and exactly all we are told.
+   ========================================================================== */
+const SERVER = (window.CG_SERVER || '').replace(/\/+$/, '');
+const netMsg = t => { const e = $('#netMsg'); if (e) e.textContent = t || ''; };
+
+function pill(cls, text) {
+  const p = $('#netPill');
+  p.className = 'netPill on ' + cls;
+  p.textContent = text;
+}
+
+function shadowState(v) {
+  const back = (pid, n) => Array.from({ length: n }, (_, i) => ({ id: 'x' + pid + i, color: 'w', kind: 'wild' }));
+  const players = v.players.map(p => p.id === v.you.id
+    ? { id: p.id, name: p.name, score: p.score, said: p.said, connected: p.connected, hand: v.you.hand }
+    : { id: p.id, name: p.name, score: p.score, said: p.said, connected: p.connected, hand: back(p.id, p.count) });
+  return {
+    order: v.players.map(p => p.id),
+    players,
+    turn: Math.max(0, v.players.findIndex(p => p.id === v.turn)),
+    dir: v.dir, color: v.color, pending: v.pending, pendingKind: v.pendingKind,
+    challenge: v.challenge, drawnThisTurn: v.drawnThisTurn,
+    discard: [v.top], draw: new Array(v.drawCount),
+    house: v.house || {}, target: v.target, round: v.round, phase: v.phase,
+    mode: v.mode, teamOf: v.teamOf, teamScores: v.teamScores,
+    eliminated: v.eliminated || [], winningTeam: v.winningTeam || null,
+    roundWinner: v.roundWinner, winner: v.winner, seed: 0
+  };
+}
+
+function netSend(m) {
+  if (!NET || !NET.ws || NET.ws.readyState !== 1) return false;
+  NET.ws.send(JSON.stringify(m)); return true;
+}
+function netLeave() {
+  if (!NET) return;
+  NET.closing = true;
+  try { NET.ws.close(); } catch (e) { }
+  NET = null;
+}
+
+function seatKey(code) { return 'cybergrill_uno_seat_' + code; }
+function loadSeat(code) { try { return JSON.parse(localStorage.getItem(seatKey(code)) || 'null'); } catch (e) { return null; } }
+function saveSeat(code, seat) { try { localStorage.setItem(seatKey(code), JSON.stringify(seat)); } catch (e) { } }
+
+function netConnect(code, name) {
+  if (!SERVER) { netMsg('No server is configured for this build yet.'); return; }
+  code = code.toUpperCase();
+  const wsUrl = SERVER.replace(/^http/, 'ws') + '/ws/' + code;
+  const seat = loadSeat(code);
+  NET = NET || { code, view: null, detail: null, isHost: false, blitz: 0, deadline: 0, skew: 0, tries: 0, lobby: null };
+  NET.code = code; NET.closing = false;
+  pill('', 'CONNECTING…');
+
+  let ws;
+  try { ws = new WebSocket(wsUrl); } catch (e) { netMsg('Could not reach the server.'); return; }
+  NET.ws = ws;
+
+  ws.onopen = () => {
+    NET.tries = 0;
+    pill('live', 'ROOM ' + code);
+    const hello = { t: 'hello', name };
+    if (seat && seat.id) { hello.playerId = seat.id; hello.token = seat.token; }
+    ws.send(JSON.stringify(hello));
+    ws.send(JSON.stringify({ t: 'ping', sent: Date.now() }));
+  };
+
+  ws.onmessage = ev => {
+    let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+    handleNet(m);
+  };
+
+  ws.onclose = () => {
+    if (!NET || NET.closing) return;
+    pill('down', 'RECONNECTING…');
+    NET.tries++;
+    const wait = Math.min(8000, 500 * Math.pow(1.7, NET.tries));
+    setTimeout(() => { if (NET && !NET.closing) netConnect(code, name); }, wait);
+  };
+  ws.onerror = () => { };
+}
+
+function handleNet(m) {
+  if (!NET) return;
+  switch (m.t) {
+    case 'pong':
+      /* rough one-way offset, good enough for a turn clock */
+      NET.skew = m.now - Date.now();
+      break;
+
+    case 'error':
+      netMsg(m.msg);
+      if (!G) { pill('down', m.msg.toUpperCase()); }
+      else logLine('⚠ ' + m.msg);
+      break;
+
+    case 'joined':
+      ME = m.you.id;
+      NET.code = m.code;
+      NET.isHost = m.hostId === m.you.id;
+      saveSeat(m.code, { id: m.you.id, token: m.you.token });
+      netMsg('');
+      break;
+
+    case 'lobby':
+      NET.lobby = m;
+      NET.isHost = m.hostId === ME;
+      NET.blitz = (m.cfg && m.cfg.blitz) || 0;
+      if (!m.started) { G = null; showLobby(); }
+      else $('#lobbyOvl').classList.remove('show');
+      break;
+
+    case 'state': {
+      const v = m.v;
+      NET.view = v;
+      NET.names = NET.names || {};
+      v.players.forEach(p => { NET.names[p.id] = p.name; });
+      NET.deadline = m.deadline || 0;
+      if (m.serverNow) NET.skew = m.serverNow - Date.now();
+      const first = !G;
+      G = shadowState(v);
+      assignColors(G.order);
+      if (first) {
+        $('#lobbyOvl').classList.remove('show');
+        $('#setup').classList.add('gone');
+        $('#table').classList.add('live');
+        pill('live', 'ROOM ' + NET.code);
+      }
+      /* elimination ghosts, from whatever the server says is out */
+      (v.eliminated || []).forEach(id => {
+        if (KO.some(k => k.id === id)) return;
+        const p = v.players.find(x => x.id === id);
+        KO.push({ id, name: (p && p.name) || NET.names[id] || '???', round: v.round });
+      });
+      (m.events || []).forEach(e => { if (e.t === 'roundEnd') NET.detail = e.detail || null; });
+      showEvents((m.events || []).filter(e => e.t !== 'dealt'));
+      if ((m.events || []).some(e => e.t === 'dealt')) {
+        $('#log').innerHTML = '';
+        logLine('Cards dealt. ' + (playerById(G, G.order[G.turn]) || {}).name + ' starts.');
+      }
+      render();
+      if (v.phase !== 'playing') showRoundEnd(); else $('#roundOvl').classList.remove('show');
+      break;
+    }
+  }
+}
+
+/* --------------------------------------------------------------- the lobby */
+function showLobby() {
+  const L = NET && NET.lobby;
+  if (!L) return;
+  const box = $('#lobbyCard');
+  const mine = MODE_UI.find(x => x[0] === (L.cfg.mode || 'classic')) || MODE_UI[0];
+  const on = HOUSE_UI.filter(([k]) => L.cfg.house && L.cfg.house[k]).map(([, n]) => n);
+
+  box.innerHTML =
+    '<h2>ROOM CODE</h2>' +
+    '<div class="codeBig">' + esc(L.code) + '</div>' +
+    '<div class="codeHint">READ IT OUT — THEY TYPE IT IN AND JOIN</div>' +
+    '<div style="font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px">' +
+      mine[2] + ' ' + mine[3] + ' · TO ' + L.cfg.target +
+      (L.cfg.blitz ? ' · ' + L.cfg.blitz + 's CLOCK' : '') +
+      (on.length ? '<br>' + esc(on.join(' · ')) : '<br>OFFICIAL RULES') +
+    '</div>';
+
+  const list = el('div', 'lobList');
+  L.players.forEach(p => {
+    list.appendChild(el('div', null,
+      '<span class="dot' + (p.connected ? '' : ' off') + '"></span>' +
+      '<span>' + esc(p.name) + (p.id === ME ? ' (you)' : '') + '</span>' +
+      (p.id === L.hostId ? '<span class="tagH">HOST</span>' : p.bot ? '<span class="tagB">BOT</span>' : '')));
+  });
+  box.appendChild(list);
+
+  if (NET.isHost) {
+    const bots = el('button', 'act', '🤖 ADD A BOT');
+    bots.onclick = () => { netSend({ t: 'addBot' }); SFX.tick(); };
+    box.appendChild(bots);
+    const go = el('button', 'go', L.players.length < 2 ? 'WAITING FOR ONE MORE…' : 'DEAL ▶');
+    if (L.players.length >= 2) go.onclick = () => { ac(); netSend({ t: 'start' }); };
+    else { go.style.opacity = '.5'; go.style.cursor = 'default'; }
+    box.appendChild(go);
+  } else {
+    box.appendChild(el('div', null,
+      '<div style="font-size:12px;font-weight:800;color:var(--dim);margin-top:6px">' +
+      'Waiting for ' + esc((L.players.find(p => p.id === L.hostId) || {}).name || 'the host') + ' to deal…</div>'));
+  }
+
+  const leave = el('button', 'act', 'LEAVE');
+  leave.style.marginTop = '10px';
+  leave.onclick = () => { netLeave(); location.reload(); };
+  box.appendChild(leave);
+  $('#lobbyOvl').classList.add('show');
+}
+
+/* ------------------------------------------------------------ setup wiring */
+let online = false;
+function setTable(net) {
+  online = net;
+  $('#tabSolo').classList.toggle('on', !net);
+  $('#tabNet').classList.toggle('on', net);
+  $('#netBox').classList.toggle('on', net);
+  document.querySelectorAll('.soloOnly').forEach(e => e.classList.toggle('hide', net));
+  $('#startBtn').style.display = net ? 'none' : '';
+  if (net && !SERVER) netMsg('This build has no server address yet — set uno_server in config.yml.');
+  else netMsg('');
+}
+$('#tabSolo').onclick = () => { setTable(false); SFX.tick(); };
+$('#tabNet').onclick = () => { setTable(true); SFX.tick(); };
+setTable(false);
+
+function myName() {
+  const n = ($('#myName').value || 'YOU').trim().slice(0, 14).toUpperCase();
+  try { localStorage.setItem('cybergrill_uno_name', n); } catch (e) { }
+  return n;
+}
+
+$('#createBtn').onclick = async () => {
+  if (!SERVER) return netMsg('No server address is configured for this build.');
+  ac(); netMsg('Making a room…');
+  $('#createBtn').disabled = true;
+  try {
+    const r = await fetch(SERVER + '/api/room', { method: 'POST' });
+    if (!r.ok) throw new Error('the server said no (' + r.status + ')');
+    const { code } = await r.json();
+    KO = []; seatColor = {}; nextSeatIx = 0;
+    netConnect(code, myName());
+    /* the host's settings travel with the room */
+    const send = () => {
+      if (!netSend({ t: 'cfg', cfg: { mode: cfg.mode, target: cfg.target, blitz: cfg.blitz, house: cfg.house } }))
+        setTimeout(send, 250);
+    };
+    setTimeout(send, 400);
+  } catch (e) {
+    netMsg(e.message || 'could not reach the server');
+  } finally { $('#createBtn').disabled = false; }
+};
+
+$('#joinBtn').onclick = async () => {
+  const code = ($('#joinCode').value || '').trim().toUpperCase();
+  if (code.length < 3) return netMsg('Type the four-letter code first.');
+  if (!SERVER) return netMsg('No server address is configured for this build.');
+  ac(); netMsg('Knocking…');
+  KO = []; seatColor = {}; nextSeatIx = 0;
+  netConnect(code, myName());
+};
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+
+/* a ?room=CODE link drops you straight into the lobby */
+{
+  const q = new URLSearchParams(location.search).get('room');
+  if (q) { setTable(true); $('#joinCode').value = q.toUpperCase(); }
+}
+
 document.querySelectorAll('.ovl').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o && o.id !== 'roundOvl' && o.id !== 'colorOvl') o.classList.remove('show'); });
+  o.addEventListener('click', e => { if (e.target === o && ['roundOvl','colorOvl','lobbyOvl'].indexOf(o.id) === -1) o.classList.remove('show'); });
 });
 addEventListener('keydown', e => {
   if (!G || G.phase !== 'playing') return;

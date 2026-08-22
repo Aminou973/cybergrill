@@ -10,6 +10,7 @@ on:
       - "index.html"
       - "shared/**"
       - "scripts/**"
+      - "game/**"
       - "config.yml"
       - ".github/workflows/publish.yml"
   workflow_dispatch:

@@ -193,6 +193,14 @@ function buildGame() {
   const re = /\/\* ENGINE:BEGIN \*\/[\s\S]*?\/\* ENGINE:END \*\//;
   if (re.test(html)) html = html.replace(re, '/* ---- engine.js, inlined at build time ---- */\n' + engine);
   else console.log('· ENGINE markers missing in game/index.html');
+
+  /* the multiplayer server address, so the table knows where to knock */
+  const server = String(CFG.uno_server || '').trim().replace(/\/+$/, '');
+  const cre = /\/\* GAMECFG:BEGIN \*\/[\s\S]*?\/\* GAMECFG:END \*\//;
+  if (cre.test(html)) html = html.replace(cre,
+    '/* GAMECFG — written by scripts/build.mjs from config.yml */\n' +
+    'window.CG_SERVER = ' + JSON.stringify(server) + ';');
+  console.log(server ? `· online server: ${server}` : '· online play off (set uno_server in config.yml)');
   const out = join(SITE, 'game');
   if (!existsSync(out)) mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'index.html'), html);

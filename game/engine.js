@@ -63,6 +63,13 @@ export function buildDeck() {
   return deck;                       /* 4*(1+18+6) + 8 = 108 */
 }
 
+/* Game modes.
+   classic     — the winner banks the losers' cards, first to the target wins.
+   teams       — 2v2, partners opposite each other, the team banks together.
+   elimination — nobody banks. Each round the biggest hand left is knocked out
+                 and you keep dealing until one player is standing. */
+export const MODES = ['classic', 'teams', 'elimination'];
+
 export const DEFAULT_HOUSE = {
   stack: false,        /* answer a +2 with a +2 (or +4 with +4) */
   jumpIn: false,       /* identical card out of turn */
@@ -87,6 +94,9 @@ export function createGame(opts = {}) {
   if (players.length < 2) throw new Error('need at least 2 players');
   if (players.length > 10) throw new Error('at most 10 players');
 
+  const mode = MODES.includes(opts.mode) ? opts.mode : 'classic';
+  if (mode === 'teams' && players.length % 2 !== 0) throw new Error('teams needs an even number of players');
+  if (mode === 'teams' && players.length < 4) throw new Error('teams needs at least 4 players');
   const house = Object.assign({}, DEFAULT_HOUSE, opts.house || {});
   const seed = (opts.seed === undefined ? 1 : opts.seed) | 0;
   const rnd = mulberry32(seed);
@@ -96,6 +106,13 @@ export function createGame(opts = {}) {
     rnd: seed,                 /* current rng cursor is re-derived, see nextRnd */
     rngCalls: 0,
     house,
+    mode,
+    /* seats alternate, so partners always sit opposite each other */
+    teamOf: mode === 'teams'
+      ? players.reduce((m, p, i) => { m[p.id] = i % 2 === 0 ? 'A' : 'B'; return m; }, {})
+      : null,
+    teamScores: mode === 'teams' ? { A: opts.teamScores ? opts.teamScores.A : 0, B: opts.teamScores ? opts.teamScores.B : 0 } : null,
+    eliminated: (opts.eliminated || []).slice(),
     target: opts.target || 500,
     players,
     order: players.map(p => p.id),
@@ -279,16 +296,52 @@ export function handValue(player) {
 }
 function endRound(state, winner, events) {
   const detail = {};
-  let total = 0;
-  for (const p of state.players) {
-    if (p.id === winner.id) continue;
-    const v = handValue(p);
-    detail[p.id] = v;
-    total += v;
-  }
-  winner.score += total;
+  for (const p of state.players) if (p.id !== winner.id) detail[p.id] = handValue(p);
   state.roundWinner = winner.id;
   state.phase = 'roundEnd';
+
+  if (state.mode === 'elimination') {
+    /* nobody banks — whoever is left holding the most goes out */
+    let worst = null, worstV = -1;
+    for (const p of state.players) {
+      if (p.id === winner.id) continue;
+      const v = handValue(p);
+      if (v > worstV || (v === worstV && worst && p.hand.length > worst.hand.length)) { worst = p; worstV = v; }
+    }
+    if (worst) {
+      state.eliminated.push(worst.id);
+      events.push({ t: 'eliminated', who: worst.id, value: worstV });
+    }
+    const left = state.players.filter(p => state.eliminated.indexOf(p.id) === -1);
+    events.push({ t: 'roundEnd', winner: winner.id, total: 0, detail, eliminated: worst ? worst.id : null });
+    if (left.length <= 1) {
+      state.winner = left.length ? left[0].id : winner.id;
+      state.phase = 'gameEnd';
+      events.push({ t: 'gameEnd', winner: state.winner });
+    }
+    return;
+  }
+
+  if (state.mode === 'teams') {
+    const team = state.teamOf[winner.id];
+    let total = 0;
+    for (const p of state.players) if (state.teamOf[p.id] !== team) total += handValue(p);
+    state.teamScores[team] += total;
+    /* mirror it onto the members so existing score displays keep working */
+    for (const p of state.players) if (state.teamOf[p.id] === team) p.score = state.teamScores[team];
+    events.push({ t: 'roundEnd', winner: winner.id, team, total, detail });
+    if (state.teamScores[team] >= state.target) {
+      state.winner = winner.id;
+      state.winningTeam = team;
+      state.phase = 'gameEnd';
+      events.push({ t: 'gameEnd', winner: winner.id, team, score: state.teamScores[team] });
+    }
+    return;
+  }
+
+  let total = 0;
+  for (const id of Object.keys(detail)) total += detail[id];
+  winner.score += total;
   events.push({ t: 'roundEnd', winner: winner.id, total, detail });
   if (winner.score >= state.target) {
     state.winner = winner.id;
@@ -510,11 +563,19 @@ function clone(s) {
 /* ==========================================================================
    start the next round — same players, scores carried, fresh deal
    ========================================================================== */
-export function nextRound(state) {
+export function nextRound(state, opts = {}) {
+  /* winner-stays-on hands us a new roster; elimination just drops the fallen */
+  let roster = opts.players
+    ? opts.players.map(p => ({ id: p.id, name: p.name, score: p.score || 0 }))
+    : state.players
+        .filter(p => state.eliminated.indexOf(p.id) === -1)
+        .map(p => ({ id: p.id, name: p.name, score: p.score }));
   const s = createGame({
-    players: state.players.map(p => ({ id: p.id, name: p.name, score: p.score })),
+    players: roster,
     seed: (state.seed * 1103515245 + 12345) >>> 0,
     house: state.house,
+    mode: opts.players ? 'classic' : state.mode,
+    teamScores: state.teamScores,
     target: state.target,
     round: state.round + 1
   });
@@ -536,6 +597,11 @@ export function viewFor(state, playerId) {
     phase: state.phase,
     target: state.target,
     house: state.house,
+    mode: state.mode,
+    teamOf: state.teamOf,
+    teamScores: state.teamScores,
+    eliminated: state.eliminated,
+    winningTeam: state.winningTeam || null,
     turn: state.order[state.turn],
     dir: state.dir,
     color: state.color,

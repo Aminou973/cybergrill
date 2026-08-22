@@ -137,6 +137,37 @@ Press **S** at any point to save the night.
 
 ---
 
+## The UNO table
+
+`/game/` is a real, playable UNO — the official rules plus every house rule as
+a switch, refereed by `game/engine.js`, which has 109 tests behind it.
+
+**Five ways to play**
+
+| | |
+|---|---|
+| 🎴 **Classic** | Rounds until somebody reaches 200 / 300 / 500. |
+| 🏆 **Winner stays on** | Last place gives up the seat to whoever is waiting. If the seat that goes is yours, you hand the device over and play on as the person sitting down. |
+| ⚡ **Blitz** | A turn clock — 20, 12, 7 or 5 seconds. Run out and you draw and pass; you never lose a card to the clock. |
+| 🤝 **Teams 2v2** | Alternate seats, one score per team. The round winner's team banks everything the other team is holding. |
+| 💀 **Elimination** | Nobody scores. Whoever is left holding the most goes out, and stays at the table as a ghost until one player is standing. |
+
+**Solo** deals you a table of bots and needs nothing but the page — it works
+offline, and from a file:// double-click.
+
+**Online** puts you in a room with a four-letter code your friends type in.
+Turn it on by deploying the Worker in `server/` once and pasting its URL into
+`config.yml` as `uno_server` — see [server/README.md](server/README.md). It is
+free to run.
+
+The room is authoritative: it holds the only complete game and sends each
+player a redacted view, so a hand cannot be read out of somebody else's
+network tab. Every move is re-validated against the same engine the solo game
+uses. Drop out and your seat waits 25 seconds before the room starts playing
+for you; come back and `hello` hands your own cards straight back.
+
+---
+
 ## Saving a night
 
 `S` on the dashboard, or the **💾 SAVE NIGHT** button. Three ways out of that
@@ -283,6 +314,10 @@ scripts/build.mjs     validate → season table → bundle.json → site → REA
 scripts/render-card.mjs   headless Chromium → site/cards/*.png
 scripts/night.mjs     file tonight's export, validate, commit, push
 scripts/passcode.mjs  generate the admin_salt / admin_hash pair
+game/engine.js        the UNO rules — one file, no DOM, used by table and server
+game/engine.test.mjs  109 tests, run with `npm test`
+game/index.html       the playable table: solo vs bots, or online in a room
+server/               the Cloudflare Worker + Durable Object that hosts rooms
 site/                 what GitHub Pages serves (built, committed)
 ```
 

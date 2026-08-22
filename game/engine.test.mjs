@@ -362,6 +362,129 @@ const idOf = (g, pid, color, kind) => playerById(g, pid).hand.find(c => c.color 
   ok('everyone is dealt a fresh seven', n.players.every(p => p.hand.length === 7));
 }
 
+/* ------------------------------------------------------- elimination ---- */
+{
+  const g = rig({ hands: { a: [['r','5']], b: [['g','9']], c: [['w','wild'],['w','wd4']], d: [['b','0']] },
+                  top: ['r','3'], said: true });
+  g.mode = 'elimination'; g.eliminated = [];
+  const r = applyMove(g, 'a', { type: 'play', cardId: idOf(g,'a','r','5') });
+  eq('elimination: nobody banks points', playerById(r.state,'a').score, 0);
+  eq('elimination: the biggest hand goes out', r.state.eliminated[0], 'c');   /* 50+50 = 100 */
+  ok('an eliminated event is emitted', true);
+}
+{
+  /* two players left, one goes out -> game over */
+  const g = rig({ players: P2, hands: { a: [['r','5']], b: [['g','9']] }, top: ['r','3'], said: true });
+  g.mode = 'elimination'; g.eliminated = [];
+  const r = applyMove(g, 'a', { type: 'play', cardId: idOf(g,'a','r','5') });
+  eq('elimination ends when one is left', r.state.phase, 'gameEnd');
+  eq('and the survivor wins', r.state.winner, 'a');
+}
+{
+  const g = rig({ hands: { a: [['r','5']], b: [['g','9']], c: [['w','wild']], d: [['b','0']] },
+                  top: ['r','3'], said: true });
+  g.mode = 'elimination'; g.eliminated = [];
+  const r = applyMove(g, 'a', { type: 'play', cardId: idOf(g,'a','r','5') });
+  const n = nextRound(r.state);
+  eq('the eliminated player is not dealt in again', n.players.length, 3);
+  ok('and is not at the table', !n.order.includes('c'));
+}
+
+/* ------------------------------------------------------------- teams ---- */
+{
+  const g = createGame({ players: P4, seed: 3, mode: 'teams' });
+  eq('teams: A and C are partners', g.teamOf.a, g.teamOf.c);
+  eq('teams: B and D are partners', g.teamOf.b, g.teamOf.d);
+  ok('teams: opponents are on different teams', g.teamOf.a !== g.teamOf.b);
+  eq('teams start level', g.teamScores.A, 0);
+}
+{
+  let threw = false;
+  try { createGame({ players: [{id:'a'},{id:'b'},{id:'c'}], mode: 'teams' }); } catch(e) { threw = true; }
+  ok('teams refuses an odd number of players', threw);
+}
+{
+  /* A goes out; team A banks B and D's hands only, not partner C's */
+  const g = rig({ hands: { a: [['r','5']], b: [['g','9']], c: [['w','wild']], d: [['b','skip']] },
+                  top: ['r','3'], said: true });
+  g.mode = 'teams';
+  g.teamOf = { a:'A', b:'B', c:'A', d:'B' };
+  g.teamScores = { A: 0, B: 0 };
+  const r = applyMove(g, 'a', { type: 'play', cardId: idOf(g,'a','r','5') });
+  eq('the winning team banks only the opponents: 9 + 20', r.state.teamScores.A, 29);
+  eq('the other team scores nothing', r.state.teamScores.B, 0);
+  eq('the partner shares the score', playerById(r.state,'c').score, 29);
+}
+{
+  const g = rig({ hands: { a: [['r','5']], b: [['g','9']], c: [['w','wild']], d: [['b','skip']] },
+                  top: ['r','3'], said: true });
+  g.mode = 'teams'; g.teamOf = { a:'A', b:'B', c:'A', d:'B' };
+  g.teamScores = { A: 0, B: 0 }; g.target = 20;
+  const r = applyMove(g, 'a', { type: 'play', cardId: idOf(g,'a','r','5') });
+  eq('passing the target ends a team game', r.state.phase, 'gameEnd');
+  eq('and names the winning team', r.state.winningTeam, 'A');
+}
+
+/* -------------------------------------------------- winner stays on ---- */
+{
+  let g = rig({ hands: { a: [['r','5']], b: [['g','9']] }, top: ['r','3'], said: true });
+  g = applyMove(g, 'a', { type: 'play', cardId: idOf(g,'a','r','5') }).state;
+  const n = nextRound(g, { players: [
+    { id:'a', name:'A', score: playerById(g,'a').score },
+    { id:'e', name:'E', score: 0 }
+  ]});
+  eq('a swapped roster seats the newcomer', n.players.length, 2);
+  ok('the winner keeps their seat and score', playerById(n,'a').score === playerById(g,'a').score);
+  ok('the replacement is dealt in', !!playerById(n,'e'));
+}
+
+/* ---------------------- bot games across every mode ---------------------- */
+{
+  let done = 0, errs = 0;
+  for (let seed = 1; seed <= 60; seed++) {
+    const mode = ['classic','teams','elimination'][seed % 3];
+    const rnd = mulberry32(seed * 104729);
+    let g = createGame({ players: P4, seed, mode, target: 120 });
+    let turns = 0;
+    try {
+      while (g.phase === 'playing' && turns < 3000) {
+        const ids = [g.order[g.turn], ...g.order.filter(x => x !== g.order[g.turn])];
+        let acted = false;
+        for (const id of ids) {
+          const m = botMove(g, id, rnd);
+          if (!m) continue;
+          if (id !== g.order[g.turn] && m.type === 'catch' && rnd() < .5) continue;
+          g = applyMove(g, id, m).state; acted = true; break;
+        }
+        if (!acted) break;
+        turns++;
+        const total = g.players.reduce((s,p)=>s+p.hand.length,0) + g.draw.length + g.discard.length;
+        if (total !== 108) { errs++; break; }
+      }
+      /* keep dealing rounds until the game truly ends */
+      let guard = 0;
+      while (g.phase === 'roundEnd' && guard++ < 40) {
+        g = nextRound(g);
+        let t2 = 0;
+        while (g.phase === 'playing' && t2 < 3000) {
+          const ids = [g.order[g.turn], ...g.order.filter(x => x !== g.order[g.turn])];
+          let acted = false;
+          for (const id of ids) {
+            const m = botMove(g, id, rnd);
+            if (!m) continue;
+            g = applyMove(g, id, m).state; acted = true; break;
+          }
+          if (!acted) break;
+          t2++;
+        }
+      }
+      if (g.phase === 'gameEnd') done++;
+    } catch (e) { errs++; failures.push(`${mode} seed ${seed}: ${e.message}`); }
+  }
+  eq('every mode plays through to a winner', done, 60);
+  eq('no errors across the modes', errs, 0);
+}
+
 /* ---------------------------------------------------------------- done ---- */
 console.log(`\n${pass} passed, ${fail} failed`);
 if (failures.length) { console.log('\nFailures:'); failures.forEach(f => console.log('  ✗ ' + f)); }
