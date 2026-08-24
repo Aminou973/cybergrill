@@ -3,7 +3,7 @@
    ========================================================================== */
 import {
   createGame, applyMove, legalMoves, viewFor, buildDeck, cardValue, nextRound,
-  botMove, mulberry32, handValue, playerById, topCard, cardPlayable, isWild, COLORS
+  botMove, mulberry32, handValue, playerById, topCard, cardPlayable, isWild, COLORS, BOT_LEVELS
 } from './engine.js';
 
 let pass = 0, fail = 0;
@@ -483,6 +483,119 @@ const idOf = (g, pid, color, kind) => playerById(g, pid).hand.find(c => c.color 
   }
   eq('every mode plays through to a winner', done, 60);
   eq('no errors across the modes', errs, 0);
+}
+
+/* ------------------------------------------------------------ bot levels ---- */
+{
+  /* every level must be able to finish a game without producing an illegal
+     move — the strengths differ, the legality never does */
+  let done = 0, errs = 0;
+  for (const level of BOT_LEVELS) {
+    for (let seed = 900; seed < 920; seed++) {
+      try {
+        let g = createGame({ players: P4, seed, target: 200 });
+        const rnd = mulberry32(seed + 7);
+        let guard = 0;
+        while (g.phase !== 'gameEnd' && guard++ < 4000) {
+          if (g.phase === 'roundEnd') { g = nextRound(g); continue; }
+          let acted = false;
+          const ids = [g.order[g.turn], ...g.order.filter(x => x !== g.order[g.turn])];
+          for (const id of ids) {
+            const m = botMove(g, id, rnd, level);
+            if (!m) continue;
+            g = applyMove(g, id, m).state; acted = true; break;
+          }
+          if (!acted) break;
+        }
+        if (g.phase === 'gameEnd') done++;
+      } catch (e) { errs++; failures.push(`${level} seed ${seed}: ${e.message}`); }
+    }
+  }
+  eq('all three bot levels finish their games', done, 60);
+  eq('no illegal moves from any level', errs, 0);
+
+  /* an unknown level must not crash — it falls back to normal */
+  const g = createGame({ players: P4, seed: 5 });
+  ok('an unknown level still returns a move', !!botMove(g, g.order[g.turn], Math.random, 'wizard'));
+
+  /* sharp must never waste a wild while a plain card is legal */
+  {
+    let g2 = createGame({ players: P4, seed: 11 });
+    const me = playerById(g2, g2.order[g2.turn]);
+    /* hand it a plain match and a wild, nothing else */
+    const top = topCard(g2);
+    const plain = { id: 'plain1', color: top.color === 'w' ? 'r' : top.color, kind: '5' };
+    me.hand = [plain, { id: 'wild1', color: 'w', kind: 'wild' }];
+    g2.color = plain.color;
+    const m = botMove(g2, me.id, mulberry32(3), 'sharp');
+    eq('sharp keeps the wild back', m.cardId, 'plain1');
+  }
+
+  /* sharp reaches for the +4 when the next player is one card from out */
+  {
+    let g3 = createGame({ players: P4, seed: 13 });
+    const meId = g3.order[g3.turn];
+    const me3 = playerById(g3, meId);
+    const nextId = g3.order[(g3.turn + (g3.dir === 1 ? 1 : g3.order.length - 1) + g3.order.length) % g3.order.length];
+    const victim = playerById(g3, nextId);
+    victim.hand = [{ id: 'last', color: 'r', kind: '9' }];
+    victim.said = true;                 /* already called, so no catch to steal focus */
+    me3.hand = [
+      { id: 'safe', color: g3.color === 'w' ? 'r' : g3.color, kind: '1' },
+      { id: 'nuke', color: 'w', kind: 'wd4' }
+    ];
+    g3.color = g3.color === 'w' ? 'r' : g3.color;
+    const m = botMove(g3, meId, mulberry32(4), 'sharp');
+    eq('sharp fires the +4 at a player on one card', m.cardId, 'nuke');
+  }
+
+  /* easy forgets to call UNO sometimes; sharp never does */
+  {
+    const mk = () => {
+      const g4 = createGame({ players: P4, seed: 21 });
+      const me4 = playerById(g4, g4.order[g4.turn]);
+      me4.hand = [{ id: 'one', color: 'r', kind: '3' }];
+      me4.said = false;
+      g4.color = 'r';
+      return { g4, id: me4.id };
+    };
+    let easyForgot = 0, sharpForgot = 0;
+    for (let i = 0; i < 60; i++) {
+      const a = mk(); const ma = botMove(a.g4, a.id, mulberry32(100 + i), 'easy');
+      if (!ma || ma.type !== 'sayUno') easyForgot++;
+      const b = mk(); const mb = botMove(b.g4, b.id, mulberry32(100 + i), 'sharp');
+      if (!mb || mb.type !== 'sayUno') sharpForgot++;
+    }
+    ok('easy bots forget UNO sometimes', easyForgot > 5, `forgot ${easyForgot}/60`);
+    eq('sharp bots never forget UNO', sharpForgot, 0);
+  }
+}
+
+/* ---------------------------------------------- shouting as you play ---- */
+{
+  const g = createGame({ players: P4, seed: 33 });
+  const me = playerById(g, g.order[g.turn]);
+  g.color = 'r';
+  me.hand = [{ id: 'p1', color: 'r', kind: '4' }, { id: 'p2', color: 'r', kind: '8' }];
+  me.said = false;
+  const quiet = applyMove(g, me.id, { type: 'play', cardId: 'p1' });
+  eq('playing without the call leaves you catchable', playerById(quiet.state, me.id).said, false);
+  ok('and a catch is on offer',
+    legalMoves(quiet.state, g.order.find(x => x !== me.id)).some(m => m.type === 'catch' && m.targetId === me.id));
+
+  const loud = applyMove(g, me.id, { type: 'play', cardId: 'p1', uno: true });
+  eq('shouting as you lay it down marks you safe', playerById(loud.state, me.id).said, true);
+  ok('and nobody can catch you',
+    !legalMoves(loud.state, g.order.find(x => x !== me.id)).some(m => m.type === 'catch' && m.targetId === me.id));
+  ok('the shout is announced', loud.events.some(e => e.t === 'uno' && e.who === me.id));
+
+  /* the flag must do nothing when you still hold more than one card */
+  const g2 = createGame({ players: P4, seed: 34 });
+  const me2 = playerById(g2, g2.order[g2.turn]);
+  g2.color = 'g';
+  me2.hand = [{ id: 'a1', color: 'g', kind: '2' }, { id: 'a2', color: 'g', kind: '3' }, { id: 'a3', color: 'g', kind: '5' }];
+  const early = applyMove(g2, me2.id, { type: 'play', cardId: 'a1', uno: true });
+  eq('calling it early does nothing', playerById(early.state, me2.id).said, false);
 }
 
 /* ---------------------------------------------------------------- done ---- */

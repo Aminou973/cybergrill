@@ -174,6 +174,27 @@ Turn it on by deploying the Worker in `server/` once and pasting its URL into
 `config.yml` as `uno_server` — see [server/README.md](server/README.md). It is
 free to run.
 
+**The bots have a skill and a speed.** 🙂 Easy plays whatever is legal, forgets
+to call UNO about half the time and never challenges a +4. 🙃 Normal calls most
+of the time and plays at random. 😈 Sharp keeps its strongest colour, holds
+wilds back, and saves the +2 for the moment you are one card away. Speed runs
+🐢 slow / normal / ⚡ fast, because bots that answer instantly make the table
+feel like a spreadsheet.
+
+**Which way play is going** is drawn on the felt — arrows marching round the
+table between the seats, turning over the moment somebody plays a reverse. The
+seat ring follows the real order, so whoever plays after you sits to your left.
+
+**Nothing is silent about why.** Tap a card you cannot play and it tells you:
+not your turn and whose it is, the pile is on green and this is blue, you
+already drew this turn.
+
+The sounds are built the way the real ones are — a card snap is a burst of high
+noise with a small thump under it, a shuffle is fourteen of those in a row, all
+sitting in a short generated room. Nothing needs an audio file. If you want
+actual recordings, drop them in `audio/` and they take over; see
+[audio/README.md](audio/README.md) for the file names.
+
 🎵 is a four-bar loop built from oscillators, not a file — it sits almost out
 of hearing until somebody drops to one card, then a second layer creeps in on
 top. Off by default.

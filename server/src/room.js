@@ -10,12 +10,14 @@
    =========================================================================== */
 import {
   createGame, applyMove, legalMoves, viewFor, nextRound, botMove,
-  playerById, MODES
+  playerById, MODES, BOT_LEVELS
 } from '../../game/engine.js';
 
 const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU', 'BILLAL', 'SARA', 'YOUCEF'];
 const MAX_PLAYERS = 8;
-const BOT_DELAY = 900;          /* ms a bot "thinks" for */
+/* How long a bot pretends to think. Instant replies make the table feel like a
+   spreadsheet, so even the fast setting pauses. */
+const BOT_SPEED = { slow: 1500, normal: 800, fast: 380 };
 const GONE_GRACE = 25000;       /* ms before a dropped player is played for */
 const ROOM_TTL = 1000 * 60 * 60 * 12;
 
@@ -27,7 +29,7 @@ function blankRoom(code) {
     createdAt: Date.now(),
     hostId: null,
     players: [],           /* {id, name, token, bot, connected, goneAt} */
-    cfg: { mode: 'classic', target: 500, blitz: 0, house: {} },
+    cfg: { mode: 'classic', target: 500, blitz: 0, house: {}, skill: 'normal', speed: 'normal' },
     game: null,
     turnStartedAt: 0,
     lastActivity: Date.now()
@@ -229,7 +231,9 @@ export class Room {
         mode: MODES.includes(c.mode) || c.mode === 'stayson' || c.mode === 'blitz' ? c.mode : 'classic',
         target: [200, 300, 500].includes(c.target) ? c.target : 500,
         blitz: [0, 5, 7, 12, 20].includes(c.blitz) ? c.blitz : 0,
-        house: Object(c.house)
+        house: Object(c.house),
+        skill: BOT_LEVELS.includes(c.skill) ? c.skill : 'normal',
+        speed: BOT_SPEED[c.speed] ? c.speed : 'normal'
       };
       await this.save(); this.broadcastLobby(); return;
     }
@@ -321,7 +325,7 @@ export class Room {
     const actor = g.order[g.turn];
     const p = R.players.find(x => x.id === actor);
     if (!p) return null;
-    if (p.bot) return { id: actor, at: Date.now() + BOT_DELAY, why: 'bot' };
+    if (p.bot) return { id: actor, at: Date.now() + (BOT_SPEED[R.cfg.speed] || BOT_SPEED.normal), why: 'bot' };
     if (!p.connected) return { id: actor, at: (p.goneAt || Date.now()) + GONE_GRACE, why: 'gone' };
     if (R.cfg.blitz) return { id: actor, at: R.turnStartedAt + R.cfg.blitz * 1000, why: 'clock' };
     return null;
@@ -344,7 +348,9 @@ export class Room {
     if (!next) return;
     if (Date.now() < next.at - 60) { await this.schedule(); return; }
 
-    const move = next.why === 'clock' ? this.clockMove(next.id) : botMove(R.game, next.id);
+    const move = next.why === 'clock'
+      ? this.clockMove(next.id)
+      : botMove(R.game, next.id, Math.random, R.cfg.skill || 'normal');
     if (!move) { await this.schedule(); return; }
 
     try {

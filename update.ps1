@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # CyberGrill -- apply an update folder to your repo and push it, in one command.
 #
 #   .\update.ps1 -From C:\Users\oaak2\Downloads\cybergrill_9

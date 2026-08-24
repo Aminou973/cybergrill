@@ -12,7 +12,7 @@
      node scripts/build.mjs           build
      node scripts/build.mjs --check   validate the night files and stop
    ========================================================================== */
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -205,6 +205,25 @@ function buildGame() {
   if (!existsSync(out)) mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'index.html'), html);
   console.log(`✓ site/game/index.html  (${(html.length / 1024).toFixed(0)} KB, self-contained)`);
+  copyAudio();
+}
+
+/* ---------- site/audio — real recordings, if any were dropped in ----------
+   These are the one thing not inlined: audio does not belong in a base64
+   string, and a missing file just means the generated sound is used. */
+function copyAudio() {
+  const from = join(ROOT, 'audio');
+  if (!existsSync(from)) return;
+  const files = readdirSync(from).filter(f => /\.(mp3|ogg|wav)$/i.test(f));
+  if (!files.length) { console.log('· audio/: no recordings, using the generated sounds'); return; }
+  const to = join(SITE, 'audio');
+  if (!existsSync(to)) mkdirSync(to, { recursive: true });
+  let bytes = 0;
+  for (const f of files) {
+    copyFileSync(join(from, f), join(to, f));
+    bytes += readFileSync(join(from, f)).length;
+  }
+  console.log(`✓ site/audio/  (${files.length} files, ${(bytes / 1024).toFixed(0)} KB)`);
 }
 
 /* ---------- site/season.html ---------- */

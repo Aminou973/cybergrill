@@ -470,6 +470,11 @@ export function applyMove(state, playerId, move) {
         return { state: s, events };
       }
       if (me.hand.length !== 1) me.said = false;
+      /* You shout UNO as you lay the card down — that is how it is played at a
+         real table. The move can carry the call with it. The button on the
+         table stays, because doing it a beat late (and getting away with it)
+         is half the fun. */
+      else if (move.uno) { me.said = true; events.push({ t: 'uno', who: me.id }); }
 
       /* effects */
       const twoPlayer = s.order.length === 2;
@@ -623,29 +628,126 @@ export function viewFor(state, playerId) {
 }
 
 /* a tiny bot, handy for testing and for filling an empty seat */
-export function botMove(state, playerId, rnd = Math.random) {
+export const BOT_LEVELS = ['easy', 'normal', 'sharp'];
+
+/* who is about to play, if I do nothing clever */
+function seatAfter(state, playerId, skip) {
+  const i = state.order.indexOf(playerId);
+  if (i < 0) return null;
+  const step = (state.dir === 1 ? 1 : -1) * (skip ? 2 : 1);
+  return state.order[((i + step) % state.order.length + state.order.length) % state.order.length];
+}
+function colourCounts(hand) {
+  const n = { r: 0, g: 0, b: 0, y: 0 };
+  hand.forEach(c => { if (c.color !== 'w') n[c.color]++; });
+  return n;
+}
+function bestColour(hand) {
+  const n = colourCounts(hand);
+  return COLORS.slice().sort((a, b) => n[b] - n[a])[0];
+}
+
+/* A bot that plays at one of three strengths.
+ *
+ *   easy   — plays whatever is legal, forgets to call UNO about a third of the
+ *            time, never challenges, rarely notices a missed UNO.
+ *   normal — the old behaviour: always calls, plays at random, saves nothing.
+ *   sharp  — keeps its strongest colour, holds wilds back until it needs them,
+ *            aims action cards at whoever is closest to going out, and decides
+ *            whether to challenge a +4 from what its own hand says about the
+ *            odds the accuser was bluffing.
+ *
+ * None of them can see anybody's cards — every decision is made from the same
+ * public information a person at the table would have.
+ */
+export function botMove(state, playerId, rnd = Math.random, level = 'normal') {
+  if (!BOT_LEVELS.includes(level)) level = 'normal';
   const ms = legalMoves(state, playerId);
   if (!ms.length) return null;
+  const me = playerById(state, playerId);
   const plays = ms.filter(m => m.type === 'play');
+  const card = id => me.hand.find(c => c.id === id);
+
+  /* --- calling UNO ---------------------------------------------------- */
   const say = ms.find(m => m.type === 'sayUno');
-  if (say) return say;                                  /* never forget UNO */
-  if (plays.length) {
-    const m = plays[Math.floor(rnd() * plays.length)];
-    const me = playerById(state, playerId);
-    const card = me.hand.find(c => c.id === m.cardId);
-    if (card && isWild(card.kind)) {
-      const counts = {};
-      me.hand.forEach(c => { if (c.color !== 'w') counts[c.color] = (counts[c.color] || 0) + 1; });
-      const best = COLORS.slice().sort((a, b) => (counts[b] || 0) - (counts[a] || 0))[0];
-      return { ...m, color: best };
-    }
-    if (card && card.kind === '7' && state.house.seven0) {
-      const others = state.players.filter(p => p.id !== playerId).sort((a, b) => a.hand.length - b.hand.length);
-      return { ...m, target: others[0] && others[0].id };
-    }
-    return m;
+  if (say && (level !== 'easy' || rnd() > 0.34)) return say;
+
+  /* --- catching somebody who forgot ------------------------------------ */
+  const catches = ms.filter(m => m.type === 'catch');
+  if (catches.length) {
+    const willPounce = level === 'sharp' ? true : level === 'normal' ? rnd() < 0.7 : rnd() < 0.2;
+    /* only worth interrupting for if there is nothing better to do, or if we
+       are sharp enough to take the free four cards straight away */
+    if (willPounce && (level === 'sharp' || !plays.length)) return catches[0];
   }
-  const order = ['accept', 'takeStack', 'draw', 'pass', 'catch', 'challenge'];
+
+  /* --- a +4 has been aimed at us --------------------------------------- */
+  const challenge = ms.find(m => m.type === 'challenge');
+  if (challenge) {
+    const accept = ms.find(m => m.type === 'accept');
+    if (level === 'easy') return accept || challenge;
+    if (level === 'normal') return rnd() < 0.2 ? challenge : accept;
+    /* Sharp: the more cards of the old colour we hold ourselves, the fewer are
+       left for them, so the likelier their +4 was honest. Hold few and the
+       bluff is worth calling. */
+    const old = state.challenge && state.challenge.colorAtPlay;
+    const mine = old ? colourCounts(me.hand)[old] || 0 : 0;
+    const odds = mine >= 3 ? 0.1 : mine === 2 ? 0.25 : mine === 1 ? 0.4 : 0.55;
+    return rnd() < odds ? challenge : accept;
+  }
+
+  /* --- playing a card --------------------------------------------------- */
+  if (plays.length) {
+    if (level === 'easy' || level === 'normal') {
+      const m = plays[Math.floor(rnd() * plays.length)];
+      return dressPlay(state, me, m, card(m.cardId), rnd, level);
+    }
+    /* sharp: score every legal card and take the best */
+    const nextId = seatAfter(state, playerId, false);
+    const next = nextId ? playerById(state, nextId) : null;
+    const threat = next ? next.hand.length : 7;
+    const keep = bestColour(me.hand);
+    const scored = plays.map(m => {
+      const c = card(m.cardId);
+      if (!c) return null;
+      const attack = c.kind === 'd2' || c.kind === 'wd4' || c.kind === 'skip' || c.kind === 'rev';
+      let sc = cardValue(c.kind) * 0.6;             /* shed what would cost most */
+      if (c.color === keep) sc += 8;                /* stay in the colour we own */
+      if (isWild(c.kind)) sc -= 40;                 /* wilds are the last resort */
+      /* An action card is worth spending only when the next player is nearly
+         out. Fired at a full hand it just feeds them cards, and a table of
+         bots that all do that never finishes a round. */
+      if (attack) sc += threat <= 2 ? 30 : -14;
+      if (c.kind === 'wd4' && threat <= 1) sc += 30;
+      if (me.hand.length <= 2 && !isWild(c.kind)) sc += 6;   /* go out clean */
+      return { m, c, sc };
+    }).filter(Boolean).sort((a, b) => b.sc - a.sc);
+    const pick = scored[0];
+    return dressPlay(state, me, pick.m, pick.c, rnd, level);
+  }
+
+  /* --- nothing playable -------------------------------------------------- */
+  const order = ['takeStack', 'draw', 'pass', 'catch'];
   for (const t of order) { const m = ms.find(x => x.type === t); if (m) return m; }
   return ms[0];
+}
+
+/* How reliably a bot remembers to shout as it lays down its second-to-last
+   card. Nobody is perfect, which is what makes catching them worth watching
+   for. */
+const UNO_RECALL = { easy: 0.5, normal: 0.78, sharp: 0.97 };
+
+/* fill in the extras a play may need: the colour for a wild, the victim of a 7,
+   and the shout if this is the second-to-last card */
+function dressPlay(state, me, m, c, rnd, level) {
+  if (!c) return m;
+  if (me.hand.length === 2 && rnd() < (UNO_RECALL[level] || 0.78)) m = { ...m, uno: true };
+  if (isWild(c.kind)) return { ...m, color: bestColour(me.hand) };
+  if (c.kind === '7' && state.house.seven0) {
+    const others = state.players
+      .filter(p => p.id !== me.id && state.eliminated.indexOf(p.id) === -1)
+      .sort((a, b) => a.hand.length - b.hand.length);
+    return { ...m, target: others[0] && others[0].id };
+  }
+  return m;
 }
