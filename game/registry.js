@@ -36,8 +36,9 @@
    ========================================================================== */
 import * as uno from './engine.js';
 import * as ludo from './ludo/engine.js';
+import * as ronda from './ronda/engine.js';
 
-export const GAMES = { uno, ludo };
+export const GAMES = { uno, ludo, ronda };
 
 export const GAME_LIST = Object.keys(GAMES).map(id => GAMES[id].META);
 
@@ -55,6 +56,14 @@ export function seatCheck(id, count) {
   const g = GAMES[id];
   if (!g) return 'that game does not exist';
   const m = g.META;
+  if (m.exactCounts) {
+    /* some games only work at particular numbers — Ronda is two head to head
+       or four in two pairs, and three people cannot play it at all */
+    if (m.exactCounts.indexOf(count) === -1)
+      return m.name + ' is played with ' + m.exactCounts.slice(0, -1).join(', ') +
+        ' or ' + m.exactCounts[m.exactCounts.length - 1] + ' players';
+    return null;
+  }
   if (count < m.min) return m.name + ' needs at least ' + m.min + ' players';
   if (count > m.max) return m.name + ' seats ' + m.max + ' at most';
   if (m.evenOnly && count % 2 !== 0) return m.name + ' needs an even number of players';

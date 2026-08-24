@@ -3352,7 +3352,7 @@ function unoLeftPanel(u){
 
   /* the playable tables live beside the dashboard on the same site */
   const ps=el('div','uSec','<h3><b>③</b> OR ACTUALLY PLAY IT</h3>');
-  [['game/','🎴 OPEN THE UNO TABLE'],['game/ludo/','🎲 OPEN THE LUDO BOARD']].forEach(([href,label],i)=>{
+  [['game/','🎴 OPEN THE UNO TABLE'],['game/ronda/','🃏 OPEN THE RONDA TABLE'],['game/ludo/','🎲 OPEN THE LUDO BOARD']].forEach(([href,label],i)=>{
     const link=el('a','uBtn'+(i?'':' prim'),label);
     link.href=href;
     link.style.cssText+='display:block;text-align:center;text-decoration:none;line-height:1.4;margin-bottom:8px';

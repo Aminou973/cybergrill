@@ -9,6 +9,18 @@
 /* TABLECSS:BEGIN */
 /* TABLECSS:END */
 
+/* the game switcher, one chip instead of one per game */
+.gameGrid{display:grid;gap:9px;margin:10px 0 4px}
+.gameGrid a{display:flex;align-items:center;gap:12px;padding:14px 15px;border-radius:14px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);text-decoration:none;color:var(--txt);
+  transition:.16s;text-align:left}
+.gameGrid a:hover{border-color:var(--cyan);background:rgba(34,230,255,.1);transform:translateY(-2px)}
+.gameGrid a.here{border-color:var(--gold);background:rgba(255,201,60,.1)}
+.gameGrid i{font-style:normal;font-size:26px;line-height:1}
+.gameGrid b{display:block;font-size:13px;font-weight:900;letter-spacing:1.5px}
+.gameGrid span{display:block;font-size:10px;color:var(--dim);font-weight:700;line-height:1.5;margin-top:2px}
+
+
 /* mode picker */
 .modeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .modeCard{padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);
@@ -362,7 +374,7 @@ body.th-neolit .cf .rim{opacity:.9}
     <span class="dirWord" id="dirWord"></span>
     <div class="teamBar" id="teamBar" style="display:none"></div>
     <div class="spacer"></div>
-    <a class="chip" href="ludo/" style="text-decoration:none"><i>🎲</i><span class="cl">LUDO</span></a>
+    <div class="chip" id="gamesChip"><i>🎮</i><span class="cl">GAMES</span></div>
     <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
     <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
     <div class="chip" id="deckChip"><i>🂠</i><span class="cl">DECK</span></div>
@@ -756,6 +768,33 @@ const MODE_LINE = {
   teams: '🤝 Teams 2v2 — you and the seat opposite share a score.',
   elimination: '💀 Elimination. Biggest hand left goes out every round.'
 };
+
+/* ---------------- hopping between the games ---------------- */
+const GAME_LINKS = [
+  ['uno', '🎴', 'UNO', 'Official rules, every house rule as a switch, five ways to play.', './'],
+  ['ronda', '🃏', 'RONDA', 'The Algerian game. Match a rank, sweep the run, count to 41.', 'ronda/'],
+  ['ludo', '🎲', 'LUDO', 'Four tokens home before anybody else. Six to get out.', 'ludo/']
+];
+$('#gamesChip').onclick = () => {
+  const box = $('#pickCard');
+  box.innerHTML = '<h2>PICK A GAME</h2>';
+  const grid = el('div', 'gameGrid');
+  GAME_LINKS.forEach(([id, icon, name, blurb, href]) => {
+    const a = el('a', id === 'uno' ? 'here' : '', '<i>' + icon + '</i><div><b>' + name + '</b><span>' + blurb + '</span></div>');
+    a.href = href;
+    grid.appendChild(a);
+  });
+  box.appendChild(grid);
+  box.appendChild(el('div', null,
+    '<div style="font-size:10px;color:var(--dim);font-weight:700;margin-top:4px">' +
+    'Leaving this table ends the game you are in.</div>'));
+  const c = el('button', 'act', 'STAY HERE');
+  c.onclick = () => $('#pickOvl').classList.remove('show');
+  box.appendChild(c);
+  $('#pickOvl').classList.add('show');
+  SFX.tick();
+};
+
 $('#quitChip').onclick = () => { if (confirm('Leave the game?')) { if (NET) netLeave(); location.reload(); } };
 $('#rulesChip').onclick = () => {
   const on = HOUSE_UI.filter(([k]) => G.house[k]).map(([, n]) => n);

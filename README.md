@@ -154,12 +154,47 @@ whole thing up:
 | | | |
 |---|---|---|
 | 🎴 **UNO** | 2–8 | [`/game/`](https://aminou973.github.io/cybergrill/game/) |
+| 🃏 **Ronda** | 2 or 4 | [`/game/ronda/`](https://aminou973.github.io/cybergrill/game/ronda/) |
 | 🎲 **Ludo** | 2–4 | [`/game/ludo/`](https://aminou973.github.io/cybergrill/game/ludo/) |
 
 Both run solo against bots with no server at all, or online in the same room
 with a four-letter code. The chrome they share — sound, confetti, the music
 bed, the setup panel, the overlays — lives in `shared/` and is inlined into
 each page at build time.
+
+---
+
+## Ronda
+
+The Algerian game, built from `cybergrill/ronda-rules.md` — Amin's own account
+of how his table plays it. That file is the source of truth; the engine follows
+it, and the four places the written rules did not settle are listed at the
+bottom of it under *Where the code had to guess*, marked `EXTRAPOLATED` in the
+code as well. Argue with the doc first.
+
+Forty cards: 1 to 7, then sota, caballo, rey. **No 8 and no 9, so the 7 runs
+straight into the 10** — sequences cross that join, and almost everything else
+follows from it. Suits are on the cards and mean nothing to the rules.
+
+Play a card. Same rank as one on the table and you take both, plus any unbroken
+run climbing away from it. No match and it sits there for somebody else.
+
+Called on the deal: **ronda** (a pair) 1, **tringa** (three) 5, with the higher
+pair taking both points when two are called. In play: **darba** 1 for taking
+back a card the player before you had to leave, then **b'khamsa** 5 and
+**b'ashra** 10 as that rank's remaining cards follow. **Missa** 1 for clearing
+the table. At the end, **bawesh** sweeps to whoever captured last, and then a
+point for every card over twenty. First to 41.
+
+**☕ Makla** is the same engine with the paperwork switched off: same capturing,
+no calls, no missa, no running total. Play it out, sweep, count. Twenty is a
+draw.
+
+The deck is drawn rather than photographed, in two finishes — *Española* on
+parchment and *Neón* for the arcade. The breaks in the card border are the
+**pintas**, and they are how you read a Spanish deck fanned in somebody's hand:
+oros has an unbroken frame, copas one break per side, espadas two, bastos
+three. They are drawn here for the same reason they exist on the real cards.
 
 ---
 

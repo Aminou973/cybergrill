@@ -9,6 +9,18 @@
 /* TABLECSS:BEGIN */
 /* TABLECSS:END */
 
+/* the game switcher, one chip instead of one per game */
+.gameGrid{display:grid;gap:9px;margin:10px 0 4px}
+.gameGrid a{display:flex;align-items:center;gap:12px;padding:14px 15px;border-radius:14px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);text-decoration:none;color:var(--txt);
+  transition:.16s;text-align:left}
+.gameGrid a:hover{border-color:var(--cyan);background:rgba(34,230,255,.1);transform:translateY(-2px)}
+.gameGrid a.here{border-color:var(--gold);background:rgba(255,201,60,.1)}
+.gameGrid i{font-style:normal;font-size:26px;line-height:1}
+.gameGrid b{display:block;font-size:13px;font-weight:900;letter-spacing:1.5px}
+.gameGrid span{display:block;font-size:10px;color:var(--dim);font-weight:700;line-height:1.5;margin-top:2px}
+
+
 /* ---------------- the board ---------------- */
 .felt{flex:1;position:relative;min-height:0;display:grid;place-items:center;padding:6px}
 .boardWrap{position:relative;width:min(88vw,min(72vh,620px));aspect-ratio:1;
@@ -82,8 +94,11 @@
 @media(max-width:700px){
   .logo{display:none}
   .chip .cl{display:none}
-  .chip{padding:8px 10px}
+  /* with three games to hop between there are seven of these — they have to
+     shrink to icons AND tighten up, or the last one falls off a phone */
+  .chip{padding:7px 8px}
   .chip i{font-size:15px}
+  .topline{gap:4px;padding:7px 6px}
   .topline{flex-wrap:nowrap;overflow:hidden}
   .log{left:8px;right:8px;width:auto;top:52px;bottom:auto;max-height:none;flex-direction:column}
   .log div{font-size:10px;padding:4px 8px;opacity:.85}
@@ -145,7 +160,7 @@
     <div class="logo">CYBERGRILL LUDO</div>
     <span class="dirBadge" id="dirBadge">🎲</span>
     <div class="spacer"></div>
-    <a class="chip" href="../" style="text-decoration:none"><i>🎴</i><span class="cl">UNO</span></a>
+    <div class="chip" id="gamesChip"><i>🎮</i><span class="cl">GAMES</span></div>
     <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
     <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
     <div class="chip" id="rulesChip"><i>📖</i><span class="cl">RULES</span></div>
@@ -630,6 +645,33 @@ $('#rulesChip').onclick = () => {
     'A token walks ' + GOAL + ' steps: ' + TRACK + ' round the outside, then five up your own colour, then the middle.\n\n' +
     'In play: ' + (on.length ? on.join(', ') : 'nothing but the basics') + '.');
 };
+
+/* ---------------- hopping between the games ---------------- */
+const GAME_LINKS = [
+  ['uno', '🎴', 'UNO', 'Official rules, every house rule as a switch, five ways to play.', '../'],
+  ['ronda', '🃏', 'RONDA', 'The Algerian game. Match a rank, sweep the run, count to 41.', '../ronda/'],
+  ['ludo', '🎲', 'LUDO', 'Four tokens home before anybody else. Six to get out.', './']
+];
+$('#gamesChip').onclick = () => {
+  const box = $('#pickCard');
+  box.innerHTML = '<h2>PICK A GAME</h2>';
+  const grid = el('div', 'gameGrid');
+  GAME_LINKS.forEach(([id, icon, name, blurb, href]) => {
+    const a = el('a', id === 'ludo' ? 'here' : '', '<i>' + icon + '</i><div><b>' + name + '</b><span>' + blurb + '</span></div>');
+    a.href = href;
+    grid.appendChild(a);
+  });
+  box.appendChild(grid);
+  box.appendChild(el('div', null,
+    '<div style="font-size:10px;color:var(--dim);font-weight:700;margin-top:4px">' +
+    'Leaving this table ends the game you are in.</div>'));
+  const c = el('button', 'act', 'STAY HERE');
+  c.onclick = () => $('#pickOvl').classList.remove('show');
+  box.appendChild(c);
+  $('#pickOvl').classList.add('show');
+  SFX.tick();
+};
+
 $('#quitChip').onclick = () => { if (confirm('Leave the game?')) { if (NET) netLeave(); location.reload(); } };
 $('#die').onclick = () => play({ type: 'roll' });
 addEventListener('keydown', e => {

@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060f">
+<title>CYBERGRILL RONDA</title>
+<style>
+/* TABLECSS:BEGIN */
+/* TABLECSS:END */
+
+/* the game switcher, one chip instead of one per game */
+.gameGrid{display:grid;gap:9px;margin:10px 0 4px}
+.gameGrid a{display:flex;align-items:center;gap:12px;padding:14px 15px;border-radius:14px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);text-decoration:none;color:var(--txt);
+  transition:.16s;text-align:left}
+.gameGrid a:hover{border-color:var(--cyan);background:rgba(34,230,255,.1);transform:translateY(-2px)}
+.gameGrid a.here{border-color:var(--gold);background:rgba(255,201,60,.1)}
+.gameGrid i{font-style:normal;font-size:26px;line-height:1}
+.gameGrid b{display:block;font-size:13px;font-weight:900;letter-spacing:1.5px}
+.gameGrid span{display:block;font-size:10px;color:var(--dim);font-weight:700;line-height:1.5;margin-top:2px}
+
+
+/* ---------------- the Spanish deck ---------------- */
+.cf{display:block;width:100%;height:100%;border-radius:inherit}
+.rcard{width:74px;height:111px;border-radius:9px;position:relative;flex:0 0 auto;
+  box-shadow:0 5px 15px rgba(0,0,0,.55);transition:transform .18s cubic-bezier(.2,.9,.3,1.2),box-shadow .18s,filter .18s}
+.rcard.sm{width:58px;height:87px;border-radius:7px}
+body.th-neon .rcard{box-shadow:0 5px 18px rgba(0,0,0,.6),0 0 22px -8px var(--glowc,transparent)}
+
+/* the four face-up cards */
+.mesa{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;
+  padding:16px;border-radius:22px;min-height:130px;min-width:min(80vw,520px);
+  background:radial-gradient(ellipse at 50% 40%,rgba(34,230,255,.10),rgba(10,14,32,.5) 70%);
+  border:2px solid rgba(120,140,255,.22);box-shadow:inset 0 0 60px -18px var(--cyan)}
+.mesa .rcard{cursor:default}
+.mesa .rcard.willTake{transform:translateY(-12px) scale(1.06);
+  box-shadow:0 14px 28px rgba(0,0,0,.6),0 0 0 3px var(--lime),0 0 26px -2px var(--lime)}
+.mesa .rcard.taking{animation:takeAway .45s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes takeAway{to{transform:translateY(120px) scale(.5) rotate(12deg);opacity:0}}
+.mesaEmpty{font-size:11px;letter-spacing:3px;color:var(--dim);font-weight:900}
+
+/* my three */
+.myHand{display:flex;gap:12px;justify-content:center;align-items:flex-end;min-height:124px;padding:8px 10px 4px}
+.myHand .rcard{cursor:pointer}
+.myHand .rcard:hover{transform:translateY(-16px) scale(1.06);box-shadow:0 18px 32px rgba(0,0,0,.6);z-index:5}
+.myHand .rcard.dim{opacity:.55;cursor:default}
+.myHand .rcard.dim:hover{transform:none}
+.myHand .rcard.willCapture:hover{box-shadow:0 18px 32px rgba(0,0,0,.6),0 0 0 3px var(--lime)}
+
+/* the seats round the table */
+.rSeat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:6;transition:.2s}
+.rSeat .av{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+  font-weight:900;font-size:14px;color:#04060f;position:relative}
+.rSeat.turn .av{box-shadow:0 0 0 3px var(--lime),0 0 28px -2px var(--lime);animation:pulseSeat 1.4s ease-in-out infinite}
+@keyframes pulseSeat{50%{box-shadow:0 0 0 5px var(--lime),0 0 38px 0 var(--lime)}}
+.rSeat .nm{font-size:11px;font-weight:900;letter-spacing:.4px;white-space:nowrap}
+.rSeat .sub{font-size:9.5px;color:var(--dim);font-weight:800;letter-spacing:1px}
+.rSeat.gone .nm::after{content:' 📴'}
+.rSeat.mate .av{outline:2px dashed rgba(156,255,46,.65);outline-offset:3px}
+.rSeat.top{left:50%;top:2%;transform:translateX(-50%)}
+.rSeat.left{left:3%;top:50%;transform:translateY(-50%)}
+.rSeat.right{right:3%;top:50%;transform:translateY(-50%)}
+.backs{display:flex;height:22px}
+.backs i{display:block;width:15px;height:22px;border-radius:3px;margin-left:-8px;
+  background:linear-gradient(140deg,#5a2130,#2a1018);border:1px solid rgba(255,255,255,.35)}
+.backs i:first-child{margin-left:0}
+/* the captured pile, face down */
+.pileStack{position:relative;width:34px;height:26px}
+.pileStack i{position:absolute;left:0;top:0;width:26px;height:20px;border-radius:3px;
+  background:linear-gradient(140deg,#3a2a18,#1a1208);border:1px solid rgba(255,255,255,.22)}
+.pileNum{font-size:10px;font-weight:900;color:var(--gold);letter-spacing:1px}
+
+/* the scoreboard */
+.teamBar{display:flex;gap:8px;align-items:center;font-size:11px;font-weight:900;letter-spacing:1px}
+.teamBar span{padding:5px 10px;border-radius:9px}
+.tA{background:rgba(34,230,255,.18);color:var(--cyan)}
+.tB{background:rgba(255,138,43,.18);color:var(--orange)}
+
+/* what just happened, said loudly in the middle */
+.callOut{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:79;pointer-events:none;
+  text-align:center;animation:callIn 1.5s cubic-bezier(.2,1.5,.4,1) forwards}
+.callOut b{display:block;font-size:min(13vw,74px);font-weight:900;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--gold),#fff,var(--orange));-webkit-background-clip:text;background-clip:text;
+  color:transparent;filter:drop-shadow(0 0 26px rgba(255,201,60,.7))}
+.callOut span{display:block;font-size:13px;font-weight:900;letter-spacing:4px;color:var(--txt);margin-top:2px}
+@keyframes callIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+  76%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.12)}}
+
+.chainTag{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:900;letter-spacing:1.5px;
+  padding:5px 10px;border-radius:9px;background:rgba(255,201,60,.16);color:var(--gold)}
+
+.felt{flex:1;position:relative;min-height:0;max-height:min(58vh,540px);display:grid;place-items:center;padding:4px}
+#table.live{justify-content:center}
+
+@media(max-width:860px){
+  .rcard{width:58px;height:87px}
+  .rcard.sm{width:46px;height:69px}
+  .mesa{gap:7px;padding:11px;min-width:min(94vw,420px);min-height:104px}
+  .myHand{gap:9px;min-height:98px}
+  .rSeat .av{width:38px;height:38px;font-size:12px}
+  .topline{padding:7px 9px;gap:6px}
+  .logo{font-size:14px;letter-spacing:1px}
+}
+@media(max-width:700px){
+  .logo{display:none}
+  .chip .cl{display:none}
+  /* with three games to hop between there are seven of these — they have to
+     shrink to icons AND tighten up, or the last one falls off a phone */
+  .chip{padding:7px 8px}
+  .chip i{font-size:15px}
+  .topline{gap:4px;padding:7px 6px}
+  .topline{flex-wrap:nowrap;overflow:hidden}
+  .log{left:8px;right:8px;width:auto;top:52px;bottom:auto;max-height:none;flex-direction:column}
+  .log div{font-size:10px;padding:4px 8px;opacity:.85}
+  .tip{max-width:min(78vw,270px);font-size:11px}
+  .rSeat.left{left:1%} .rSeat.right{right:1%}
+  .teamBar{font-size:9px;gap:4px}
+  .teamBar span{padding:3px 6px}
+  .teamBar span:last-child{display:none}
+  .chainTag{display:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<svg id="cgDefs" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
+  <filter id="cgGlow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="1.8" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs></svg>
+
+<div id="setup"><div class="sBox">
+  <h1>CYBERGRILL RONDA</h1>
+  <div class="sub">4 0 &nbsp; C A R D S</div>
+
+  <div class="tabs">
+    <div class="tab on" id="tabSolo">🤖 SOLO VS BOTS</div>
+    <div class="tab" id="tabNet">🌍 ONLINE</div>
+  </div>
+
+  <div class="fld"><label>YOUR NAME</label><input id="myName" maxlength="14" placeholder="AMIN" autocomplete="off"></div>
+
+  <div class="netBox" id="netBox">
+    <div class="fld"><label>START A TABLE, OR JOIN ONE</label>
+      <button class="go" id="createBtn" style="margin:0 0 10px">🃏 CREATE A ROOM</button>
+      <div style="display:flex;gap:8px">
+        <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off"
+          style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;font-family:inherit;font-weight:900;font-size:20px;letter-spacing:6px;text-align:center;text-transform:uppercase">
+        <button id="joinBtn" style="padding:0 22px;border-radius:12px;border:0;cursor:pointer;font-weight:900;font-size:13px;letter-spacing:1px;background:linear-gradient(135deg,var(--cyan),#1e9bff);color:#02121a">JOIN</button>
+      </div>
+      <div id="netMsg" style="font-size:11px;font-weight:800;color:var(--dim);margin-top:9px;min-height:15px"></div>
+    </div>
+  </div>
+
+  <div class="fld"><label>WHICH GAME</label>
+    <div class="modeGrid" id="variantSel"></div>
+    <div id="variantBlurb" style="font-size:10px;color:var(--dim);font-weight:700;margin-top:7px"></div>
+  </div>
+
+  <div class="fld"><label>DECK</label>
+    <div class="row2" id="themeSel"></div>
+  </div>
+
+  <div class="fld soloOnly"><label>AT THE TABLE</label>
+    <div class="row2" id="seatSel"></div>
+  </div>
+
+  <div class="fld"><label>HOW GOOD ARE THEY</label>
+    <div class="row2" id="skillSel"></div>
+  </div>
+
+  <div class="fld"><label>HOW FAST THEY PLAY</label>
+    <div class="row2" id="speedSel"></div>
+  </div>
+
+  <button class="go" id="startBtn">DEAL ▶</button>
+</div></div>
+
+<div id="table">
+  <div class="topline">
+    <div class="logo">CYBERGRILL RONDA</div>
+    <div class="teamBar" id="teamBar"></div>
+    <div class="spacer"></div>
+    <div class="chainTag" id="chainTag" style="display:none"></div>
+    <div class="chip" id="gamesChip"><i>🎮</i><span class="cl">GAMES</span></div>
+    <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
+    <div class="chip" id="deckChip"><i>🃏</i><span class="cl">DECK</span></div>
+    <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
+    <div class="chip" id="rulesChip"><i>📖</i><span class="cl">RULES</span></div>
+    <div class="chip" id="quitChip"><i>✕</i><span class="cl">QUIT</span></div>
+  </div>
+
+  <div class="felt" id="felt">
+    <div class="mesa" id="mesa"></div>
+  </div>
+
+  <div class="myHand" id="myHand"></div>
+  <div class="acts" id="acts"></div>
+</div>
+
+<aside class="intel" id="intel"></aside>
+<div class="tip" id="tip"></div>
+<div class="log" id="log"></div>
+<div class="ovl" id="roundOvl"><div class="oCard" id="roundCard"></div></div>
+<div class="ovl" id="pickOvl"><div class="oCard" id="pickCard"></div></div>
+<div class="ovl" id="lobbyOvl"><div class="oCard" id="lobbyCard"></div></div>
+<div class="netPill" id="netPill"></div>
+
+<script>
+window.CG_AUDIO = '../../audio/';
+/* GAMECFG:BEGIN */
+window.CG_SERVER = '';
+/* GAMECFG:END */
+</script>
+<script type="module">
+/* ENGINE:BEGIN */
+import {
+  createGame, applyMove, legalMoves, viewFor, nextRound, botMove, captureWith,
+  playerById, ord, nextRank, RANKS, SUITS, SUIT_NAME, RANK_NAME,
+  TARGET, BREAK_EVEN, SCORES, BOT_LEVELS, VARIANTS, META
+} from './engine.js';
+/* ENGINE:END */
+
+const $ = s => document.querySelector(s);
+const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const PALETTE = ['#22e6ff', '#ff8a2b', '#9cff2e', '#a55bff'];
+
+/* PARTY:BEGIN */
+/* PARTY:END */
+
+$('#musicChip').onclick = () => {
+  const nowOn = music.toggle();
+  $('#musicChip').querySelector('i').textContent = nowOn ? '🎵' : '🔇';
+  $('#musicChip').style.opacity = nowOn ? '1' : '.5';
+  logLine(nowOn ? '🎵 music on' : '🔇 music off');
+};
+$('#musicChip').style.opacity = '.5';
+
+/* ==========================================================================
+   LA BARAJA ESPAÑOLA
+   --------------------------------------------------------------------------
+   Forty cards, four suits, drawn rather than photographed so they stay crisp
+   at any size and can be recoloured for the arcade.
+
+   The detail worth knowing: the breaks in the border are called *pintas*, and
+   they are how you read a Spanish deck fanned in somebody's hand — oros has an
+   unbroken frame, copas one break per side, espadas two, bastos three. They
+   are drawn here for the same reason they exist on the real cards.
+   ========================================================================== */
+const PINTAS = { o: 0, c: 1, e: 2, b: 3 };
+
+const DECKS = {
+  classic: {
+    key: 'classic', icon: '🃏', name: 'ESPAÑOLA',
+    card: '#f4ecd8', ink: '#2b2417', frame: '#7a6844',
+    suit: { o: '#d19a1a', c: '#b8342a', e: '#2a63a8', b: '#4a7c3a' },
+    glow: false
+  },
+  neon: {
+    key: 'neon', icon: '✨', name: 'NEÓN',
+    card: '#0d1230', ink: '#e8ecff', frame: 'rgba(120,140,255,.55)',
+    suit: { o: '#ffc93c', c: '#ff2fb9', e: '#22e6ff', b: '#9cff2e' },
+    glow: true
+  }
+};
+let deckTheme = 'classic';
+const D = () => DECKS[deckTheme] || DECKS.classic;
+
+/* --- the four suits, each drawn around its own origin --- */
+function suitPath(suit, col, ink) {
+  switch (suit) {
+    case 'o':   /* oros — a coin */
+      return '<g><circle r="9.2" fill="' + col + '"/>' +
+        '<circle r="9.2" fill="none" stroke="' + ink + '" stroke-opacity=".35" stroke-width=".9"/>' +
+        '<circle r="6" fill="none" stroke="' + ink + '" stroke-opacity=".45" stroke-width=".9"/>' +
+        '<circle r="2.1" fill="' + ink + '" fill-opacity=".45"/></g>';
+    case 'c':   /* copas — a goblet */
+      return '<g fill="' + col + '">' +
+        '<path d="M-7.4,-9.5 L7.4,-9.5 L6,-1.5 A6,6 0 0 1 -6,-1.5 Z"/>' +
+        '<rect x="-1.3" y="1" width="2.6" height="5.4"/>' +
+        '<ellipse cx="0" cy="8" rx="5.8" ry="1.9"/>' +
+        '<rect x="-7.4" y="-10.6" width="14.8" height="1.6" rx=".8"/></g>';
+    case 'e':   /* espadas — a sword */
+      return '<g fill="' + col + '">' +
+        '<path d="M0,-11.5 L2.1,-7.5 L2.1,2.6 L-2.1,2.6 L-2.1,-7.5 Z"/>' +
+        '<rect x="-6.6" y="2.6" width="13.2" height="2.1" rx="1"/>' +
+        '<rect x="-1.3" y="4.7" width="2.6" height="4.4"/>' +
+        '<circle cy="10.2" r="1.9"/></g>';
+    default:    /* bastos — a club */
+      return '<g fill="' + col + '" transform="rotate(12)">' +
+        '<path d="M-2.2,10.5 L-3.1,-2.4 Q0,-11.5 3.1,-2.4 L2.2,10.5 Z"/>' +
+        '<circle cx="-3.4" cy="1.2" r="1.9"/><circle cx="3.4" cy="4.4" r="1.9"/>' +
+        '<circle cx="-3" cy="7.2" r="1.6"/></g>';
+  }
+}
+
+/* --- the three figures: page, horseman, king --- */
+function figure(rank, col, ink) {
+  if (rank === 10)      /* sota — the page, standing with a staff */
+    return '<g fill="' + col + '">' +
+      '<path d="M-6.5,-22 L6.5,-22 L8,-17.5 L-8,-17.5 Z"/>' +
+      '<circle cx="0" cy="-12" r="6.4"/>' +
+      '<path d="M-11.5,13 Q-11.5,-4 0,-4 Q11.5,-4 11.5,13 Z"/>' +
+      '<rect x="9.5" y="-16" width="1.9" height="29" rx=".9"/>' +
+      '<circle cx="10.4" cy="-17.5" r="2.4"/>' +
+      '<path d="M-11.5,13 L11.5,13 L10,16 L-10,16 Z" opacity=".75"/></g>';
+  if (rank === 11)      /* caballo — the horseman, drawn as the horse's head */
+    return '<g fill="' + col + '">' +
+      '<path d="M-7,17 L-4.5,3 C-10.5,0.5 -13,-6 -9.5,-11.5 ' +
+      'C-7,-15.5 -2,-17.5 2,-18.5 L0.5,-23 L6.5,-19.5 ' +
+      'C11.5,-16 13.5,-9.5 12,-3.5 C10.5,2.5 8,6 7.5,17 Z"/>' +
+      '<circle cx="2.5" cy="-12" r="1.7" fill="' + ink + '" fill-opacity=".6"/>' +
+      '<path d="M-9.5,-11.5 C-13,-14 -14.5,-18 -14,-22 C-10.5,-19 -8,-16 -6.5,-13.5 Z"/>' +
+      '<path d="M-4.5,3 C-1,4.5 3,4.5 6.5,3" stroke="' + ink + '" stroke-opacity=".28" stroke-width="1.1" fill="none"/></g>';
+    /* rey — the crown */
+  return '<g fill="' + col + '">' +
+    '<path d="M-14,6 L-11,-12 L-5,-3 L0,-15 L5,-3 L11,-12 L14,6 Z"/>' +
+    '<rect x="-14" y="7" width="28" height="6" rx="2"/>' +
+    '<circle cx="-11" cy="-14" r="2.3"/><circle cx="0" cy="-17" r="2.6"/><circle cx="11" cy="-14" r="2.3"/>' +
+    '<circle cx="-7" cy="10" r="1.5" fill="' + ink + '" fill-opacity=".4"/>' +
+    '<circle cx="0" cy="10" r="1.5" fill="' + ink + '" fill-opacity=".4"/>' +
+    '<circle cx="7" cy="10" r="1.5" fill="' + ink + '" fill-opacity=".4"/></g>';
+}
+
+/* the pip layouts, on a 100 x 150 card */
+const PIPS = {
+  1: [[50, 75]],
+  2: [[50, 45], [50, 105]],
+  3: [[50, 40], [50, 75], [50, 110]],
+  4: [[33, 46], [67, 46], [33, 104], [67, 104]],
+  5: [[33, 46], [67, 46], [50, 75], [33, 104], [67, 104]],
+  6: [[33, 40], [67, 40], [33, 75], [67, 75], [33, 110], [67, 110]],
+  7: [[33, 38], [67, 38], [50, 57], [33, 75], [67, 75], [33, 112], [67, 112]]
+};
+
+function cardSVG(card, t) {
+  t = t || D();
+  const col = t.suit[card.suit], ink = t.ink;
+  const g = t.glow ? ' filter="url(#cgGlow)"' : '';
+  let out = '<svg class="cf" viewBox="0 0 100 150" preserveAspectRatio="none">' +
+    '<rect x="0" y="0" width="100" height="150" rx="9" fill="' + t.card + '"/>';
+
+  /* the frame, with the suit's pintas cut out of it */
+  out += '<rect x="6" y="6" width="88" height="138" rx="6" fill="none" stroke="' + t.frame + '" stroke-width="1.8"/>';
+  const n = PINTAS[card.suit];
+  for (let i = 0; i < n; i++) {
+    const f = (i + 1) / (n + 1);
+    out += '<rect x="' + (6 + 88 * f - 5) + '" y="4.2" width="10" height="3.6" fill="' + t.card + '"/>';
+    out += '<rect x="' + (6 + 88 * f - 5) + '" y="142.2" width="10" height="3.6" fill="' + t.card + '"/>';
+    out += '<rect x="4.2" y="' + (6 + 138 * f - 5) + '" width="3.6" height="10" fill="' + t.card + '"/>';
+    out += '<rect x="92.2" y="' + (6 + 138 * f - 5) + '" width="3.6" height="10" fill="' + t.card + '"/>';
+  }
+
+  /* the middle */
+  if (card.rank >= 10) {
+    out += '<g' + g + ' transform="translate(50,70) scale(1.45)">' + figure(card.rank, col, ink) + '</g>';
+    out += '<g transform="translate(50,24) scale(.62)">' + suitPath(card.suit, col, ink) + '</g>';
+    out += '<text x="50" y="130" font-size="10.5" fill="' + ink + '" fill-opacity=".7" text-anchor="middle" ' +
+      'font-weight="900" letter-spacing="1.5">' + RANK_NAME[card.rank] + '</text>';
+  } else {
+    const pips = PIPS[card.rank] || [];
+    const scale = card.rank === 1 ? 1.9 : card.rank === 2 || card.rank === 3 ? 1.35 : 1.05;
+    out += '<g' + g + '>' + pips.map(([x, y]) =>
+      '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' + suitPath(card.suit, col, ink) + '</g>'
+    ).join('') + '</g>';
+  }
+
+  /* the rank in two corners, the way you read a fanned hand */
+  const lbl = String(card.rank);
+  out += '<text x="15" y="26" font-size="19" fill="' + ink + '" text-anchor="middle" font-weight="900">' + lbl + '</text>';
+  out += '<text x="85" y="126" font-size="19" fill="' + ink + '" text-anchor="middle" font-weight="900" ' +
+    'transform="rotate(180 85 126)">' + lbl + '</text>';
+  return out + '</svg>';
+}
+
+function cardBackSVG(t) {
+  t = t || D();
+  return '<svg class="cf" viewBox="0 0 100 150" preserveAspectRatio="none">' +
+    '<rect x="0" y="0" width="100" height="150" rx="9" fill="#5a2130"/>' +
+    '<rect x="6" y="6" width="88" height="138" rx="6" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6"/>' +
+    '<g fill="rgba(255,255,255,.13)">' +
+    [22, 52, 82, 112].map(y => [24, 50, 76].map(x =>
+      '<circle cx="' + x + '" cy="' + y + '" r="7"/>').join('')).join('') + '</g></svg>';
+}
+
+function cardEl(card, cls) {
+  const d = el('div', 'rcard ' + (cls || ''));
+  d.innerHTML = cardSVG(card);
+  d.dataset.cid = card.id;
+  d.dataset.rank = card.rank;
+  if (D().glow) d.style.setProperty('--glowc', D().suit[card.suit]);
+  return d;
+}
+const cardName = c => c.rank + ' ' + SUIT_NAME[c.suit] + (RANK_NAME[c.rank] ? ' (' + RANK_NAME[c.rank] + ')' : '');
+
+function applyDeck(k) {
+  deckTheme = DECKS[k] ? k : 'classic';
+  Object.keys(DECKS).forEach(x => document.body.classList.remove('th-' + x));
+  document.body.classList.add('th-' + deckTheme);
+  try { localStorage.setItem('cybergrill_ronda_deck', deckTheme); } catch (e) { }
+  if (G) render();
+}
+try { const t0 = localStorage.getItem('cybergrill_ronda_deck'); if (t0 && DECKS[t0]) deckTheme = t0; } catch (e) { }
+document.body.classList.add('th-' + deckTheme);
+
+/* ==========================================================================
+   setup
+   ========================================================================== */
+let G = null, ME = 'you', busy = false, NET = null, animating = false;
+const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU'];
+
+const VARIANT_UI = [
+  ['ronda', '🃏', 'RONDA', 'The full game. Rondas and tringas called on the deal, the darba chain, missa, and a match to 41.'],
+  ['makla', '☕', 'MAKLA', 'The café version. Same capturing, none of the paperwork — play the hand out and count. Twenty is a draw.']
+];
+const SKILL_UI = [['easy', '🙂 EASY'], ['normal', '🙃 NORMAL'], ['sharp', '😈 SHARP']];
+const SPEED_UI = [['slow', '🐢 SLOW', 1400, 800], ['normal', 'NORMAL', 750, 500], ['fast', '⚡ FAST', 340, 240]];
+const cfg = { variant: 'ronda', seats: 2, skill: 'normal', speed: 'normal' };
+const speedMs = () => { const r = SPEED_UI.find(x => x[0] === cfg.speed) || SPEED_UI[1]; return r[2] + Math.random() * r[3]; };
+
+function buildSetup() {
+  const vs = $('#variantSel'); vs.innerHTML = '';
+  VARIANT_UI.forEach(([k, icon, name, desc]) => {
+    const d = el('div', 'modeCard' + (cfg.variant === k ? ' on' : ''), '<b>' + icon + ' ' + name + '</b><span>' + desc + '</span>');
+    d.onclick = () => { cfg.variant = k; buildSetup(); SFX.tick(); };
+    vs.appendChild(d);
+  });
+  $('#variantBlurb').textContent = (VARIANT_UI.find(v => v[0] === cfg.variant) || VARIANT_UI[0])[3];
+
+  const th = $('#themeSel'); th.innerHTML = '';
+  Object.keys(DECKS).forEach(k => {
+    const p = el('div', 'pill' + (deckTheme === k ? ' on' : ''), DECKS[k].icon + ' ' + DECKS[k].name);
+    p.onclick = () => { applyDeck(k); buildSetup(); SFX.tick(); };
+    th.appendChild(p);
+  });
+
+  const ss = $('#seatSel'); ss.innerHTML = '';
+  [[2, 'HEAD TO HEAD'], [4, 'FOUR, IN PAIRS']].forEach(([n, name]) => {
+    const p = el('div', 'pill' + (cfg.seats === n ? ' on' : ''), name);
+    p.onclick = () => { cfg.seats = n; buildSetup(); SFX.tick(); };
+    ss.appendChild(p);
+  });
+
+  const sk = $('#skillSel'); sk.innerHTML = '';
+  SKILL_UI.forEach(([k, name]) => {
+    const p = el('div', 'pill' + (cfg.skill === k ? ' on' : ''), name);
+    p.onclick = () => { cfg.skill = k; buildSetup(); SFX.tick(); };
+    sk.appendChild(p);
+  });
+  const sp = $('#speedSel'); sp.innerHTML = '';
+  SPEED_UI.forEach(([k, name]) => {
+    const p = el('div', 'pill' + (cfg.speed === k ? ' on' : ''), name);
+    p.onclick = () => { cfg.speed = k; buildSetup(); SFX.tick(); };
+    sp.appendChild(p);
+  });
+}
+buildSetup();
+try { const n = localStorage.getItem('cybergrill_uno_name'); if (n) $('#myName').value = n; } catch (e) { }
+
+/* ==========================================================================
+   drawing the table
+   ========================================================================== */
+const myView = () => NET ? NET.view : viewFor(G, ME);
+function seatColor(p) { return p.team === 'A' ? 'var(--cyan)' : 'var(--orange)'; }
+
+/* where each opponent sits, relative to me, once I am at the bottom */
+function seatSlots(v) {
+  const n = v.players.length;
+  const mine = v.players.findIndex(p => p.id === ME);
+  const out = [];
+  for (let k = 1; k < n; k++) {
+    const p = v.players[(mine + k) % n];
+    out.push({ p, where: n === 2 ? 'top' : (k === 1 ? 'right' : k === 2 ? 'top' : 'left') });
+  }
+  return out;
+}
+
+function render() {
+  if (!G) return;
+  const v = myView();
+  if (!v || !v.you) return;
+
+  /* the seats */
+  const felt = $('#felt');
+  felt.querySelectorAll('.rSeat').forEach(e => e.remove());
+  seatSlots(v).forEach(({ p, where }) => {
+    const s = el('div', 'rSeat ' + where + (v.turn === p.id ? ' turn' : '') +
+      (p.team === v.you.team ? ' mate' : '') + (p.connected === false ? ' gone' : ''));
+    s.innerHTML =
+      '<div class="av" style="background:' + seatColor(p) + '">' + esc(p.name.slice(0, 2)) + '</div>' +
+      '<div class="nm">' + esc(p.name) + '</div>' +
+      '<div class="backs">' + '<i></i>'.repeat(p.count) + '</div>' +
+      '<div class="pileNum">🂠 ' + p.pile + '</div>';
+    felt.appendChild(s);
+  });
+
+  /* the four in the middle */
+  const mesa = $('#mesa'); mesa.innerHTML = '';
+  if (!v.table.length) mesa.appendChild(el('div', 'mesaEmpty', 'TABLE CLEAR'));
+  v.table.forEach(c => {
+    const d = cardEl(c);
+    d.dataset.mesa = '1';
+    mesa.appendChild(d);
+  });
+
+  /* my three */
+  const hand = $('#myHand'); hand.innerHTML = '';
+  const myTurn = v.turn === ME && v.phase === 'playing';
+  v.you.hand.forEach(c => {
+    const taken = captureWith(v.table, c.rank);
+    const d = cardEl(c, (myTurn ? '' : 'dim') + (taken.length ? ' willCapture' : ''));
+    if (myTurn && !animating) {
+      d.onclick = () => play(c.id);
+      d.onpointerenter = () => preview(taken);
+      d.onpointerleave = () => preview([]);
+    }
+    hand.appendChild(d);
+  });
+
+  /* the scoreboard, and whose game it is */
+  const tb = $('#teamBar');
+  if (v.variant === 'ronda') {
+    const mine = v.you.team;
+    tb.innerHTML =
+      '<span class="tA">A ' + v.teamScores.A + (mine === 'A' ? ' ★' : '') + '</span>' +
+      '<span class="tB">B ' + v.teamScores.B + (mine === 'B' ? ' ★' : '') + '</span>' +
+      '<span style="color:var(--dim);background:none;padding-left:2px">to ' + v.target + '</span>';
+  } else {
+    tb.innerHTML = '<span class="tA">☕ MAKLA</span>' +
+      '<span style="color:var(--dim);background:none">' + v.deckCount + ' left</span>';
+  }
+
+  /* the darba chain, if one is live */
+  const ct = $('#chainTag');
+  if (v.chain) {
+    ct.style.display = '';
+    ct.innerHTML = '🔗 ' + (v.chain.stage === 1 ? "B'KHAMSA" : "B'ASHRA") + ' ON THE ' + v.chain.rank +
+      ' · TEAM ' + v.chain.team;
+  } else ct.style.display = 'none';
+
+  buildIntel(v);
+  const acts = $('#acts'); acts.innerHTML = '';
+  if (!myTurn && v.phase === 'playing') {
+    const who = (v.players.find(p => p.id === v.turn) || {}).name || '';
+    acts.appendChild(el('div', null, '<div style="font-size:11px;letter-spacing:2px;color:var(--dim);font-weight:900">' +
+      esc(who) + ' IS PLAYING…</div>'));
+  }
+}
+
+/* light up what a card would take, before you commit to it */
+function preview(taken) {
+  const ids = new Set(taken.map(c => c.id));
+  $('#mesa').querySelectorAll('.rcard').forEach(d => d.classList.toggle('willTake', ids.has(d.dataset.cid)));
+}
+
+/* ==========================================================================
+   playing
+   ========================================================================== */
+function play(cardId) {
+  if (!G || animating) return;
+  if (busy && !NET) return;
+  preview([]);
+  if (NET) { netSend({ t: 'move', move: { type: 'play', cardId } }); return; }
+  try {
+    const r = applyMove(G, ME, { type: 'play', cardId });
+    G = r.state;
+    after(r.events);
+  } catch (e) { SFX.bad(); logLine('⚠ ' + e.message); }
+}
+
+function after(events) {
+  const cap = events.find(e => e.t === 'capture');
+  showEvents(events);
+  const done = () => {
+    render();
+    if (G.phase !== 'playing') return showRoundEnd();
+    if (!busy) tickBots();
+  };
+  if (cap && cap.taken.length) {
+    /* let the captured cards slide off the table before redrawing it */
+    animating = true;
+    const ids = new Set(cap.taken.map(c => c.id));
+    $('#mesa').querySelectorAll('.rcard').forEach(d => { if (ids.has(d.dataset.cid)) d.classList.add('taking'); });
+    setTimeout(() => { animating = false; done(); }, 420);
+  } else done();
+}
+
+function tickBots() {
+  if (NET || !G || G.phase !== 'playing') return;
+  const who = G.order[G.turn];
+  if (who === ME) return;
+  busy = true;
+  setTimeout(() => {
+    if (!G || G.phase !== 'playing') { busy = false; return; }
+    const m = botMove(G, who, Math.random, cfg.skill);
+    if (!m) { busy = false; return; }
+    let r;
+    try { r = applyMove(G, who, m); } catch (e) { busy = false; return; }
+    G = r.state; busy = false;
+    after(r.events);
+  }, speedMs());
+}
+
+/* ==========================================================================
+   what just happened
+   ========================================================================== */
+function nameOf(id) { const p = (G.players || []).find(x => x.id === id); return p ? p.name : '?'; }
+function logLine(t) {
+  const l = $('#log');
+  l.insertBefore(el('div', null, t), l.firstChild);
+  while (l.children.length > (innerWidth < 700 ? 3 : 6)) l.removeChild(l.lastChild);
+}
+function callOut(word, sub) {
+  /* the last events of a round arrive with the round-end card, and a shout
+     landing on top of it just makes both unreadable */
+  if ($('#roundOvl').classList.contains('show')) return;
+  const d = el('div', 'callOut', '<b>' + esc(word) + '</b><span>' + esc(sub || '') + '</span>');
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1600);
+}
+const clearCallOuts = () => document.querySelectorAll('.callOut').forEach(e => e.remove());
+
+function showEvents(evs) {
+  (evs || []).forEach(e => {
+    switch (e.t) {
+      case 'deal':
+        SFX.shuffle();
+        logLine('🂠 three each — ' + e.left + ' left in the deck');
+        break;
+      case 'bury':
+        logLine('↩️ ' + cardName(e.card) + ' buried, the table has to start dead');
+        break;
+      case 'call': {
+        const label = e.kind === 'tringa' ? 'TRINGA' : 'RONDA';
+        if (e.points > 0) {
+          SFX.uno();
+          callOut(label, nameOf(e.who) + ' · ' + e.rank + 's · +' + e.points);
+          burst(innerWidth / 2, innerHeight * .38, 30, ['#ffc93c', '#fff']);
+          logLine('📣 ' + nameOf(e.who) + ' calls ' + label + ' on the ' + e.rank + 's — ' + e.points);
+        } else {
+          logLine('📣 ' + nameOf(e.who) + ' calls ' + label + ' on the ' + e.rank + 's — beaten');
+        }
+        break;
+      }
+      case 'capture':
+        SFX.play();
+        logLine('✋ ' + nameOf(e.who) + ' plays the ' + e.card.rank + ' and takes ' +
+          e.taken.map(c => c.rank).join(', ') + (e.run ? ' — a run' : ''));
+        break;
+      case 'drop':
+        SFX.draw();
+        logLine('🃏 ' + nameOf(e.who) + ' leaves the ' + e.card.rank);
+        break;
+      case 'darba':
+        SFX.hit();
+        callOut('DARBA', nameOf(e.who) + (e.points ? ' · +' + e.points : ''));
+        logLine('👊 DARBA — ' + nameOf(e.who) + ' takes the ' + e.rank + ' straight back' + (e.points ? ' (+' + e.points + ')' : ''));
+        break;
+      case 'khamsa':
+        SFX.win();
+        callOut("B'KHAMSA", nameOf(e.who) + ' · +' + e.points);
+        burst(innerWidth / 2, innerHeight * .4, 40, ['#ffc93c', '#ff8a2b']);
+        logLine("🔥 B'KHAMSA — the third " + e.rank + ' (+' + e.points + ')');
+        break;
+      case 'ashra':
+        SFX.win();
+        callOut("B'ASHRA", nameOf(e.who) + ' · +' + e.points);
+        for (let i = 0; i < 4; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 130);
+        logLine("💥 B'ASHRA — all four " + e.rank + 's (+' + e.points + ')');
+        break;
+      case 'chainBroken': logLine('🔗 the chain on the ' + e.rank + ' is broken'); break;
+      case 'missa':
+        if (e.points) { SFX.uno(); callOut('MISSA', nameOf(e.who) + ' · +' + e.points); logLine('🧹 MISSA — ' + nameOf(e.who) + ' clears the table (+' + e.points + ')'); }
+        else logLine('🧹 table cleared — no missa on the last hand');
+        break;
+      case 'bawesh':
+        SFX.rev();
+        logLine('🧺 BAWESH — ' + nameOf(e.who) + ' sweeps the last ' + e.cards.length);
+        break;
+      case 'count':
+        logLine('🔢 A ' + e.counts.A + ' cards (+' + e.gained.A + ') · B ' + e.counts.B + ' cards (+' + e.gained.B + ')');
+        break;
+    }
+  });
+}
+
+/* ---------------- the info panel ---------------- */
+function buildIntel(v) {
+  if (!document.body.classList.contains('intelOn')) return;
+  const box = $('#intel');
+  const seen = {};
+  RANKS.forEach(r => seen[r] = 0);
+  v.table.forEach(c => seen[c.rank]++);
+  v.you.hand.forEach(c => seen[c.rank]++);
+
+  let html = '<div class="iSec"><h4>THE COUNT</h4>' +
+    '<div class="iRow"><span>Cards left to deal</span><span class="r">' + v.deckCount + '</span></div>' +
+    '<div class="iRow"><span>On the table</span><span class="r">' + v.table.length + '</span></div>' +
+    '<div class="iRow"><span>In your pile</span><span class="r">' + v.you.pile + '</span></div>' +
+    '<div class="iSub">Forty cards in the deck, so twenty is nobody\'s. Every card over twenty is a point.</div></div>';
+
+  html += '<div class="iSec"><h4>THE PILES</h4>';
+  v.players.forEach(p => {
+    html += '<div class="iRow' + (p.id === ME ? ' me' : '') + '">' +
+      '<span style="width:9px;height:9px;border-radius:3px;background:' + seatColor(p) + '"></span>' +
+      '<span>' + esc(p.name) + (p.team === v.you.team && p.id !== ME ? ' (partner)' : '') + '</span>' +
+      '<span class="r">' + p.pile + '</span></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="iSec"><h4>WHAT YOU CAN SEE</h4><div class="iSub">' +
+    'Ranks you hold or can see on the table. Anything showing 0 is entirely unaccounted for.</div>' +
+    '<div class="iBars" style="height:44px">' +
+    RANKS.map(r => '<div style="height:' + (6 + seen[r] * 11) + 'px;background:' +
+      (seen[r] ? 'var(--cyan)' : 'rgba(255,255,255,.12)') + '"><span>' + r + '</span></div>').join('') +
+    '</div></div>';
+
+  if (v.variant === 'ronda') {
+    html += '<div class="iSec"><h4>WHAT THINGS PAY</h4><div class="iSub">' +
+      'ronda 1 &nbsp;·&nbsp; tringa 5<br>darba 1 &nbsp;·&nbsp; b\'khamsa 5 &nbsp;·&nbsp; b\'ashra 10<br>missa 1 &nbsp;·&nbsp; a point a card over twenty' +
+      '</div></div>';
+  }
+  if (NET) html += '<div class="iSec"><div class="iRow"><span>ROOM</span><span class="r">' + NET.code + '</span></div></div>';
+  box.innerHTML = html;
+}
+
+$('#infoChip').onclick = () => { document.body.classList.toggle('intelOn'); SFX.tick(); if (G) render(); };
+$('#deckChip').onclick = () => {
+  const keys = Object.keys(DECKS);
+  applyDeck(keys[(keys.indexOf(deckTheme) + 1) % keys.length]);
+  logLine(D().icon + ' deck: ' + D().name.toLowerCase());
+  SFX.tick();
+};
+$('#rulesChip').onclick = () => {
+  const v = myView();
+  alert((v.variant === 'makla' ? '☕ MAKLA' : '🃏 RONDA') + '\n\n' +
+    'Forty cards: 1 to 7, then sota, caballo, rey. No 8, no 9 — the 7 runs straight into the 10.\n\n' +
+    'Play one card. Same rank as one on the table and you take both, plus any unbroken run climbing from it. No match and it stays there.\n\n' +
+    (v.variant === 'ronda'
+      ? 'Called on the deal: ronda (a pair) 1, tringa (three) 5.\nIn play: darba 1, b\'khamsa 5, b\'ashra 10, missa 1.\nAt the end: bawesh sweeps, then a point for every card over twenty. First to ' + v.target + '.'
+      : 'No calls, no missa, no running total. Play it out, sweep, and count. Twenty is a draw.'));
+};
+
+/* ---------------- hopping between the games ---------------- */
+const GAME_LINKS = [
+  ['uno', '🎴', 'UNO', 'Official rules, every house rule as a switch, five ways to play.', '../'],
+  ['ronda', '🃏', 'RONDA', 'The Algerian game. Match a rank, sweep the run, count to 41.', './'],
+  ['ludo', '🎲', 'LUDO', 'Four tokens home before anybody else. Six to get out.', '../ludo/']
+];
+$('#gamesChip').onclick = () => {
+  const box = $('#pickCard');
+  box.innerHTML = '<h2>PICK A GAME</h2>';
+  const grid = el('div', 'gameGrid');
+  GAME_LINKS.forEach(([id, icon, name, blurb, href]) => {
+    const a = el('a', id === 'ronda' ? 'here' : '', '<i>' + icon + '</i><div><b>' + name + '</b><span>' + blurb + '</span></div>');
+    a.href = href;
+    grid.appendChild(a);
+  });
+  box.appendChild(grid);
+  box.appendChild(el('div', null,
+    '<div style="font-size:10px;color:var(--dim);font-weight:700;margin-top:4px">' +
+    'Leaving this table ends the game you are in.</div>'));
+  const c = el('button', 'act', 'STAY HERE');
+  c.onclick = () => $('#pickOvl').classList.remove('show');
+  box.appendChild(c);
+  $('#pickOvl').classList.add('show');
+  SFX.tick();
+};
+
+$('#quitChip').onclick = () => { if (confirm('Leave the game?')) { if (NET) netLeave(); location.reload(); } };
+
+/* ---------------- the end of a round ---------------- */
+function showRoundEnd() {
+  clearCallOuts();
+  music.tense(false); music.sting();
+  const v = myView();
+  const gameOver = G.phase === 'gameEnd';
+  for (let i = 0; i < 6; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 140);
+  const box = $('#roundCard');
+  const won = gameOver ? G.winner : G.roundWinner;
+  const mine = v.you.team;
+  const headline = won === null ? 'A DRAW' : (won === mine ? 'YOU TAKE IT' : 'THEY TAKE IT');
+  box.innerHTML =
+    '<div style="font-size:52px">' + (won === null ? '🤝' : gameOver ? '🏆' : '🧺') + '</div>' +
+    '<div class="bigName">' + (won === null ? 'LEVEL' : 'TEAM ' + won) + '</div>' +
+    '<h2>' + (gameOver ? headline : 'TAKES THE ROUND') + '</h2>';
+
+  const counts = { A: 0, B: 0 };
+  G.players.forEach(p => { counts[p.team] += p.pile.length; });
+  const list = el('div', 'scoreList');
+  ['A', 'B'].forEach(t => {
+    const who = G.players.filter(p => p.team === t).map(p => p.name).join(' + ');
+    list.appendChild(el('div', null,
+      '<span style="width:10px;height:10px;border-radius:3px;background:' +
+      (t === 'A' ? 'var(--cyan)' : 'var(--orange)') + ';display:inline-block"></span>' +
+      '<span>TEAM ' + t + ' · ' + esc(who) + '</span>' +
+      '<span>' + counts[t] + ' cards' + (v.variant === 'ronda' ? ' · ' + G.teamScores[t] + 'p' : '') + '</span>'));
+  });
+  box.appendChild(list);
+  if (v.variant === 'ronda') box.appendChild(el('div', null,
+    '<div style="font-size:10px;color:var(--dim);font-weight:700;margin-top:2px">' +
+    'A point a card over twenty, plus everything called along the way.</div>'));
+
+  const b = el('button', 'go', gameOver ? 'PLAY AGAIN' : 'NEXT ROUND ▶');
+  if (NET && !NET.isHost) { b.textContent = 'WAITING FOR THE HOST…'; b.style.opacity = '.55'; b.style.cursor = 'default'; }
+  else b.onclick = () => {
+    $('#roundOvl').classList.remove('show');
+    if (NET) { netSend({ t: gameOver ? 'again' : 'next' }); return; }
+    if (gameOver) { location.reload(); return; }
+    G = nextRound(G);
+    logLine('— round ' + G.round + ' —');
+    showEvents(G.openingEvents || []);
+    render(); tickBots();
+  };
+  box.appendChild(b);
+  $('#roundOvl').classList.add('show');
+}
+
+/* ---------------- solo ---------------- */
+$('#startBtn').onclick = () => {
+  ac(); loadSamples();
+  const name = ($('#myName').value || 'YOU').trim().slice(0, 14).toUpperCase();
+  try { localStorage.setItem('cybergrill_uno_name', name); } catch (e) { }
+  const players = [{ id: ME, name }];
+  for (let i = 0; i < cfg.seats - 1; i++) players.push({ id: 'bot' + i, name: BOT_NAMES[i] });
+  try {
+    G = createGame({ players, seed: (Math.random() * 1e9) | 0, house: { variant: cfg.variant } });
+  } catch (err) { alert(err.message); return; }
+  $('#setup').classList.add('gone');
+  $('#table').classList.add('live');
+  $('#log').innerHTML = '';
+  logLine(cfg.variant === 'makla' ? '☕ Makla. Play it out and count.' : '🃏 Ronda. First to ' + G.target + '.');
+  showEvents(G.openingEvents || []);
+  render();
+  tickBots();
+};
+
+/* ==========================================================================
+   ONLINE
+   ========================================================================== */
+const SERVER = (window.CG_SERVER || '').replace(/\/+$/, '');
+const netMsg = t => { const e = $('#netMsg'); if (e) e.textContent = t || ''; };
+function pill(cls, text) { const p = $('#netPill'); p.className = 'netPill on ' + cls; p.textContent = text; }
+function netSend(m) { if (!NET || !NET.ws || NET.ws.readyState !== 1) return false; NET.ws.send(JSON.stringify(m)); return true; }
+function netLeave() { if (!NET) return; NET.closing = true; try { NET.ws.close(); } catch (e) { } NET = null; }
+const seatKey = c => 'cybergrill_ronda_seat_' + c;
+const loadSeat = c => { try { return JSON.parse(localStorage.getItem(seatKey(c)) || 'null'); } catch (e) { return null; } };
+const saveSeat = (c, s) => { try { localStorage.setItem(seatKey(c), JSON.stringify(s)); } catch (e) { } };
+
+function netConnect(code, name) {
+  if (!SERVER) { netMsg('No server is configured for this build yet.'); return; }
+  code = code.toUpperCase();
+  const seat = loadSeat(code);
+  NET = NET || { code, view: null, isHost: false, tries: 0, lobby: null };
+  NET.code = code; NET.closing = false;
+  pill('', 'CONNECTING…');
+  let ws;
+  try { ws = new WebSocket(SERVER.replace(/^http/, 'ws') + '/ws/' + code); }
+  catch (e) { netMsg('Could not reach the server.'); return; }
+  NET.ws = ws;
+  ws.onopen = () => {
+    NET.tries = 0; pill('live', 'ROOM ' + code);
+    const hello = { t: 'hello', name };
+    if (seat && seat.id) { hello.playerId = seat.id; hello.token = seat.token; }
+    ws.send(JSON.stringify(hello));
+  };
+  ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handleNet(m); };
+  ws.onclose = () => {
+    if (!NET || NET.closing) return;
+    pill('down', 'RECONNECTING…'); NET.tries++;
+    setTimeout(() => { if (NET && !NET.closing) netConnect(code, name); }, Math.min(8000, 500 * Math.pow(1.7, NET.tries)));
+  };
+  ws.onerror = () => { };
+}
+
+function handleNet(m) {
+  if (!NET) return;
+  switch (m.t) {
+    case 'error':
+      netMsg(m.msg);
+      if (!G) pill('down', m.msg.toUpperCase()); else logLine('⚠ ' + m.msg);
+      break;
+    case 'joined':
+      ME = m.you.id; NET.code = m.code; NET.isHost = m.hostId === m.you.id;
+      saveSeat(m.code, { id: m.you.id, token: m.you.token });
+      netMsg('');
+      break;
+    case 'lobby':
+      NET.lobby = m; NET.isHost = m.hostId === ME;
+      if (m.gameId && m.gameId !== 'ronda') netMsg('That room is playing ' + m.gameId + ', not Ronda.');
+      if (!m.started) { G = null; showLobby(); } else $('#lobbyOvl').classList.remove('show');
+      break;
+    case 'state': {
+      const v = m.v;
+      const first = !G;
+      NET.view = v;
+      G = {
+        order: v.players.map(p => p.id),
+        turn: Math.max(0, v.players.findIndex(p => p.id === v.turn)),
+        phase: v.phase, variant: v.variant, target: v.target, round: v.round,
+        teamScores: v.teamScores, roundWinner: v.roundWinner, winner: v.winner,
+        players: v.players.map(p => ({ ...p, pile: { length: p.pile } }))
+      };
+      /* the round-end card counts piles, and online we only have the numbers */
+      G.players = v.players.map(p => ({ id: p.id, name: p.name, team: p.team, pile: { length: p.pile } }));
+      Object.defineProperty(G, '_counts', { value: true, enumerable: false });
+      if (first) {
+        $('#lobbyOvl').classList.remove('show');
+        $('#setup').classList.add('gone');
+        $('#table').classList.add('live');
+        pill('live', 'ROOM ' + NET.code);
+        $('#log').innerHTML = '';
+        logLine(v.variant === 'makla' ? '☕ Makla.' : '🃏 Ronda. First to ' + v.target + '.');
+      }
+      showEvents(m.events || []);
+      render();
+      if (v.phase !== 'playing') showRoundEnd(); else $('#roundOvl').classList.remove('show');
+      break;
+    }
+  }
+}
+
+function showLobby() {
+  const L = NET && NET.lobby; if (!L) return;
+  const box = $('#lobbyCard');
+  box.innerHTML =
+    '<h2>ROOM CODE</h2><div class="codeBig">' + esc(L.code) + '</div>' +
+    '<div class="codeHint">READ IT OUT — THEY TYPE IT IN AND JOIN</div>' +
+    '<div style="font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px">🃏 RONDA · ' +
+    L.players.length + ' AT THE TABLE · NEEDS TWO OR FOUR</div>';
+  const list = el('div', 'lobList');
+  L.players.forEach(p => {
+    list.appendChild(el('div', null,
+      '<span class="dot' + (p.connected ? '' : ' off') + '"></span>' +
+      '<span>' + esc(p.name) + (p.id === ME ? ' (you)' : '') + '</span>' +
+      (p.id === L.hostId ? '<span class="tagH">HOST</span>' : p.bot ? '<span class="tagB">BOT</span>' : '')));
+  });
+  box.appendChild(list);
+  if (NET.isHost) {
+    if (L.players.length < 4) {
+      const bots = el('button', 'act', '🤖 ADD A BOT');
+      bots.onclick = () => { netSend({ t: 'addBot' }); SFX.tick(); };
+      box.appendChild(bots);
+    }
+    const ready = L.players.length === 2 || L.players.length === 4;
+    const go = el('button', 'go', ready ? 'DEAL ▶' : 'TWO OR FOUR ONLY…');
+    if (ready) go.onclick = () => { ac(); netSend({ t: 'start' }); };
+    else { go.style.opacity = '.5'; go.style.cursor = 'default'; }
+    box.appendChild(go);
+  } else {
+    box.appendChild(el('div', null, '<div style="font-size:12px;font-weight:800;color:var(--dim);margin-top:6px">Waiting for ' +
+      esc((L.players.find(p => p.id === L.hostId) || {}).name || 'the host') + '…</div>'));
+  }
+  const leave = el('button', 'act', 'LEAVE');
+  leave.style.marginTop = '10px';
+  leave.onclick = () => { netLeave(); location.reload(); };
+  box.appendChild(leave);
+  $('#lobbyOvl').classList.add('show');
+}
+
+function setTable(net) {
+  $('#tabSolo').classList.toggle('on', !net);
+  $('#tabNet').classList.toggle('on', net);
+  $('#netBox').classList.toggle('on', net);
+  document.querySelectorAll('.soloOnly').forEach(e => e.classList.toggle('hide', net));
+  $('#startBtn').style.display = net ? 'none' : '';
+  netMsg(net && !SERVER ? 'This build has no server address yet — set uno_server in config.yml.' : '');
+}
+$('#tabSolo').onclick = () => { setTable(false); SFX.tick(); };
+$('#tabNet').onclick = () => { setTable(true); SFX.tick(); };
+setTable(false);
+
+const myName = () => {
+  const n = ($('#myName').value || 'YOU').trim().slice(0, 14).toUpperCase();
+  try { localStorage.setItem('cybergrill_uno_name', n); } catch (e) { }
+  return n;
+};
+$('#createBtn').onclick = async () => {
+  if (!SERVER) return netMsg('No server address is configured for this build.');
+  ac(); loadSamples(); netMsg('Making a room…');
+  try {
+    const r = await fetch(SERVER + '/api/room', { method: 'POST' });
+    if (!r.ok) throw new Error('the server said no (' + r.status + ')');
+    const { code } = await r.json();
+    netConnect(code, myName());
+    const send = () => {
+      if (!netSend({ t: 'cfg', gameId: 'ronda', cfg: { house: { variant: cfg.variant }, skill: cfg.skill, speed: cfg.speed } }))
+        setTimeout(send, 250);
+    };
+    setTimeout(send, 400);
+  } catch (e) { netMsg(e.message || 'could not reach the server'); }
+};
+$('#joinBtn').onclick = () => {
+  const code = ($('#joinCode').value || '').trim().toUpperCase();
+  if (code.length < 3) return netMsg('Type the four-letter code first.');
+  if (!SERVER) return netMsg('No server address is configured for this build.');
+  ac(); loadSamples(); netMsg('Knocking…');
+  netConnect(code, myName());
+};
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+{
+  const q = new URLSearchParams(location.search).get('room');
+  if (q) { setTable(true); $('#joinCode').value = q.toUpperCase(); }
+}
+document.querySelectorAll('.ovl').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o && ['roundOvl', 'lobbyOvl'].indexOf(o.id) === -1) o.classList.remove('show'); });
+});
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05060f">
-<title>CYBERGRILL LUDO</title>
+<title>CYBERGRILL RONDA</title>
 <style>
 /* ==========================================================================
    TABLE — the furniture every CyberGrill game sits on.
@@ -186,73 +186,86 @@ body.intelOn #table{margin-right:262px}
 .gameGrid span{display:block;font-size:10px;color:var(--dim);font-weight:700;line-height:1.5;margin-top:2px}
 
 
-/* ---------------- the board ---------------- */
-.felt{flex:1;position:relative;min-height:0;display:grid;place-items:center;padding:6px}
-.boardWrap{position:relative;width:min(88vw,min(72vh,620px));aspect-ratio:1;
-  filter:drop-shadow(0 26px 60px rgba(0,0,0,.65))}
-.boardWrap svg{display:block;width:100%;height:100%;border-radius:18px}
-.cell{stroke:rgba(255,255,255,.14);stroke-width:.03}
-.yard{stroke:rgba(255,255,255,.22);stroke-width:.06}
-.yardIn{fill:rgba(6,9,22,.82)}
-.star{fill:rgba(255,255,255,.55)}
-.midT{stroke:rgba(255,255,255,.25);stroke-width:.04}
+/* ---------------- the Spanish deck ---------------- */
+.cf{display:block;width:100%;height:100%;border-radius:inherit}
+.rcard{width:74px;height:111px;border-radius:9px;position:relative;flex:0 0 auto;
+  box-shadow:0 5px 15px rgba(0,0,0,.55);transition:transform .18s cubic-bezier(.2,.9,.3,1.2),box-shadow .18s,filter .18s}
+.rcard.sm{width:58px;height:87px;border-radius:7px}
+body.th-neon .rcard{box-shadow:0 5px 18px rgba(0,0,0,.6),0 0 22px -8px var(--glowc,transparent)}
 
-/* a token: an HTML disc over the board, so it can be clicked and can glide */
-.tok{position:absolute;width:5.6%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);
-  border:2px solid rgba(255,255,255,.9);box-shadow:0 3px 9px rgba(0,0,0,.6),inset 0 -3px 6px rgba(0,0,0,.35);
-  transition:left .11s linear,top .11s linear,box-shadow .2s,filter .2s;cursor:default;z-index:3;
-  display:grid;place-items:center;font-size:9px;font-weight:900;color:rgba(0,0,0,.55)}
-.tok.can{cursor:pointer;animation:tokReady 1.1s ease-in-out infinite;z-index:5}
-@keyframes tokReady{50%{box-shadow:0 0 0 4px rgba(255,255,255,.5),0 0 22px 2px currentColor}}
-.tok.can:hover{transform:translate(-50%,-50%) scale(1.18)}
-.tok.home{opacity:.92;width:4.4%}
-.tok.hit{animation:tokHit .5s ease-in-out}
-@keyframes tokHit{0%,100%{transform:translate(-50%,-50%)}
-  25%{transform:translate(-50%,-50%) scale(1.5) rotate(-18deg)}
-  60%{transform:translate(-50%,-50%) scale(.8)}}
+/* the four face-up cards */
+.mesa{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;
+  padding:16px;border-radius:22px;min-height:130px;min-width:min(80vw,520px);
+  background:radial-gradient(ellipse at 50% 40%,rgba(34,230,255,.10),rgba(10,14,32,.5) 70%);
+  border:2px solid rgba(120,140,255,.22);box-shadow:inset 0 0 60px -18px var(--cyan)}
+.mesa .rcard{cursor:default}
+.mesa .rcard.willTake{transform:translateY(-12px) scale(1.06);
+  box-shadow:0 14px 28px rgba(0,0,0,.6),0 0 0 3px var(--lime),0 0 26px -2px var(--lime)}
+.mesa .rcard.taking{animation:takeAway .45s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes takeAway{to{transform:translateY(120px) scale(.5) rotate(12deg);opacity:0}}
+.mesaEmpty{font-size:11px;letter-spacing:3px;color:var(--dim);font-weight:900}
 
-/* the seats, one per corner of the board */
-.pSeat{position:absolute;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:12px;
-  background:rgba(8,11,26,.8);border:1px solid var(--line);font-size:11px;font-weight:900;z-index:6;
-  transition:.2s;white-space:nowrap}
-.pSeat .dot{width:13px;height:13px;border-radius:4px}
-.pSeat .sc{color:var(--gold)}
-.pSeat.turn{border-color:var(--lime);box-shadow:0 0 22px -4px var(--lime)}
-.pSeat.done{opacity:.5}
-.pSeat.gone .nm::after{content:' 📴'}
-.pSeat.tl{left:-2%;top:-4%} .pSeat.tr{right:-2%;top:-4%}
-.pSeat.br{right:-2%;bottom:-4%} .pSeat.bl{left:-2%;bottom:-4%}
+/* my three */
+.myHand{display:flex;gap:12px;justify-content:center;align-items:flex-end;min-height:124px;padding:8px 10px 4px}
+.myHand .rcard{cursor:pointer}
+.myHand .rcard:hover{transform:translateY(-16px) scale(1.06);box-shadow:0 18px 32px rgba(0,0,0,.6);z-index:5}
+.myHand .rcard.dim{opacity:.55;cursor:default}
+.myHand .rcard.dim:hover{transform:none}
+.myHand .rcard.willCapture:hover{box-shadow:0 18px 32px rgba(0,0,0,.6),0 0 0 3px var(--lime)}
 
-/* the die */
-.diceRow{display:flex;gap:12px;align-items:center;justify-content:center;padding:8px 10px 12px;flex:0 0 auto}
-.die{width:72px;height:72px;border-radius:16px;background:linear-gradient(150deg,#fdfdfd,#d7dced);
-  border:0;cursor:pointer;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.55),inset 0 -5px 10px rgba(0,0,0,.16);
-  transition:transform .16s}
-.die:hover:not(:disabled){transform:translateY(-3px) scale(1.04)}
-.die:disabled{opacity:.4;cursor:default}
-.die.rolling{animation:dieRoll .55s cubic-bezier(.3,1.4,.4,1)}
-@keyframes dieRoll{0%{transform:rotate(0) scale(1)}
-  35%{transform:rotate(220deg) scale(1.22)}
-  70%{transform:rotate(400deg) scale(.94)}
-  100%{transform:rotate(360deg) scale(1)}}
-.die i{position:absolute;width:13px;height:13px;border-radius:50%;background:#151a33;
-  box-shadow:inset 0 -2px 3px rgba(0,0,0,.35)}
-.dieHint{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--dim);max-width:min(46vw,300px);line-height:1.6}
+/* the seats round the table */
+.rSeat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:6;transition:.2s}
+.rSeat .av{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+  font-weight:900;font-size:14px;color:#04060f;position:relative}
+.rSeat.turn .av{box-shadow:0 0 0 3px var(--lime),0 0 28px -2px var(--lime);animation:pulseSeat 1.4s ease-in-out infinite}
+@keyframes pulseSeat{50%{box-shadow:0 0 0 5px var(--lime),0 0 38px 0 var(--lime)}}
+.rSeat .nm{font-size:11px;font-weight:900;letter-spacing:.4px;white-space:nowrap}
+.rSeat .sub{font-size:9.5px;color:var(--dim);font-weight:800;letter-spacing:1px}
+.rSeat.gone .nm::after{content:' 📴'}
+.rSeat.mate .av{outline:2px dashed rgba(156,255,46,.65);outline-offset:3px}
+.rSeat.top{left:50%;top:2%;transform:translateX(-50%)}
+.rSeat.left{left:3%;top:50%;transform:translateY(-50%)}
+.rSeat.right{right:3%;top:50%;transform:translateY(-50%)}
+.backs{display:flex;height:22px}
+.backs i{display:block;width:15px;height:22px;border-radius:3px;margin-left:-8px;
+  background:linear-gradient(140deg,#5a2130,#2a1018);border:1px solid rgba(255,255,255,.35)}
+.backs i:first-child{margin-left:0}
+/* the captured pile, face down */
+.pileStack{position:relative;width:34px;height:26px}
+.pileStack i{position:absolute;left:0;top:0;width:26px;height:20px;border-radius:3px;
+  background:linear-gradient(140deg,#3a2a18,#1a1208);border:1px solid rgba(255,255,255,.22)}
+.pileNum{font-size:10px;font-weight:900;color:var(--gold);letter-spacing:1px}
 
-.legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-.legend span{font-size:9px;letter-spacing:1px;font-weight:900;padding:3px 8px;border-radius:7px;color:#04060f}
+/* the scoreboard */
+.teamBar{display:flex;gap:8px;align-items:center;font-size:11px;font-weight:900;letter-spacing:1px}
+.teamBar span{padding:5px 10px;border-radius:9px}
+.tA{background:rgba(34,230,255,.18);color:var(--cyan)}
+.tB{background:rgba(255,138,43,.18);color:var(--orange)}
+
+/* what just happened, said loudly in the middle */
+.callOut{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:79;pointer-events:none;
+  text-align:center;animation:callIn 1.5s cubic-bezier(.2,1.5,.4,1) forwards}
+.callOut b{display:block;font-size:min(13vw,74px);font-weight:900;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--gold),#fff,var(--orange));-webkit-background-clip:text;background-clip:text;
+  color:transparent;filter:drop-shadow(0 0 26px rgba(255,201,60,.7))}
+.callOut span{display:block;font-size:13px;font-weight:900;letter-spacing:4px;color:var(--txt);margin-top:2px}
+@keyframes callIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+  76%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.12)}}
+
+.chainTag{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:900;letter-spacing:1.5px;
+  padding:5px 10px;border-radius:9px;background:rgba(255,201,60,.16);color:var(--gold)}
+
+.felt{flex:1;position:relative;min-height:0;max-height:min(58vh,540px);display:grid;place-items:center;padding:4px}
+#table.live{justify-content:center}
 
 @media(max-width:860px){
-  .boardWrap{width:min(95vw,min(56vh,520px))}
-  /* the slack in portrait goes under the board, where the die can use it */
-  .diceRow{flex-direction:column;gap:10px;padding-top:14px}
-  .die{width:86px;height:86px;border-radius:20px}
-  .die i{width:15px;height:15px}
-  .dieHint{display:block;text-align:center;max-width:82vw}
-  .pSeat{font-size:10px;padding:5px 8px;gap:5px}
-  .pSeat .dot{width:10px;height:10px}
-  .die{width:60px;height:60px}
-  .die i{width:11px;height:11px}
+  .rcard{width:58px;height:87px}
+  .rcard.sm{width:46px;height:69px}
+  .mesa{gap:7px;padding:11px;min-width:min(94vw,420px);min-height:104px}
+  .myHand{gap:9px;min-height:98px}
+  .rSeat .av{width:38px;height:38px;font-size:12px}
   .topline{padding:7px 9px;gap:6px}
   .logo{font-size:14px;letter-spacing:1px}
 }
@@ -268,15 +281,26 @@ body.intelOn #table{margin-right:262px}
   .log{left:8px;right:8px;width:auto;top:52px;bottom:auto;max-height:none;flex-direction:column}
   .log div{font-size:10px;padding:4px 8px;opacity:.85}
   .tip{max-width:min(78vw,270px);font-size:11px}
+  .rSeat.left{left:1%} .rSeat.right{right:1%}
+  .teamBar{font-size:9px;gap:4px}
+  .teamBar span{padding:3px 6px}
+  .teamBar span:last-child{display:none}
+  .chainTag{display:none!important}
 }
 </style>
 </head>
 <body>
 <canvas id="fx"></canvas>
+<svg id="cgDefs" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
+  <filter id="cgGlow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="1.8" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs></svg>
 
 <div id="setup"><div class="sBox">
-  <h1>CYBERGRILL LUDO</h1>
-  <div class="sub">F O U R &nbsp; H O M E</div>
+  <h1>CYBERGRILL RONDA</h1>
+  <div class="sub">4 0 &nbsp; C A R D S</div>
 
   <div class="tabs">
     <div class="tab on" id="tabSolo">🤖 SOLO VS BOTS</div>
@@ -287,7 +311,7 @@ body.intelOn #table{margin-right:262px}
 
   <div class="netBox" id="netBox">
     <div class="fld"><label>START A TABLE, OR JOIN ONE</label>
-      <button class="go" id="createBtn" style="margin:0 0 10px">🎲 CREATE A ROOM</button>
+      <button class="go" id="createBtn" style="margin:0 0 10px">🃏 CREATE A ROOM</button>
       <div style="display:flex;gap:8px">
         <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off"
           style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;font-family:inherit;font-weight:900;font-size:20px;letter-spacing:6px;text-align:center;text-transform:uppercase">
@@ -297,8 +321,17 @@ body.intelOn #table{margin-right:262px}
     </div>
   </div>
 
-  <div class="fld soloOnly"><label>OPPONENTS</label>
-    <div class="row2" id="botCount"></div>
+  <div class="fld"><label>WHICH GAME</label>
+    <div class="modeGrid" id="variantSel"></div>
+    <div id="variantBlurb" style="font-size:10px;color:var(--dim);font-weight:700;margin-top:7px"></div>
+  </div>
+
+  <div class="fld"><label>DECK</label>
+    <div class="row2" id="themeSel"></div>
+  </div>
+
+  <div class="fld soloOnly"><label>AT THE TABLE</label>
+    <div class="row2" id="seatSel"></div>
   </div>
 
   <div class="fld"><label>HOW GOOD ARE THEY</label>
@@ -309,40 +342,29 @@ body.intelOn #table{margin-right:262px}
     <div class="row2" id="speedSel"></div>
   </div>
 
-  <div class="fld"><label>ROUNDS TO WIN THE MATCH</label>
-    <div class="row2" id="targetSel"></div>
-  </div>
-
-  <div class="fld"><label>HOUSE RULES</label>
-    <div id="houseList"></div>
-  </div>
-
-  <button class="go" id="startBtn">THROW ▶</button>
+  <button class="go" id="startBtn">DEAL ▶</button>
 </div></div>
 
 <div id="table">
   <div class="topline">
-    <div class="logo">CYBERGRILL LUDO</div>
-    <span class="dirBadge" id="dirBadge">🎲</span>
+    <div class="logo">CYBERGRILL RONDA</div>
+    <div class="teamBar" id="teamBar"></div>
     <div class="spacer"></div>
+    <div class="chainTag" id="chainTag" style="display:none"></div>
     <div class="chip" id="gamesChip"><i>🎮</i><span class="cl">GAMES</span></div>
     <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
+    <div class="chip" id="deckChip"><i>🃏</i><span class="cl">DECK</span></div>
     <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
     <div class="chip" id="rulesChip"><i>📖</i><span class="cl">RULES</span></div>
     <div class="chip" id="quitChip"><i>✕</i><span class="cl">QUIT</span></div>
   </div>
 
-  <div class="felt">
-    <div class="boardWrap" id="boardWrap">
-      <svg id="board" viewBox="0 0 15 15" aria-label="Ludo board"></svg>
-    </div>
+  <div class="felt" id="felt">
+    <div class="mesa" id="mesa"></div>
   </div>
 
-  <div class="diceRow">
-    <button class="die" id="die" aria-label="Throw the die"></button>
-    <div class="dieHint" id="dieHint"></div>
-    <div class="acts" id="acts"></div>
-  </div>
+  <div class="myHand" id="myHand"></div>
+  <div class="acts" id="acts"></div>
 </div>
 
 <aside class="intel" id="intel"></aside>
@@ -354,70 +376,61 @@ body.intelOn #table{margin-right:262px}
 <div class="netPill" id="netPill"></div>
 
 <script>
-/* this table sits one folder deeper than the others */
 window.CG_AUDIO = '../../audio/';
 /* GAMECFG — written by scripts/build.mjs from config.yml */
 window.CG_SERVER = "https://cybergrill-uno.cybergrill.workers.dev";
 </script>
 <script type="module">
-/* ---- ludo engine, inlined at build time ---- */
+/* ---- ronda engine, inlined at build time ---- */
 /* ==========================================================================
-   LUDO — the rules, and nothing else.
+   RONDA — and Makla, its café cousin.
    --------------------------------------------------------------------------
-   No DOM, no network, no randomness that cannot be replayed. The same file
-   runs in the browser and inside the Durable Object, so the referee is
-   literally the same code on both sides and the rules can never drift apart.
+   Built from cybergrill/ronda-rules.md, which is Amin's own account of how his
+   table plays it. That file is the source of truth: corrections go there
+   first, and then here. Where the written rules did not cover a case I have
+   said so in a comment rather than quietly inventing something — look for
+   "EXTRAPOLATED" and check those against a real game.
 
-   The board, in numbers rather than pictures:
+   The one thing to hold in your head: the ranks run
 
-     A token's `pos` is how many steps it has walked, not where it is sitting.
+        1 2 3 4 5 6 7 10 11 12
 
-       -1        still in the yard
-       0 .. 51   on the shared track, starting from its own colour's start
-       52 .. 56  the five squares of its own home column
-       57        home
-
-     So every token needs exactly 57 steps, and the square a token is really
-     standing on is (start + pos) mod 52. Two tokens of different colours with
-     the same `pos` are nowhere near each other; two with the same absolute
-     square are on top of each other. That distinction is the whole game.
+   with no 8 and no 9, so **7 and 10 are neighbours**. Sequences cross that
+   join. Suits exist on the cards and mean nothing to the rules.
    ========================================================================== */
 
 export const META = {
-  id: 'ludo',
-  name: 'Ludo',
-  icon: '🎲',
-  blurb: 'Four tokens home before anyone else. Six to get out, exact roll to finish.',
+  id: 'ronda',
+  name: 'Ronda',
+  icon: '🃏',
+  blurb: 'The Algerian card game. Match a rank, sweep the run behind it, count to 41.',
   min: 2,
   max: 4,
-  evenOnly: false,
-  path: 'ludo/'
+  exactCounts: [2, 4],          /* two head to head, or four in two pairs */
+  evenOnly: true,
+  path: 'ronda/'
 };
 
-export const TRACK = 52;          /* squares on the shared loop */
-export const HOME_RUN = 5;        /* squares in your own column before the middle */
-export const GOAL = TRACK + HOME_RUN;   /* 57 — the exact number of steps home */
-export const TOKENS = 4;
+/* the deck, in the only order that matters */
+export const RANKS = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+export const SUITS = ['o', 'c', 'e', 'b'];        /* oros, copas, espadas, bastos */
+export const SUIT_NAME = { o: 'OROS', c: 'COPAS', e: 'ESPADAS', b: 'BASTOS' };
+export const RANK_NAME = { 10: 'SOTA', 11: 'CABALLO', 12: 'REY' };
+export const TARGET = 41;
+export const BREAK_EVEN = 20;   /* forty cards, so twenty is nobody's */
 
-/* where each colour joins the loop */
-export const STARTS = [0, 13, 26, 39];
-/* the squares nobody can be knocked off: the four starts and the four stars */
-export const SAFE = [0, 8, 13, 21, 26, 34, 39, 47];
-export const COLORS = ['r', 'g', 'y', 'b'];
-export const COLOR_NAME = { r: 'RED', g: 'GREEN', y: 'YELLOW', b: 'BLUE' };
+export const ord = r => RANKS.indexOf(r);
+export const nextRank = r => { const i = ord(r); return i >= 0 && i < RANKS.length - 1 ? RANKS[i + 1] : null; };
 
+export const VARIANTS = ['ronda', 'makla'];
 export const DEFAULT_HOUSE = {
-  sixToLeave: true,     /* a six is needed to bring a token out */
-  sixAgain: true,       /* and it earns another roll */
-  exactFinish: true,    /* you must land on the middle exactly */
-  capture: false,       /* landing on somebody sends them back to the yard */
-  threeSixes: true      /* three sixes in a row and you lose the turn */
+  variant: 'ronda',
+  darbaTalk: true,   /* Makla only: still call the darba, just for the insult */
+  missaLastHand: false
 };
 
-/* ---------- the dice, made replayable ----------
-   The state carries a seed and a count of how many numbers have been drawn.
-   Rolling means drawing the next one, so the same game replays identically
-   anywhere — which is what makes the tests worth anything. */
+export const SCORES = { ronda: 1, tringa: 5, darba: 1, khamsa: 5, ashra: 10, missa: 1 };
+
 export function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {
@@ -427,245 +440,347 @@ export function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function drawDie(state) {
-  const r = mulberry32(state.seed);
-  for (let i = 0; i < state.rolls; i++) r();
-  const v = 1 + Math.floor(r() * 6);
-  return v > 6 ? 6 : v;
-}
-
 const clone = s => JSON.parse(JSON.stringify(s));
+
+export function buildDeck() {
+  const d = [];
+  for (const s of SUITS) for (const r of RANKS) d.push({ id: s + r, rank: r, suit: s });
+  return d;
+}
+function shuffle(cards, rnd) {
+  const a = cards.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
 
 export function playerById(state, id) { return state.players.find(p => p.id === id); }
 export function currentPlayer(state) { return playerById(state, state.order[state.turn]); }
-
-/* the square a token is actually standing on, or null if it is not on the loop */
-export function square(player, pos) {
-  if (pos < 0 || pos >= TRACK) return null;
-  return (STARTS[player.seat] + pos) % TRACK;
-}
-export function isSafe(sq) { return SAFE.indexOf(sq) !== -1; }
-export function atHome(player) { return player.tokens.filter(t => t === GOAL).length; }
-export function inYard(player) { return player.tokens.filter(t => t === -1).length; }
+export function teamOf(state, id) { const p = playerById(state, id); return p ? p.team : null; }
+export function teamMates(state, team) { return state.players.filter(p => p.team === team); }
 
 /* ==========================================================================
-   a fresh board
+   the deal
    ========================================================================== */
-export function createGame(opts = {}) {
-  const list = (opts.players || []).slice(0, TOKENS);
-  if (list.length < META.min) throw new Error('ludo needs at least two players');
-  const house = { ...DEFAULT_HOUSE, ...(opts.house || {}) };
-  const seed = (opts.seed === undefined ? 1 : opts.seed) >>> 0;
 
+/* The clean table rule. The four face-up cards must not contain a pair, and
+   must not be a four-card run. Whichever it is, the offending card goes back
+   into the deck and a fresh one comes out. Repeat until the table is dead. */
+export function cleanTable(deck, table, events) {
+  let guard = 0;
+  while (guard++ < 60) {
+    /* a pair — the second one of the two goes back */
+    let cut = -1;
+    outer:
+    for (let i = 0; i < table.length; i++) {
+      for (let j = i + 1; j < table.length; j++) {
+        if (table[i].rank === table[j].rank) { cut = j; break outer; }
+      }
+    }
+    /* otherwise, four in an unbroken run — the last one of the run goes back */
+    if (cut < 0 && table.length === 4) {
+      const byOrd = table.map((c, i) => ({ i, o: ord(c.rank) })).sort((a, b) => a.o - b.o);
+      let run = true;
+      for (let k = 1; k < byOrd.length; k++) if (byOrd[k].o !== byOrd[k - 1].o + 1) { run = false; break; }
+      if (run) cut = byOrd[byOrd.length - 1].i;
+    }
+    if (cut < 0) return;
+    if (!deck.length) return;
+    const buried = table[cut];
+    table[cut] = deck.shift();
+    deck.push(buried);                       /* back into the deck, at the bottom */
+    if (events) events.push({ t: 'bury', card: buried, drew: table[cut] });
+  }
+}
+
+export function createGame(opts = {}) {
+  const list = (opts.players || []).slice(0, META.max);
+  if (list.length !== 2 && list.length !== 4) throw new Error('ronda is played two-handed or four in two pairs');
+  const house = { ...DEFAULT_HOUSE, ...(opts.house || {}) };
+  if (!VARIANTS.includes(house.variant)) house.variant = 'ronda';
+  const seed = (opts.seed === undefined ? 1 : opts.seed) >>> 0;
+  const rnd = mulberry32(seed);
+
+  /* seats alternate, so in a four-hander your partner is opposite you */
   const players = list.map((p, i) => ({
-    id: p.id,
-    name: p.name,
-    seat: i,                       /* which corner, and so which start square */
-    color: COLORS[i],
-    tokens: [-1, -1, -1, -1],
-    score: p.score || 0,
-    connected: true
+    id: p.id, name: p.name, seat: i,
+    team: list.length === 4 ? (i % 2 === 0 ? 'A' : 'B') : (i === 0 ? 'A' : 'B'),
+    hand: [], pile: [], score: p.score || 0, connected: true
   }));
 
-  return {
-    game: 'ludo',
+  const s = {
+    game: 'ronda',
+    variant: house.variant,
     players,
     order: players.map(p => p.id),
+    /* Play starts to the dealer's right and goes anti-clockwise. We put the
+       seats in that order to begin with, so "the next seat" is simply +1 and
+       the board can draw them the way they sit. */
     turn: 0,
     dir: 1,
+    dealer: players[players.length - 1].id,
+    deck: shuffle(buildDeck(), rnd),
+    table: [],
+    pending: [],                 /* what the last capture took, for the animation */
     phase: 'playing',
     house,
     seed,
-    rolls: 0,                      /* how many dice have ever been drawn */
-    die: null,                     /* the roll waiting to be used */
-    sixes: 0,                      /* consecutive sixes this turn */
-    finished: [],                  /* player ids, in the order they got all four home */
+    lastCapture: null,           /* who sweeps at the end — Bawesh */
+    lastPlay: null,              /* {who, card, captured} — a darba needs this */
+    chain: null,                 /* {rank, team, stage} — darba, then b'khamsa, then b'ashra */
+    hand: 0,                     /* which set of three we are on */
     round: opts.round || 1,
-    target: opts.target || 1,      /* rounds to win the match */
+    target: house.variant === 'makla' ? 0 : (opts.target || TARGET),
+    teamScores: { A: 0, B: 0 },
+    calls: [],                   /* the announcements of the current hand */
     roundWinner: null,
     winner: null
   };
+  /* carry the match score in on the team, not the player */
+  players.forEach(p => { s.teamScores[p.team] = Math.max(s.teamScores[p.team], p.score || 0); });
+
+  const events = [];
+  s.table = s.deck.splice(0, 4);
+  cleanTable(s.deck, s.table, events);
+  dealHands(s, events);
+  s.openingEvents = events;
+  return s;
+}
+
+function dealHands(s, events) {
+  s.hand++;
+  for (const p of s.players) p.hand = s.deck.splice(0, 3);
+  events.push({ t: 'deal', hand: s.hand, left: s.deck.length });
+  s.calls = [];
+  if (s.variant === 'ronda') announce(s, events);
+}
+
+/* ==========================================================================
+   Ronda and Tringa, called the moment a hand is dealt
+   --------------------------------------------------------------------------
+   The rules cover: a pair is 1, three of a kind is 5, opposing Rondas mean the
+   higher pair takes both points, equal rank splits, and a Tringa always beats
+   a Ronda.
+
+   EXTRAPOLATED, because the rules do not say and it cannot come up often:
+     * two Tringas of different ranks — the higher scores its 5, the other
+       nothing. It does not double the way Rondas do, because "takes both
+       points" was said of Rondas specifically.
+     * three or more Rondas — the pot is one point per caller and the highest
+       rank takes the lot, which is the same rule stretched.
+   ========================================================================== */
+function announce(s, events) {
+  const calls = [];
+  for (const p of s.players) {
+    const byRank = {};
+    p.hand.forEach(c => { byRank[c.rank] = (byRank[c.rank] || 0) + 1; });
+    let best = null;
+    for (const r of Object.keys(byRank)) {
+      const n = byRank[r], rank = +r;
+      if (n >= 3) { best = { kind: 'tringa', rank }; break; }
+      if (n === 2 && (!best || ord(rank) > ord(best.rank))) best = { kind: 'ronda', rank };
+    }
+    if (best) calls.push({ who: p.id, team: p.team, ...best });
+  }
+  s.calls = calls;
+  if (!calls.length) return;
+
+  const tringas = calls.filter(c => c.kind === 'tringa');
+  if (tringas.length) {
+    const top = tringas.slice().sort((a, b) => ord(b.rank) - ord(a.rank))[0];
+    s.teamScores[top.team] += SCORES.tringa;
+    events.push({ t: 'call', kind: 'tringa', who: top.who, team: top.team, rank: top.rank, points: SCORES.tringa });
+    calls.filter(c => c !== top).forEach(c =>
+      events.push({ t: 'call', kind: c.kind, who: c.who, team: c.team, rank: c.rank, points: 0, beaten: true }));
+    return;
+  }
+
+  const pot = calls.length;                       /* one point per caller */
+  const topOrd = Math.max(...calls.map(c => ord(c.rank)));
+  const winners = calls.filter(c => ord(c.rank) === topOrd);
+  const each = Math.floor(pot / winners.length);
+  calls.forEach(c => {
+    const won = winners.indexOf(c) !== -1;
+    const pts = won ? each : 0;
+    if (pts) s.teamScores[c.team] += pts;
+    events.push({ t: 'call', kind: 'ronda', who: c.who, team: c.team, rank: c.rank, points: pts, beaten: !won });
+  });
 }
 
 /* ==========================================================================
    what you may do
    ========================================================================== */
 export function legalMoves(state, playerId) {
-  const out = [];
-  if (state.phase !== 'playing') return out;
-  if (state.order[state.turn] !== playerId) return out;
+  if (state.phase !== 'playing') return [];
+  if (state.order[state.turn] !== playerId) return [];
   const me = playerById(state, playerId);
-  if (!me) return out;
-
-  if (state.die === null) { out.push({ type: 'roll' }); return out; }
-
-  me.tokens.forEach((pos, i) => {
-    if (canMove(state, me, i)) out.push({ type: 'move', token: i });
-  });
-  if (!out.length) out.push({ type: 'pass' });
-  return out;
+  if (!me) return [];
+  /* You play exactly one card. There is never a choice about whether to
+     capture — if the rank is on the table, it comes to you. */
+  return me.hand.map(c => ({ type: 'play', cardId: c.id }));
 }
 
-export function canMove(state, player, i) {
-  const pos = player.tokens[i];
-  const die = state.die;
-  if (die === null) return false;
-  if (pos === GOAL) return false;                         /* already home */
-  if (pos === -1) return state.house.sixToLeave ? die === 6 : true;
-  const next = pos + die;
-  if (next > GOAL) return state.house.exactFinish ? false : true;
-  return true;
+/* what a card of this rank would take off this table */
+export function captureWith(table, rank) {
+  const i = table.findIndex(c => c.rank === rank);
+  if (i < 0) return [];
+  const taken = [table[i]];
+  let r = rank;
+  for (; ;) {
+    r = nextRank(r);
+    if (r === null) break;
+    const j = table.findIndex(c => c.rank === r && taken.indexOf(c) === -1);
+    if (j < 0) break;
+    taken.push(table[j]);
+  }
+  return taken;
 }
 
 /* ==========================================================================
-   doing it
+   playing a card
    ========================================================================== */
 export function applyMove(state, playerId, move) {
   const s = clone(state);
   const events = [];
-  const me = playerById(s, playerId);
-  if (!me) throw new Error('no such player');
-  if (s.phase !== 'playing') throw new Error('the game is over');
+  if (s.phase !== 'playing') throw new Error('the round is over');
   if (s.order[s.turn] !== playerId) throw new Error('not your turn');
-  if (!move || !move.type) throw new Error('no move given');
+  if (!move || move.type !== 'play') throw new Error('play a card');
+  const me = playerById(s, playerId);
+  const idx = me.hand.findIndex(c => c.id === move.cardId);
+  if (idx < 0) throw new Error('that card is not in your hand');
+  const card = me.hand.splice(idx, 1)[0];
 
-  switch (move.type) {
-    case 'roll': {
-      if (s.die !== null) throw new Error('you have already rolled — move a token');
-      const v = drawDie(s);
-      s.rolls++;
-      s.die = v;
-      events.push({ t: 'roll', who: me.id, die: v });
+  const taken = captureWith(s.table, card.rank);
+  const beforeCount = s.table.length;
+  let justDarba = false;
 
-      if (v === 6) {
-        s.sixes++;
-        if (s.house.threeSixes && s.sixes >= 3) {
-          events.push({ t: 'threeSixes', who: me.id });
-          s.die = null; s.sixes = 0;
-          advance(s);
-          break;
-        }
-      } else {
-        s.sixes = 0;
-      }
-      /* rolled, but nothing on the board can use it */
-      if (!me.tokens.some((_, i) => canMove(s, me, i))) {
-        events.push({ t: 'stuck', who: me.id, die: v });
-      }
-      break;
+  if (taken.length) {
+    s.table = s.table.filter(c => taken.indexOf(c) === -1);
+    me.pile.push(card, ...taken);
+    s.lastCapture = me.id;
+    s.pending = [card, ...taken];
+    events.push({ t: 'capture', who: me.id, card, taken, run: taken.length > 1 });
+
+    /* Darba — the player right before you left this exact card, and you have
+       just taken it back with the same rank. */
+    const lp = s.lastPlay;
+    const darba = lp && !lp.captured && lp.card.rank === card.rank &&
+      taken.some(c => c.id === lp.card.id) && teamOf(s, lp.who) !== me.team;
+    if (darba) {
+      justDarba = true;
+      const pts = s.variant === 'ronda' ? SCORES.darba : 0;
+      if (pts) s.teamScores[me.team] += pts;
+      s.chain = { rank: card.rank, team: me.team, stage: 1 };
+      events.push({ t: 'darba', who: me.id, team: me.team, rank: card.rank, points: pts });
     }
 
-    case 'pass': {
-      if (s.die === null) throw new Error('roll first');
-      if (me.tokens.some((_, i) => canMove(s, me, i))) throw new Error('you have a move — take it');
-      events.push({ t: 'passed', who: me.id, die: s.die });
-      const wasSix = s.die === 6;
-      s.die = null;
-      if (!(wasSix && s.house.sixAgain)) { s.sixes = 0; advance(s); }
-      break;
-    }
-
-    case 'move': {
-      if (s.die === null) throw new Error('roll first');
-      const i = move.token;
-      if (!(i >= 0 && i < TOKENS)) throw new Error('no such token');
-      if (!canMove(s, me, i)) throw new Error('that token cannot move');
-
-      const from = me.tokens[i];
-      let to;
-      if (from === -1) {
-        to = 0;
-        events.push({ t: 'leave', who: me.id, token: i, square: square(me, 0) });
+    /* Missa — the capture cleared the table. Not on the last hand, when the
+       sweep would have taken it anyway. */
+    if (s.table.length === 0 && beforeCount > 0 && s.variant === 'ronda') {
+      /* "the last hand of the round" is the last *deal*, not the last play:
+         once the deck is empty no more threes are coming, and whatever is left
+         on the table goes to the sweep anyway. */
+      const lastHand = s.deck.length === 0;
+      if (!lastHand || s.house.missaLastHand) {
+        s.teamScores[me.team] += SCORES.missa;
+        events.push({ t: 'missa', who: me.id, team: me.team, points: SCORES.missa });
       } else {
-        to = Math.min(from + s.die, GOAL);
+        events.push({ t: 'missa', who: me.id, team: me.team, points: 0, lastHand: true });
       }
-      me.tokens[i] = to;
-      events.push({ t: 'step', who: me.id, token: i, from, to, die: s.die });
-
-      /* landing on somebody */
-      const sq = square(me, to);
-      if (sq !== null && s.house.capture && !isSafe(sq)) {
-        for (const other of s.players) {
-          if (other.id === me.id) continue;
-          other.tokens.forEach((p2, j) => {
-            if (p2 >= 0 && p2 < TRACK && square(other, p2) === sq) {
-              other.tokens[j] = -1;
-              events.push({ t: 'capture', who: me.id, victim: other.id, token: j, square: sq });
-            }
-          });
-        }
-      }
-
-      if (to === GOAL) {
-        events.push({ t: 'home', who: me.id, token: i, count: atHome(me) });
-        if (atHome(me) === TOKENS) {
-          s.finished.push(me.id);
-          events.push({ t: 'allHome', who: me.id, place: s.finished.length });
-        }
-      }
-
-      /* is the round over? it ends when only one player is still going */
-      const stillGoing = s.players.filter(p => atHome(p) < TOKENS);
-      if (stillGoing.length <= 1) {
-        stillGoing.forEach(p => { if (s.finished.indexOf(p.id) === -1) s.finished.push(p.id); });
-        endRound(s, events);
-        return { state: s, events };
-      }
-
-      const wasSix = s.die === 6;
-      s.die = null;
-      if (wasSix && s.house.sixAgain) {
-        events.push({ t: 'rollAgain', who: me.id });
-      } else {
-        s.sixes = 0;
-        advance(s);
-      }
-      break;
     }
-
-    default:
-      throw new Error('unknown move: ' + move.type);
+  } else {
+    s.table.push(card);
+    s.pending = [];
+    events.push({ t: 'drop', who: me.id, card });
   }
 
+  /* the chain that runs on from a darba: the third card of that rank, then the
+     fourth. It is the darba team's chain; if the other side plays that rank
+     first, it is broken. */
+  /* The chain that runs on from a darba, and it is one side's chain: they took
+     the second card of the rank, they drop the third, they play the fourth.
+     If the other side gets in first the chain is dead — though taking a
+     just-dropped card back is a darba of their own, which is handled above and
+     starts a new chain rather than continuing this one.
+
+     EXTRAPOLATED: the rules say the b'ashra is "the fourth card of that rank
+     straight after a b'khamsa" without saying who plays it. Requiring the same
+     team is what makes the b'khamsa a gamble worth taking, so that is what
+     this does. Worth checking at a real table. */
+  if (s.chain && card.rank === s.chain.rank && !justDarba) {
+    if (me.team !== s.chain.team) {
+      events.push({ t: 'chainBroken', rank: s.chain.rank, by: me.id });
+      s.chain = null;
+    } else if (s.chain.stage === 1) {
+      const pts = s.variant === 'ronda' ? SCORES.khamsa : 0;
+      s.teamScores[me.team] += pts;
+      events.push({ t: 'khamsa', who: me.id, team: me.team, rank: card.rank, points: pts });
+      s.chain.stage = 2;
+    } else {
+      const pts = s.variant === 'ronda' ? SCORES.ashra : 0;
+      s.teamScores[me.team] += pts;
+      events.push({ t: 'ashra', who: me.id, team: me.team, rank: card.rank, points: pts });
+      s.chain = null;
+    }
+  }
+
+  s.lastPlay = { who: me.id, card, captured: taken.length > 0 };
+
+  /* everybody out of cards? three more each, and nothing new on the table */
+  if (s.players.every(p => p.hand.length === 0)) {
+    if (s.deck.length >= s.players.length * 3) {
+      dealHands(s, events);
+    } else {
+      endRound(s, events);
+      return { state: s, events };
+    }
+  }
+
+  s.turn = (s.turn + 1) % s.order.length;
   return { state: s, events };
 }
 
-/* the next seat that still has a token to move */
-function advance(s) {
-  for (let k = 1; k <= s.order.length; k++) {
-    const idx = ((s.turn + k * s.dir) % s.order.length + s.order.length) % s.order.length;
-    const p = playerById(s, s.order[idx]);
-    if (atHome(p) < TOKENS) { s.turn = idx; return; }
-  }
-  s.turn = (s.turn + 1) % s.order.length;
-}
-
-/* ---------- scoring ----------
-   Placement, the way a race scores: first home takes the round. Points are
-   handed out by finishing position so a night of Ludo slots straight into the
-   same table as everything else. */
-export const PLACE_POINTS = [10, 6, 3, 1];
-
+/* ==========================================================================
+   the end of a round
+   ========================================================================== */
 function endRound(s, events) {
-  s.phase = 'roundEnd';
-  s.roundWinner = s.finished[0] || null;
-  const detail = {};
-  s.finished.forEach((id, i) => {
-    const p = playerById(s, id);
-    const pts = PLACE_POINTS[i] === undefined ? 1 : PLACE_POINTS[i];
-    p.score += pts;
-    detail[id] = pts;
-  });
-  events.push({ t: 'roundEnd', winner: s.roundWinner, detail, order: s.finished.slice() });
-
-  const best = s.players.slice().sort((a, b) => b.score - a.score)[0];
-  const wins = s.players.filter(p => p.id === s.roundWinner).length;
-  if (s.round >= s.target) {
-    s.winner = best ? best.id : s.roundWinner;
-    s.phase = 'gameEnd';
-    events.push({ t: 'gameEnd', winner: s.winner, score: best ? best.score : 0 });
+  /* Bawesh — whoever captured last sweeps what is left */
+  if (s.table.length) {
+    const who = s.lastCapture || s.order[s.turn];
+    const p = playerById(s, who);
+    p.pile.push(...s.table);
+    events.push({ t: 'bawesh', who, cards: s.table.slice() });
+    s.table = [];
   }
-  return wins;
+
+  const counts = { A: 0, B: 0 };
+  s.players.forEach(p => { counts[p.team] += p.pile.length; });
+
+  const gained = { A: Math.max(0, counts.A - BREAK_EVEN), B: Math.max(0, counts.B - BREAK_EVEN) };
+  if (s.variant === 'ronda') {
+    s.teamScores.A += gained.A;
+    s.teamScores.B += gained.B;
+  }
+  events.push({ t: 'count', counts, gained, teamScores: { ...s.teamScores } });
+
+  /* mirror the team score onto each player so the shared table code can show it */
+  s.players.forEach(p => { p.score = s.teamScores[p.team]; });
+
+  s.phase = 'roundEnd';
+  s.roundWinner = counts.A === counts.B ? null : (counts.A > counts.B ? 'A' : 'B');
+
+  if (s.variant === 'makla') {
+    /* one hand, count, done — no running total */
+    s.winner = s.roundWinner;
+    s.phase = 'gameEnd';
+    events.push({ t: 'gameEnd', team: s.winner, counts, draw: s.roundWinner === null });
+    return;
+  }
+  const top = s.teamScores.A >= s.teamScores.B ? 'A' : 'B';
+  if (s.teamScores[top] >= s.target) {
+    s.winner = top;
+    s.phase = 'gameEnd';
+    events.push({ t: 'gameEnd', team: top, score: s.teamScores[top] });
+  }
 }
 
 export function nextRound(state, opts = {}) {
@@ -677,40 +792,48 @@ export function nextRound(state, opts = {}) {
     target: state.target,
     round: state.round + 1
   });
-  /* the winner of the last round sits out the first throw */
-  if (state.roundWinner) {
-    const w = s.order.indexOf(state.roundWinner);
-    if (w >= 0) s.turn = (w + 1) % s.order.length;
-  }
+  s.teamScores = { ...state.teamScores };
+  s.players.forEach(p => { p.score = s.teamScores[p.team]; });
+  /* the deal passes on */
+  const d = state.order.indexOf(state.dealer);
+  s.dealer = s.order[(d + 1) % s.order.length];
   return s;
 }
 
 /* ==========================================================================
    what a player is allowed to see
    --------------------------------------------------------------------------
-   Everything. Ludo is played face up — the board is the whole truth, and
-   hiding any of it would be lying about the game rather than protecting
-   anybody. The shape still matches UNO's so the table code can be shared.
+   Your own three cards, the table, and everybody's counts. Captured piles are
+   face down and stay that way — a player may remember what went into them,
+   which is part of the game, but the server will not do the remembering for
+   them.
    ========================================================================== */
 export function viewFor(state, playerId) {
+  const me = playerById(state, playerId);
   return {
-    game: 'ludo',
+    game: 'ronda',
+    variant: state.variant,
     round: state.round,
+    hand: state.hand,
     phase: state.phase,
     target: state.target,
     house: state.house,
     turn: state.order[state.turn],
     dir: state.dir,
-    die: state.die,
-    sixes: state.sixes,
-    finished: state.finished.slice(),
-    you: playerById(state, playerId) || null,
+    dealer: state.dealer,
+    table: state.table.slice(),
+    deckCount: state.deck.length,
+    teamScores: { ...state.teamScores },
+    calls: state.calls.slice(),
+    chain: state.chain ? { ...state.chain } : null,
+    lastPlay: state.lastPlay ? { who: state.lastPlay.who, card: state.lastPlay.card, captured: state.lastPlay.captured } : null,
+    lastCapture: state.lastCapture,
+    you: me ? { id: me.id, name: me.name, team: me.team, seat: me.seat, hand: me.hand.slice(), pile: me.pile.length } : null,
     players: state.order.map(id => {
       const p = playerById(state, id);
       return {
-        id: p.id, name: p.name, seat: p.seat, color: p.color,
-        tokens: p.tokens.slice(), score: p.score, connected: p.connected,
-        home: atHome(p), yard: inYard(p)
+        id: p.id, name: p.name, team: p.team, seat: p.seat,
+        count: p.hand.length, pile: p.pile.length, score: p.score, connected: p.connected
       };
     }),
     roundWinner: state.roundWinner,
@@ -727,49 +850,46 @@ export const BOT_LEVELS = ['easy', 'normal', 'sharp'];
 export function botMove(state, playerId, rnd = Math.random, level = 'normal') {
   const ms = legalMoves(state, playerId);
   if (!ms.length) return null;
-  if (ms.length === 1) return ms[0];              /* roll, or pass — no choice */
   if (!BOT_LEVELS.includes(level)) level = 'normal';
+  const me = playerById(state, playerId);
+  const card = id => me.hand.find(c => c.id === id);
   if (level === 'easy') return ms[Math.floor(rnd() * ms.length)];
 
-  const me = playerById(state, playerId);
-  const die = state.die;
   const scored = ms.map(m => {
-    if (m.type !== 'move') return { m, sc: -1 };
-    const pos = me.tokens[m.token];
-    const to = pos === -1 ? 0 : Math.min(pos + die, GOAL);
-    let sc = 0;
+    const c = card(m.cardId);
+    if (!c) return null;
+    const taken = captureWith(state.table, c.rank);
+    let sc = taken.length * 12;
+    if (taken.length && state.table.length === taken.length && state.variant === 'ronda') sc += 9;   /* missa */
 
-    if (to === GOAL) sc += 100;                                  /* finish one */
-    if (pos === -1) sc += 55;                                    /* get out */
-    if (to >= TRACK && pos < TRACK) sc += 45;                    /* into the column */
+    /* a darba is worth taking the moment it is on offer */
+    const lp = state.lastPlay;
+    if (taken.length && lp && !lp.captured && lp.card.rank === c.rank && teamOf(state, lp.who) !== me.team) sc += 10;
+    /* and so is carrying on a chain we started */
+    if (state.chain && state.chain.rank === c.rank && state.chain.team === me.team) sc += 14;
 
-    /* land on somebody, if this table allows it */
-    if (state.house.capture) {
-      const sq = square(me, to);
-      if (sq !== null && !isSafe(sq)) {
-        for (const other of state.players) {
-          if (other.id === me.id) continue;
-          if (other.tokens.some(p2 => p2 >= 0 && p2 < TRACK && square(other, p2) === sq)) sc += 80;
-        }
-      }
-      /* and try not to stop somewhere you can be taken */
-      const land = square(me, to);
-      if (land !== null && !isSafe(land)) sc -= 8;
+    if (!taken.length) {
+      /* Leaving a card is a gift if the rank is still out there. Count what we
+         can honestly see — our own hand and the table — and drop the rank that
+         is least likely to be sitting in somebody else's three. */
+      const seen = me.hand.filter(x => x.rank === c.rank).length + state.table.filter(x => x.rank === c.rank).length;
+      sc -= 6 - seen * 2;
+      /* and a low card left behind is a smaller loss than a high one, because
+         a run sweeps upward from wherever it starts */
+      sc -= (RANKS.length - ord(c.rank)) * 0.25;
     }
-    sc += to * 0.35;                                             /* progress is progress */
-    if (level === 'normal') sc += rnd() * 26;                    /* not machine-perfect */
+    if (level === 'normal') sc += rnd() * 7;
     return { m, sc };
-  }).sort((a, b) => b.sc - a.sc);
+  }).filter(Boolean).sort((a, b) => b.sc - a.sc);
 
-  return scored[0].m;
+  return scored.length ? scored[0].m : ms[0];
 }
 
 
 const $ = s => document.querySelector(s);
 const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const CVAR = { r: '#ff4d5e', g: '#3ddc6d', y: '#ffd23d', b: '#3d8bff' };
-const PALETTE = [CVAR.r, CVAR.g, CVAR.y, CVAR.b];
+const PALETTE = ['#22e6ff', '#ff8a2b', '#9cff2e', '#a55bff'];
 
 /* ==========================================================================
    PARTY — the things every CyberGrill table needs and none of them owns.
@@ -1174,147 +1294,210 @@ $('#musicChip').onclick = () => {
 $('#musicChip').style.opacity = '.5';
 
 /* ==========================================================================
-   THE BOARD, IN COORDINATES
+   LA BARAJA ESPAÑOLA
    --------------------------------------------------------------------------
-   Fifteen by fifteen. The loop is built once, in the order a token walks it,
-   so that every seat's 51st step lands on the middle cell of its own arm —
-   the one square from which it can turn into its home column. Get that wrong
-   and the tokens take a diagonal into the column, which looks like a bug
-   because it is one.
+   Forty cards, four suits, drawn rather than photographed so they stay crisp
+   at any size and can be recoloured for the arcade.
+
+   The detail worth knowing: the breaks in the border are called *pintas*, and
+   they are how you read a Spanish deck fanned in somebody's hand — oros has an
+   unbroken frame, copas one break per side, espadas two, bastos three. They
+   are drawn here for the same reason they exist on the real cards.
    ========================================================================== */
-const PATH = [];
-{
-  const p = (r, c) => PATH.push([r, c]);
-  p(6, 0);
-  for (let c = 1; c <= 5; c++) p(6, c);
-  for (let r = 5; r >= 1; r--) p(r, 6);
-  p(0, 6); p(0, 7); p(0, 8);
-  for (let r = 1; r <= 5; r++) p(r, 8);
-  for (let c = 9; c <= 13; c++) p(6, c);
-  p(6, 14); p(7, 14); p(8, 14);
-  for (let c = 13; c >= 9; c--) p(8, c);
-  for (let r = 9; r <= 13; r++) p(r, 8);
-  p(14, 8); p(14, 7); p(14, 6);
-  for (let r = 13; r >= 9; r--) p(r, 6);
-  for (let c = 5; c >= 1; c--) p(8, c);
-  p(8, 0); p(7, 0);
-}
-if (PATH.length !== TRACK) console.warn('the loop is the wrong length', PATH.length);
+const PINTAS = { o: 0, c: 1, e: 2, b: 3 };
 
-/* each colour's run in from the rim to the middle */
-const HOME_CELLS = [
-  [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5]],
-  [[1, 7], [2, 7], [3, 7], [4, 7], [5, 7]],
-  [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9]],
-  [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7]]
-];
-/* the corner each colour waits in, as the top-left cell of its 6x6 block */
-const YARDS = [[0, 0], [0, 9], [9, 9], [9, 0]];
-const YARD_SPOTS = [[1.5, 1.5], [1.5, 3.5], [3.5, 1.5], [3.5, 3.5]];
-/* where the four colours sit once they are home, so they do not stack up */
-const CENTRE = [[7.5, 6.9], [6.9, 7.5], [7.5, 8.1], [8.1, 7.5]];
-const SEAT_CORNER = ['tl', 'tr', 'br', 'bl'];
-
-/* row/col of a token, in board units, as a [r, c] pair */
-function cellOf(seat, pos, tokenIndex) {
-  if (pos === -1) {
-    const y = YARDS[seat], s = YARD_SPOTS[tokenIndex];
-    return [y[0] + s[0], y[1] + s[1]];
+const DECKS = {
+  classic: {
+    key: 'classic', icon: '🃏', name: 'ESPAÑOLA',
+    card: '#f4ecd8', ink: '#2b2417', frame: '#7a6844',
+    suit: { o: '#d19a1a', c: '#b8342a', e: '#2a63a8', b: '#4a7c3a' },
+    glow: false
+  },
+  neon: {
+    key: 'neon', icon: '✨', name: 'NEÓN',
+    card: '#0d1230', ink: '#e8ecff', frame: 'rgba(120,140,255,.55)',
+    suit: { o: '#ffc93c', c: '#ff2fb9', e: '#22e6ff', b: '#9cff2e' },
+    glow: true
   }
-  if (pos >= 0 && pos < TRACK) {
-    const cell = PATH[(STARTS[seat] + pos) % TRACK];
-    return [cell[0] + 0.5, cell[1] + 0.5];
+};
+let deckTheme = 'classic';
+const D = () => DECKS[deckTheme] || DECKS.classic;
+
+/* --- the four suits, each drawn around its own origin --- */
+function suitPath(suit, col, ink) {
+  switch (suit) {
+    case 'o':   /* oros — a coin */
+      return '<g><circle r="9.2" fill="' + col + '"/>' +
+        '<circle r="9.2" fill="none" stroke="' + ink + '" stroke-opacity=".35" stroke-width=".9"/>' +
+        '<circle r="6" fill="none" stroke="' + ink + '" stroke-opacity=".45" stroke-width=".9"/>' +
+        '<circle r="2.1" fill="' + ink + '" fill-opacity=".45"/></g>';
+    case 'c':   /* copas — a goblet */
+      return '<g fill="' + col + '">' +
+        '<path d="M-7.4,-9.5 L7.4,-9.5 L6,-1.5 A6,6 0 0 1 -6,-1.5 Z"/>' +
+        '<rect x="-1.3" y="1" width="2.6" height="5.4"/>' +
+        '<ellipse cx="0" cy="8" rx="5.8" ry="1.9"/>' +
+        '<rect x="-7.4" y="-10.6" width="14.8" height="1.6" rx=".8"/></g>';
+    case 'e':   /* espadas — a sword */
+      return '<g fill="' + col + '">' +
+        '<path d="M0,-11.5 L2.1,-7.5 L2.1,2.6 L-2.1,2.6 L-2.1,-7.5 Z"/>' +
+        '<rect x="-6.6" y="2.6" width="13.2" height="2.1" rx="1"/>' +
+        '<rect x="-1.3" y="4.7" width="2.6" height="4.4"/>' +
+        '<circle cy="10.2" r="1.9"/></g>';
+    default:    /* bastos — a club */
+      return '<g fill="' + col + '" transform="rotate(12)">' +
+        '<path d="M-2.2,10.5 L-3.1,-2.4 Q0,-11.5 3.1,-2.4 L2.2,10.5 Z"/>' +
+        '<circle cx="-3.4" cy="1.2" r="1.9"/><circle cx="3.4" cy="4.4" r="1.9"/>' +
+        '<circle cx="-3" cy="7.2" r="1.6"/></g>';
   }
-  if (pos < GOAL) {
-    const cell = HOME_CELLS[seat][pos - TRACK];
-    return [cell[0] + 0.5, cell[1] + 0.5];
+}
+
+/* --- the three figures: page, horseman, king --- */
+function figure(rank, col, ink) {
+  if (rank === 10)      /* sota — the page, standing with a staff */
+    return '<g fill="' + col + '">' +
+      '<path d="M-6.5,-22 L6.5,-22 L8,-17.5 L-8,-17.5 Z"/>' +
+      '<circle cx="0" cy="-12" r="6.4"/>' +
+      '<path d="M-11.5,13 Q-11.5,-4 0,-4 Q11.5,-4 11.5,13 Z"/>' +
+      '<rect x="9.5" y="-16" width="1.9" height="29" rx=".9"/>' +
+      '<circle cx="10.4" cy="-17.5" r="2.4"/>' +
+      '<path d="M-11.5,13 L11.5,13 L10,16 L-10,16 Z" opacity=".75"/></g>';
+  if (rank === 11)      /* caballo — the horseman, drawn as the horse's head */
+    return '<g fill="' + col + '">' +
+      '<path d="M-7,17 L-4.5,3 C-10.5,0.5 -13,-6 -9.5,-11.5 ' +
+      'C-7,-15.5 -2,-17.5 2,-18.5 L0.5,-23 L6.5,-19.5 ' +
+      'C11.5,-16 13.5,-9.5 12,-3.5 C10.5,2.5 8,6 7.5,17 Z"/>' +
+      '<circle cx="2.5" cy="-12" r="1.7" fill="' + ink + '" fill-opacity=".6"/>' +
+      '<path d="M-9.5,-11.5 C-13,-14 -14.5,-18 -14,-22 C-10.5,-19 -8,-16 -6.5,-13.5 Z"/>' +
+      '<path d="M-4.5,3 C-1,4.5 3,4.5 6.5,3" stroke="' + ink + '" stroke-opacity=".28" stroke-width="1.1" fill="none"/></g>';
+    /* rey — the crown */
+  return '<g fill="' + col + '">' +
+    '<path d="M-14,6 L-11,-12 L-5,-3 L0,-15 L5,-3 L11,-12 L14,6 Z"/>' +
+    '<rect x="-14" y="7" width="28" height="6" rx="2"/>' +
+    '<circle cx="-11" cy="-14" r="2.3"/><circle cx="0" cy="-17" r="2.6"/><circle cx="11" cy="-14" r="2.3"/>' +
+    '<circle cx="-7" cy="10" r="1.5" fill="' + ink + '" fill-opacity=".4"/>' +
+    '<circle cx="0" cy="10" r="1.5" fill="' + ink + '" fill-opacity=".4"/>' +
+    '<circle cx="7" cy="10" r="1.5" fill="' + ink + '" fill-opacity=".4"/></g>';
+}
+
+/* the pip layouts, on a 100 x 150 card */
+const PIPS = {
+  1: [[50, 75]],
+  2: [[50, 45], [50, 105]],
+  3: [[50, 40], [50, 75], [50, 110]],
+  4: [[33, 46], [67, 46], [33, 104], [67, 104]],
+  5: [[33, 46], [67, 46], [50, 75], [33, 104], [67, 104]],
+  6: [[33, 40], [67, 40], [33, 75], [67, 75], [33, 110], [67, 110]],
+  7: [[33, 38], [67, 38], [50, 57], [33, 75], [67, 75], [33, 112], [67, 112]]
+};
+
+function cardSVG(card, t) {
+  t = t || D();
+  const col = t.suit[card.suit], ink = t.ink;
+  const g = t.glow ? ' filter="url(#cgGlow)"' : '';
+  let out = '<svg class="cf" viewBox="0 0 100 150" preserveAspectRatio="none">' +
+    '<rect x="0" y="0" width="100" height="150" rx="9" fill="' + t.card + '"/>';
+
+  /* the frame, with the suit's pintas cut out of it */
+  out += '<rect x="6" y="6" width="88" height="138" rx="6" fill="none" stroke="' + t.frame + '" stroke-width="1.8"/>';
+  const n = PINTAS[card.suit];
+  for (let i = 0; i < n; i++) {
+    const f = (i + 1) / (n + 1);
+    out += '<rect x="' + (6 + 88 * f - 5) + '" y="4.2" width="10" height="3.6" fill="' + t.card + '"/>';
+    out += '<rect x="' + (6 + 88 * f - 5) + '" y="142.2" width="10" height="3.6" fill="' + t.card + '"/>';
+    out += '<rect x="4.2" y="' + (6 + 138 * f - 5) + '" width="3.6" height="10" fill="' + t.card + '"/>';
+    out += '<rect x="92.2" y="' + (6 + 138 * f - 5) + '" width="3.6" height="10" fill="' + t.card + '"/>';
   }
-  const c = CENTRE[seat];
-  return [c[0] + (tokenIndex % 2) * 0.34 - 0.17, c[1] + (tokenIndex > 1 ? 0.34 : 0) - 0.17];
+
+  /* the middle */
+  if (card.rank >= 10) {
+    out += '<g' + g + ' transform="translate(50,70) scale(1.45)">' + figure(card.rank, col, ink) + '</g>';
+    out += '<g transform="translate(50,24) scale(.62)">' + suitPath(card.suit, col, ink) + '</g>';
+    out += '<text x="50" y="130" font-size="10.5" fill="' + ink + '" fill-opacity=".7" text-anchor="middle" ' +
+      'font-weight="900" letter-spacing="1.5">' + RANK_NAME[card.rank] + '</text>';
+  } else {
+    const pips = PIPS[card.rank] || [];
+    const scale = card.rank === 1 ? 1.9 : card.rank === 2 || card.rank === 3 ? 1.35 : 1.05;
+    out += '<g' + g + '>' + pips.map(([x, y]) =>
+      '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' + suitPath(card.suit, col, ink) + '</g>'
+    ).join('') + '</g>';
+  }
+
+  /* the rank in two corners, the way you read a fanned hand */
+  const lbl = String(card.rank);
+  out += '<text x="15" y="26" font-size="19" fill="' + ink + '" text-anchor="middle" font-weight="900">' + lbl + '</text>';
+  out += '<text x="85" y="126" font-size="19" fill="' + ink + '" text-anchor="middle" font-weight="900" ' +
+    'transform="rotate(180 85 126)">' + lbl + '</text>';
+  return out + '</svg>';
 }
-const pct = v => (v / 15 * 100) + '%';
 
-/* ---------------- the board, drawn once ---------------- */
-function drawBoard() {
-  const svg = $('#board');
-  const bits = [];
-  bits.push('<rect x="0" y="0" width="15" height="15" rx="0.5" fill="#070a18"/>');
-
-  /* the four yards */
-  YARDS.forEach((y, i) => {
-    const col = CVAR[COLORS[i]];
-    bits.push(`<rect class="yard" x="${y[1]}" y="${y[0]}" width="6" height="6" rx="0.6" fill="${col}" fill-opacity=".26"/>`);
-    bits.push(`<rect class="yardIn" x="${y[1] + 0.75}" y="${y[0] + 0.75}" width="4.5" height="4.5" rx="0.5"/>`);
-    YARD_SPOTS.forEach(sp => {
-      bits.push(`<circle cx="${y[1] + sp[1]}" cy="${y[0] + sp[0]}" r="0.36" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-opacity=".5" stroke-width=".05"/>`);
-    });
-  });
-
-  /* the loop */
-  PATH.forEach(([r, c], i) => {
-    const startSeat = STARTS.indexOf(i);
-    const fill = startSeat >= 0 ? CVAR[COLORS[startSeat]] : '#101532';
-    const op = startSeat >= 0 ? '.85' : '1';
-    bits.push(`<rect class="cell" x="${c}" y="${r}" width="1" height="1" rx=".14" fill="${fill}" fill-opacity="${op}"/>`);
-    if (startSeat < 0 && isSafe(i)) {
-      bits.push(`<path class="star" transform="translate(${c + 0.5} ${r + 0.5}) scale(0.030)" d="M0,-11 L3,-3.5 L11,-3.5 L4.6,1.4 L7,9 L0,4.4 L-7,9 L-4.6,1.4 L-11,-3.5 L-3,-3.5 Z"/>`);
-    }
-  });
-
-  /* the four runs in */
-  HOME_CELLS.forEach((run, i) => {
-    const col = CVAR[COLORS[i]];
-    run.forEach(([r, c]) => {
-      bits.push(`<rect class="cell" x="${c}" y="${r}" width="1" height="1" rx=".14" fill="${col}" fill-opacity=".62"/>`);
-    });
-  });
-
-  /* the middle, as four triangles meeting in the centre */
-  const T = [
-    [[6, 6], [6, 9], [7.5, 7.5]],      /* top    (row 6) */
-    [[6, 9], [9, 9], [7.5, 7.5]],      /* right  */
-    [[9, 9], [9, 6], [7.5, 7.5]],      /* bottom */
-    [[9, 6], [6, 6], [7.5, 7.5]]       /* left   */
-  ];
-  /* each triangle belongs to the colour whose run arrives at it */
-  const TRI_SEAT = [1, 2, 3, 0];
-  T.forEach((tri, i) => {
-    const col = CVAR[COLORS[TRI_SEAT[i]]];
-    const pts = tri.map(([r, c]) => `${c},${r}`).join(' ');
-    bits.push(`<polygon class="midT" points="${pts}" fill="${col}" fill-opacity=".72"/>`);
-  });
-
-  svg.innerHTML = bits.join('');
+function cardBackSVG(t) {
+  t = t || D();
+  return '<svg class="cf" viewBox="0 0 100 150" preserveAspectRatio="none">' +
+    '<rect x="0" y="0" width="100" height="150" rx="9" fill="#5a2130"/>' +
+    '<rect x="6" y="6" width="88" height="138" rx="6" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6"/>' +
+    '<g fill="rgba(255,255,255,.13)">' +
+    [22, 52, 82, 112].map(y => [24, 50, 76].map(x =>
+      '<circle cx="' + x + '" cy="' + y + '" r="7"/>').join('')).join('') + '</g></svg>';
 }
+
+function cardEl(card, cls) {
+  const d = el('div', 'rcard ' + (cls || ''));
+  d.innerHTML = cardSVG(card);
+  d.dataset.cid = card.id;
+  d.dataset.rank = card.rank;
+  if (D().glow) d.style.setProperty('--glowc', D().suit[card.suit]);
+  return d;
+}
+const cardName = c => c.rank + ' ' + SUIT_NAME[c.suit] + (RANK_NAME[c.rank] ? ' (' + RANK_NAME[c.rank] + ')' : '');
+
+function applyDeck(k) {
+  deckTheme = DECKS[k] ? k : 'classic';
+  Object.keys(DECKS).forEach(x => document.body.classList.remove('th-' + x));
+  document.body.classList.add('th-' + deckTheme);
+  try { localStorage.setItem('cybergrill_ronda_deck', deckTheme); } catch (e) { }
+  if (G) render();
+}
+try { const t0 = localStorage.getItem('cybergrill_ronda_deck'); if (t0 && DECKS[t0]) deckTheme = t0; } catch (e) { }
+document.body.classList.add('th-' + deckTheme);
 
 /* ==========================================================================
-   state
+   setup
    ========================================================================== */
 let G = null, ME = 'you', busy = false, NET = null, animating = false;
-const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU', 'BILLAL'];
+const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU'];
 
-const HOUSE_UI = [
-  ['capture', 'CAPTURE', 'Land on somebody and they go back to the yard. Stars and starts stay safe.'],
-  ['sixAgain', 'A SIX ROLLS AGAIN', 'Throw a six and you go again.'],
-  ['threeSixes', 'THREE SIXES FORFEITS', 'Three in a row and you lose the turn.'],
-  ['exactFinish', 'EXACT ROLL TO FINISH', 'You must land on the middle exactly.'],
-  ['sixToLeave', 'SIX TO LEAVE THE YARD', 'Nothing comes out without a six.']
+const VARIANT_UI = [
+  ['ronda', '🃏', 'RONDA', 'The full game. Rondas and tringas called on the deal, the darba chain, missa, and a match to 41.'],
+  ['makla', '☕', 'MAKLA', 'The café version. Same capturing, none of the paperwork — play the hand out and count. Twenty is a draw.']
 ];
 const SKILL_UI = [['easy', '🙂 EASY'], ['normal', '🙃 NORMAL'], ['sharp', '😈 SHARP']];
-const SPEED_UI = [['slow', '🐢 SLOW', 1500, 900], ['normal', 'NORMAL', 800, 520], ['fast', '⚡ FAST', 380, 260]];
-const cfg = {
-  bots: 3, skill: 'normal', speed: 'normal', target: 1,
-  house: { capture: false, sixAgain: true, threeSixes: true, exactFinish: true, sixToLeave: true }
-};
+const SPEED_UI = [['slow', '🐢 SLOW', 1400, 800], ['normal', 'NORMAL', 750, 500], ['fast', '⚡ FAST', 340, 240]];
+const cfg = { variant: 'ronda', seats: 2, skill: 'normal', speed: 'normal' };
 const speedMs = () => { const r = SPEED_UI.find(x => x[0] === cfg.speed) || SPEED_UI[1]; return r[2] + Math.random() * r[3]; };
 
 function buildSetup() {
-  const bc = $('#botCount'); bc.innerHTML = '';
-  [1, 2, 3].forEach(n => {
-    const p = el('div', 'pill' + (cfg.bots === n ? ' on' : ''), n + ' BOT' + (n > 1 ? 'S' : ''));
-    p.onclick = () => { cfg.bots = n; buildSetup(); SFX.tick(); };
-    bc.appendChild(p);
+  const vs = $('#variantSel'); vs.innerHTML = '';
+  VARIANT_UI.forEach(([k, icon, name, desc]) => {
+    const d = el('div', 'modeCard' + (cfg.variant === k ? ' on' : ''), '<b>' + icon + ' ' + name + '</b><span>' + desc + '</span>');
+    d.onclick = () => { cfg.variant = k; buildSetup(); SFX.tick(); };
+    vs.appendChild(d);
   });
+  $('#variantBlurb').textContent = (VARIANT_UI.find(v => v[0] === cfg.variant) || VARIANT_UI[0])[3];
+
+  const th = $('#themeSel'); th.innerHTML = '';
+  Object.keys(DECKS).forEach(k => {
+    const p = el('div', 'pill' + (deckTheme === k ? ' on' : ''), DECKS[k].icon + ' ' + DECKS[k].name);
+    p.onclick = () => { applyDeck(k); buildSetup(); SFX.tick(); };
+    th.appendChild(p);
+  });
+
+  const ss = $('#seatSel'); ss.innerHTML = '';
+  [[2, 'HEAD TO HEAD'], [4, 'FOUR, IN PAIRS']].forEach(([n, name]) => {
+    const p = el('div', 'pill' + (cfg.seats === n ? ' on' : ''), name);
+    p.onclick = () => { cfg.seats = n; buildSetup(); SFX.tick(); };
+    ss.appendChild(p);
+  });
+
   const sk = $('#skillSel'); sk.innerHTML = '';
   SKILL_UI.forEach(([k, name]) => {
     const p = el('div', 'pill' + (cfg.skill === k ? ' on' : ''), name);
@@ -1327,168 +1510,140 @@ function buildSetup() {
     p.onclick = () => { cfg.speed = k; buildSetup(); SFX.tick(); };
     sp.appendChild(p);
   });
-  const ts = $('#targetSel'); ts.innerHTML = '';
-  [1, 2, 3].forEach(n => {
-    const p = el('div', 'pill' + (cfg.target === n ? ' on' : ''), n === 1 ? 'ONE' : n + ' ROUNDS');
-    p.onclick = () => { cfg.target = n; buildSetup(); SFX.tick(); };
-    ts.appendChild(p);
-  });
-  const hl = $('#houseList'); hl.innerHTML = '';
-  HOUSE_UI.forEach(([k, name, desc]) => {
-    const d = el('div', 'hr2' + (cfg.house[k] ? ' on' : ''),
-      '<div class="sw"></div><div><b>' + name + '</b><br><span>' + desc + '</span></div>');
-    d.onclick = () => { cfg.house[k] = !cfg.house[k]; buildSetup(); SFX.tick(); };
-    hl.appendChild(d);
-  });
 }
 buildSetup();
 try { const n = localStorage.getItem('cybergrill_uno_name'); if (n) $('#myName').value = n; } catch (e) { }
 
 /* ==========================================================================
-   drawing the live board
+   drawing the table
    ========================================================================== */
-function seatOf(pid) { const p = playerById(G, pid); return p ? p.seat : 0; }
-function colorOf(pid) { const p = playerById(G, pid); return p ? CVAR[p.color] : '#888'; }
 const myView = () => NET ? NET.view : viewFor(G, ME);
+function seatColor(p) { return p.team === 'A' ? 'var(--cyan)' : 'var(--orange)'; }
 
-function render() {
-  if (!G || !playerById(G, ME)) return;
-  const v = myView();
-  if (!v) return;
-  const wrap = $('#boardWrap');
-
-  /* seats */
-  wrap.querySelectorAll('.pSeat').forEach(e => e.remove());
-  v.players.forEach(p => {
-    const s = el('div', 'pSeat ' + SEAT_CORNER[p.seat] +
-      (v.turn === p.id ? ' turn' : '') +
-      (p.home === TOKENS ? ' done' : '') +
-      (p.connected === false ? ' gone' : ''));
-    s.innerHTML = '<span class="dot" style="background:' + CVAR[p.color] + '"></span>' +
-      '<span class="nm">' + esc(p.name) + (p.id === ME ? ' (you)' : '') + '</span>' +
-      '<span class="sc">' + p.home + '/4</span>' +
-      (v.target > 1 ? '<span style="color:var(--dim)">· ' + p.score + 'p</span>' : '');
-    wrap.appendChild(s);
-  });
-
-  /* tokens */
-  const movable = new Set(v.moves.filter(m => m.type === 'move').map(m => m.token));
-  v.players.forEach(p => {
-    p.tokens.forEach((pos, i) => {
-      const id = 'tok-' + p.id + '-' + i;
-      let t = document.getElementById(id);
-      if (!t) {
-        t = el('div', 'tok');
-        t.id = id;
-        t.style.background = CVAR[p.color];
-        t.style.color = CVAR[p.color];
-        wrap.appendChild(t);
-      }
-      const mine = p.id === ME;
-      t.className = 'tok' + (pos === GOAL ? ' home' : '') + (mine && movable.has(i) && !animating ? ' can' : '');
-      t.textContent = pos === GOAL ? '★' : '';
-      const [r, c] = cellOf(p.seat, pos, i);
-      t.style.left = pct(c); t.style.top = pct(r);
-      t.onclick = (mine && movable.has(i) && !animating) ? () => play({ type: 'move', token: i }) : null;
-    });
-  });
-
-  paintDie(v);
-  buildIntel(v);
-  const myTurn = v.turn === ME;
-  $('#dirBadge').textContent = myTurn ? '🎲' : '⏳';
-
-  /* actions */
-  const acts = $('#acts'); acts.innerHTML = '';
-  if (v.moves.some(m => m.type === 'pass')) {
-    const b = el('button', 'act warn', 'NOTHING TO MOVE — PASS');
-    b.onclick = () => play({ type: 'pass' });
-    acts.appendChild(b);
+/* where each opponent sits, relative to me, once I am at the bottom */
+function seatSlots(v) {
+  const n = v.players.length;
+  const mine = v.players.findIndex(p => p.id === ME);
+  const out = [];
+  for (let k = 1; k < n; k++) {
+    const p = v.players[(mine + k) % n];
+    out.push({ p, where: n === 2 ? 'top' : (k === 1 ? 'right' : k === 2 ? 'top' : 'left') });
   }
-}
-
-const PIPS = {
-  1: [[50, 50]],
-  2: [[28, 28], [72, 72]],
-  3: [[26, 26], [50, 50], [74, 74]],
-  4: [[28, 28], [72, 28], [28, 72], [72, 72]],
-  5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
-  6: [[28, 24], [72, 24], [28, 50], [72, 50], [28, 76], [72, 76]]
-};
-function paintDie(v) {
-  const d = $('#die');
-  const myTurn = v.turn === ME;
-  const canRoll = myTurn && v.moves.some(m => m.type === 'roll') && !animating;
-  d.disabled = !canRoll;
-  const face = v.die;
-  d.innerHTML = face
-    ? PIPS[face].map(([x, y]) => `<i style="left:calc(${x}% - 6.5px);top:calc(${y}% - 6.5px)"></i>`).join('')
-    : '<span style="font-size:26px;color:#151a33;font-weight:900">?</span>';
-  const who = (v.players.find(p => p.id === v.turn) || {}).name || '';
-  $('#dieHint').textContent = !myTurn ? who + ' is throwing…'
-    : canRoll ? 'Tap the die'
-      : v.moves.some(m => m.type === 'move') ? 'Pick a token to move ' + v.die
-        : 'Nothing can use a ' + v.die;
-}
-
-/* ---------------- moving, with the token actually walking ---------------- */
-function play(move) {
-  if (!G || animating) return;
-  if (busy && NET === null) return;
-  if (NET) { netSend({ t: 'move', move }); return; }
-  try {
-    const before = snapshot();
-    const r = applyMove(G, ME, move);
-    G = r.state;
-    afterMove(r.events, before);
-  } catch (e) { SFX.bad(); logLine('⚠ ' + e.message); }
-}
-function snapshot() {
-  const out = {};
-  G.players.forEach(p => { out[p.id] = p.tokens.slice(); });
   return out;
 }
 
-/* walk a token cell by cell so the eye can follow it round the board */
-function walk(pid, token, from, to, done) {
-  const seat = seatOf(pid);
-  const t = document.getElementById('tok-' + pid + '-' + token);
-  if (!t || from < 0 || to <= from) { done && done(); return; }
-  animating = true;
-  let step = from;
-  const tick = () => {
-    step++;
-    const [r, c] = cellOf(seat, step, token);
-    t.style.left = pct(c); t.style.top = pct(r);
-    SFX.tick();
-    if (step < to) setTimeout(tick, 115);
-    else { animating = false; done && done(); }
-  };
-  setTimeout(tick, 60);
+function render() {
+  if (!G) return;
+  const v = myView();
+  if (!v || !v.you) return;
+
+  /* the seats */
+  const felt = $('#felt');
+  felt.querySelectorAll('.rSeat').forEach(e => e.remove());
+  seatSlots(v).forEach(({ p, where }) => {
+    const s = el('div', 'rSeat ' + where + (v.turn === p.id ? ' turn' : '') +
+      (p.team === v.you.team ? ' mate' : '') + (p.connected === false ? ' gone' : ''));
+    s.innerHTML =
+      '<div class="av" style="background:' + seatColor(p) + '">' + esc(p.name.slice(0, 2)) + '</div>' +
+      '<div class="nm">' + esc(p.name) + '</div>' +
+      '<div class="backs">' + '<i></i>'.repeat(p.count) + '</div>' +
+      '<div class="pileNum">🂠 ' + p.pile + '</div>';
+    felt.appendChild(s);
+  });
+
+  /* the four in the middle */
+  const mesa = $('#mesa'); mesa.innerHTML = '';
+  if (!v.table.length) mesa.appendChild(el('div', 'mesaEmpty', 'TABLE CLEAR'));
+  v.table.forEach(c => {
+    const d = cardEl(c);
+    d.dataset.mesa = '1';
+    mesa.appendChild(d);
+  });
+
+  /* my three */
+  const hand = $('#myHand'); hand.innerHTML = '';
+  const myTurn = v.turn === ME && v.phase === 'playing';
+  v.you.hand.forEach(c => {
+    const taken = captureWith(v.table, c.rank);
+    const d = cardEl(c, (myTurn ? '' : 'dim') + (taken.length ? ' willCapture' : ''));
+    if (myTurn && !animating) {
+      d.onclick = () => play(c.id);
+      d.onpointerenter = () => preview(taken);
+      d.onpointerleave = () => preview([]);
+    }
+    hand.appendChild(d);
+  });
+
+  /* the scoreboard, and whose game it is */
+  const tb = $('#teamBar');
+  if (v.variant === 'ronda') {
+    const mine = v.you.team;
+    tb.innerHTML =
+      '<span class="tA">A ' + v.teamScores.A + (mine === 'A' ? ' ★' : '') + '</span>' +
+      '<span class="tB">B ' + v.teamScores.B + (mine === 'B' ? ' ★' : '') + '</span>' +
+      '<span style="color:var(--dim);background:none;padding-left:2px">to ' + v.target + '</span>';
+  } else {
+    tb.innerHTML = '<span class="tA">☕ MAKLA</span>' +
+      '<span style="color:var(--dim);background:none">' + v.deckCount + ' left</span>';
+  }
+
+  /* the darba chain, if one is live */
+  const ct = $('#chainTag');
+  if (v.chain) {
+    ct.style.display = '';
+    ct.innerHTML = '🔗 ' + (v.chain.stage === 1 ? "B'KHAMSA" : "B'ASHRA") + ' ON THE ' + v.chain.rank +
+      ' · TEAM ' + v.chain.team;
+  } else ct.style.display = 'none';
+
+  buildIntel(v);
+  const acts = $('#acts'); acts.innerHTML = '';
+  if (!myTurn && v.phase === 'playing') {
+    const who = (v.players.find(p => p.id === v.turn) || {}).name || '';
+    acts.appendChild(el('div', null, '<div style="font-size:11px;letter-spacing:2px;color:var(--dim);font-weight:900">' +
+      esc(who) + ' IS PLAYING…</div>'));
+  }
 }
 
-function afterMove(events, before) {
+/* light up what a card would take, before you commit to it */
+function preview(taken) {
+  const ids = new Set(taken.map(c => c.id));
+  $('#mesa').querySelectorAll('.rcard').forEach(d => d.classList.toggle('willTake', ids.has(d.dataset.cid)));
+}
+
+/* ==========================================================================
+   playing
+   ========================================================================== */
+function play(cardId) {
+  if (!G || animating) return;
+  if (busy && !NET) return;
+  preview([]);
+  if (NET) { netSend({ t: 'move', move: { type: 'play', cardId } }); return; }
+  try {
+    const r = applyMove(G, ME, { type: 'play', cardId });
+    G = r.state;
+    after(r.events);
+  } catch (e) { SFX.bad(); logLine('⚠ ' + e.message); }
+}
+
+function after(events) {
+  const cap = events.find(e => e.t === 'capture');
   showEvents(events);
-  const stepEv = events.find(e => e.t === 'step' && e.from >= 0 && e.to > e.from);
-  const finish = () => {
+  const done = () => {
     render();
     if (G.phase !== 'playing') return showRoundEnd();
     if (!busy) tickBots();
   };
-  if (stepEv) {
-    render();
-    /* put it back where it started, then walk it */
-    const seat = seatOf(stepEv.who);
-    const t = document.getElementById('tok-' + stepEv.who + '-' + stepEv.token);
-    if (t) { const [r, c] = cellOf(seat, stepEv.from, stepEv.token); t.style.left = pct(c); t.style.top = pct(r); }
-    walk(stepEv.who, stepEv.token, stepEv.from, stepEv.to, finish);
-  } else finish();
+  if (cap && cap.taken.length) {
+    /* let the captured cards slide off the table before redrawing it */
+    animating = true;
+    const ids = new Set(cap.taken.map(c => c.id));
+    $('#mesa').querySelectorAll('.rcard').forEach(d => { if (ids.has(d.dataset.cid)) d.classList.add('taking'); });
+    setTimeout(() => { animating = false; done(); }, 420);
+  } else done();
 }
 
-/* ---------------- the machines ---------------- */
 function tickBots() {
-  if (NET) return;
-  if (!G || G.phase !== 'playing') return;
+  if (NET || !G || G.phase !== 'playing') return;
   const who = G.order[G.turn];
   if (who === ME) return;
   busy = true;
@@ -1497,59 +1652,91 @@ function tickBots() {
     const m = botMove(G, who, Math.random, cfg.skill);
     if (!m) { busy = false; return; }
     let r;
-    try { r = applyMove(G, who, m); }
-    catch (e) { busy = false; return; }
-    G = r.state;
-    busy = false;
-    afterMove(r.events, null);
+    try { r = applyMove(G, who, m); } catch (e) { busy = false; return; }
+    G = r.state; busy = false;
+    after(r.events);
   }, speedMs());
 }
 
-/* ---------------- events ---------------- */
-function nameOf(id) { const p = playerById(G, id); return p ? p.name : '?'; }
+/* ==========================================================================
+   what just happened
+   ========================================================================== */
+function nameOf(id) { const p = (G.players || []).find(x => x.id === id); return p ? p.name : '?'; }
 function logLine(t) {
   const l = $('#log');
   l.insertBefore(el('div', null, t), l.firstChild);
   while (l.children.length > (innerWidth < 700 ? 3 : 6)) l.removeChild(l.lastChild);
 }
-function tokenEl(pid, i) { return document.getElementById('tok-' + pid + '-' + i); }
+function callOut(word, sub) {
+  /* the last events of a round arrive with the round-end card, and a shout
+     landing on top of it just makes both unreadable */
+  if ($('#roundOvl').classList.contains('show')) return;
+  const d = el('div', 'callOut', '<b>' + esc(word) + '</b><span>' + esc(sub || '') + '</span>');
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1600);
+}
+const clearCallOuts = () => document.querySelectorAll('.callOut').forEach(e => e.remove());
 
 function showEvents(evs) {
   (evs || []).forEach(e => {
     switch (e.t) {
-      case 'roll':
+      case 'deal':
         SFX.shuffle();
-        { const d = $('#die'); d.classList.remove('rolling'); void d.offsetWidth; d.classList.add('rolling'); }
-        logLine('🎲 ' + nameOf(e.who) + ' threw a ' + e.die);
+        logLine('🂠 three each — ' + e.left + ' left in the deck');
         break;
-      case 'leave': SFX.play(); logLine('🚪 ' + nameOf(e.who) + ' brings one out'); break;
-      case 'step': break;
-      case 'capture': {
+      case 'bury':
+        logLine('↩️ ' + cardName(e.card) + ' buried, the table has to start dead');
+        break;
+      case 'call': {
+        const label = e.kind === 'tringa' ? 'TRINGA' : 'RONDA';
+        if (e.points > 0) {
+          SFX.uno();
+          callOut(label, nameOf(e.who) + ' · ' + e.rank + 's · +' + e.points);
+          burst(innerWidth / 2, innerHeight * .38, 30, ['#ffc93c', '#fff']);
+          logLine('📣 ' + nameOf(e.who) + ' calls ' + label + ' on the ' + e.rank + 's — ' + e.points);
+        } else {
+          logLine('📣 ' + nameOf(e.who) + ' calls ' + label + ' on the ' + e.rank + 's — beaten');
+        }
+        break;
+      }
+      case 'capture':
+        SFX.play();
+        logLine('✋ ' + nameOf(e.who) + ' plays the ' + e.card.rank + ' and takes ' +
+          e.taken.map(c => c.rank).join(', ') + (e.run ? ' — a run' : ''));
+        break;
+      case 'drop':
+        SFX.draw();
+        logLine('🃏 ' + nameOf(e.who) + ' leaves the ' + e.card.rank);
+        break;
+      case 'darba':
         SFX.hit();
-        const t = tokenEl(e.victim, e.token);
-        if (t) { t.classList.remove('hit'); void t.offsetWidth; t.classList.add('hit'); }
-        const r = t && t.getBoundingClientRect();
-        if (r) burst(r.left + r.width / 2, r.top + r.height / 2, 22, [colorOf(e.victim), '#fff']);
-        logLine('💥 ' + nameOf(e.who) + ' sends ' + nameOf(e.victim) + ' home');
+        callOut('DARBA', nameOf(e.who) + (e.points ? ' · +' + e.points : ''));
+        logLine('👊 DARBA — ' + nameOf(e.who) + ' takes the ' + e.rank + ' straight back' + (e.points ? ' (+' + e.points + ')' : ''));
         break;
-      }
-      case 'home': {
-        SFX.uno();
-        const t = tokenEl(e.who, e.token);
-        const r = t && t.getBoundingClientRect();
-        if (r) burst(r.left + r.width / 2, r.top + r.height / 2, 26, [colorOf(e.who), '#ffd93c']);
-        logLine('🏠 ' + nameOf(e.who) + ' gets one home (' + e.count + '/4)');
-        break;
-      }
-      case 'allHome':
+      case 'khamsa':
         SFX.win();
-        logLine('🏁 ' + nameOf(e.who) + ' is all home — ' + ['1st', '2nd', '3rd', '4th'][e.place - 1]);
+        callOut("B'KHAMSA", nameOf(e.who) + ' · +' + e.points);
+        burst(innerWidth / 2, innerHeight * .4, 40, ['#ffc93c', '#ff8a2b']);
+        logLine("🔥 B'KHAMSA — the third " + e.rank + ' (+' + e.points + ')');
         break;
-      case 'threeSixes': SFX.bad(); logLine('🚫 three sixes — ' + nameOf(e.who) + ' loses the turn'); break;
-      case 'stuck': logLine('😐 a ' + e.die + ' is no use to ' + nameOf(e.who)); break;
-      case 'passed': logLine(nameOf(e.who) + ' passes'); break;
-      case 'rollAgain': logLine('🔁 a six — ' + nameOf(e.who) + ' throws again'); break;
-      case 'left': logLine('📴 ' + nameOf(e.who) + ' dropped out'); break;
+      case 'ashra':
+        SFX.win();
+        callOut("B'ASHRA", nameOf(e.who) + ' · +' + e.points);
+        for (let i = 0; i < 4; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 130);
+        logLine("💥 B'ASHRA — all four " + e.rank + 's (+' + e.points + ')');
+        break;
+      case 'chainBroken': logLine('🔗 the chain on the ' + e.rank + ' is broken'); break;
+      case 'missa':
+        if (e.points) { SFX.uno(); callOut('MISSA', nameOf(e.who) + ' · +' + e.points); logLine('🧹 MISSA — ' + nameOf(e.who) + ' clears the table (+' + e.points + ')'); }
+        else logLine('🧹 table cleared — no missa on the last hand');
+        break;
+      case 'bawesh':
+        SFX.rev();
+        logLine('🧺 BAWESH — ' + nameOf(e.who) + ' sweeps the last ' + e.cards.length);
+        break;
+      case 'count':
+        logLine('🔢 A ' + e.counts.A + ' cards (+' + e.gained.A + ') · B ' + e.counts.B + ' cards (+' + e.gained.B + ')');
+        break;
     }
   });
 }
@@ -1558,58 +1745,71 @@ function showEvents(evs) {
 function buildIntel(v) {
   if (!document.body.classList.contains('intelOn')) return;
   const box = $('#intel');
-  let html = '<div class="iSec"><h4>THE RACE</h4>';
-  v.players.slice().sort((a, b) => steps(b) - steps(a)).forEach(p => {
-    const done = p.tokens.reduce((t, x) => t + Math.max(0, x), 0);
-    const pctDone = Math.round(done / (GOAL * TOKENS) * 100);
+  const seen = {};
+  RANKS.forEach(r => seen[r] = 0);
+  v.table.forEach(c => seen[c.rank]++);
+  v.you.hand.forEach(c => seen[c.rank]++);
+
+  let html = '<div class="iSec"><h4>THE COUNT</h4>' +
+    '<div class="iRow"><span>Cards left to deal</span><span class="r">' + v.deckCount + '</span></div>' +
+    '<div class="iRow"><span>On the table</span><span class="r">' + v.table.length + '</span></div>' +
+    '<div class="iRow"><span>In your pile</span><span class="r">' + v.you.pile + '</span></div>' +
+    '<div class="iSub">Forty cards in the deck, so twenty is nobody\'s. Every card over twenty is a point.</div></div>';
+
+  html += '<div class="iSec"><h4>THE PILES</h4>';
+  v.players.forEach(p => {
     html += '<div class="iRow' + (p.id === ME ? ' me' : '') + '">' +
-      '<span style="width:9px;height:9px;border-radius:3px;background:' + CVAR[p.color] + '"></span>' +
-      '<span>' + esc(p.name) + '</span><span class="r">' + p.home + '/4</span></div>' +
-      '<div class="iMeter" style="margin:-2px 0 7px"><i style="width:' + pctDone + '%;background:' + CVAR[p.color] + '"></i></div>';
+      '<span style="width:9px;height:9px;border-radius:3px;background:' + seatColor(p) + '"></span>' +
+      '<span>' + esc(p.name) + (p.team === v.you.team && p.id !== ME ? ' (partner)' : '') + '</span>' +
+      '<span class="r">' + p.pile + '</span></div>';
   });
   html += '</div>';
 
-  const me = v.players.find(p => p.id === ME);
-  if (me) {
-    html += '<div class="iSec"><h4>YOUR FOUR</h4>';
-    me.tokens.forEach((pos, i) => {
-      const where = pos === -1 ? 'in the yard' : pos === GOAL ? 'home' :
-        pos >= TRACK ? 'in the run in, ' + (GOAL - pos) + ' to go' :
-          'on the track, ' + (GOAL - pos) + ' to go';
-      html += '<div class="iRow"><span style="width:9px;height:9px;border-radius:50%;background:' + CVAR[me.color] + '"></span>' +
-        '<span>Token ' + (i + 1) + '</span><span class="r" style="font-size:10px;color:var(--dim)">' + where + '</span></div>';
-    });
-    html += '</div>';
-  }
-
-  html += '<div class="iSec"><h4>THE RULES IN PLAY</h4><div class="iSub">' +
-    HOUSE_UI.filter(([k]) => v.house[k]).map(([, n]) => n.toLowerCase()).join('<br>') +
+  html += '<div class="iSec"><h4>WHAT YOU CAN SEE</h4><div class="iSub">' +
+    'Ranks you hold or can see on the table. Anything showing 0 is entirely unaccounted for.</div>' +
+    '<div class="iBars" style="height:44px">' +
+    RANKS.map(r => '<div style="height:' + (6 + seen[r] * 11) + 'px;background:' +
+      (seen[r] ? 'var(--cyan)' : 'rgba(255,255,255,.12)') + '"><span>' + r + '</span></div>').join('') +
     '</div></div>';
+
+  if (v.variant === 'ronda') {
+    html += '<div class="iSec"><h4>WHAT THINGS PAY</h4><div class="iSub">' +
+      'ronda 1 &nbsp;·&nbsp; tringa 5<br>darba 1 &nbsp;·&nbsp; b\'khamsa 5 &nbsp;·&nbsp; b\'ashra 10<br>missa 1 &nbsp;·&nbsp; a point a card over twenty' +
+      '</div></div>';
+  }
   if (NET) html += '<div class="iSec"><div class="iRow"><span>ROOM</span><span class="r">' + NET.code + '</span></div></div>';
   box.innerHTML = html;
 }
-const steps = p => p.tokens.reduce((t, x) => t + Math.max(0, x), 0);
 
 $('#infoChip').onclick = () => { document.body.classList.toggle('intelOn'); SFX.tick(); if (G) render(); };
+$('#deckChip').onclick = () => {
+  const keys = Object.keys(DECKS);
+  applyDeck(keys[(keys.indexOf(deckTheme) + 1) % keys.length]);
+  logLine(D().icon + ' deck: ' + D().name.toLowerCase());
+  SFX.tick();
+};
 $('#rulesChip').onclick = () => {
-  const on = HOUSE_UI.filter(([k]) => G.house[k]).map(([, n]) => n);
-  alert('🎲 LUDO\n\nFour tokens round the board and home before anybody else.\n\n' +
-    'A token walks ' + GOAL + ' steps: ' + TRACK + ' round the outside, then five up your own colour, then the middle.\n\n' +
-    'In play: ' + (on.length ? on.join(', ') : 'nothing but the basics') + '.');
+  const v = myView();
+  alert((v.variant === 'makla' ? '☕ MAKLA' : '🃏 RONDA') + '\n\n' +
+    'Forty cards: 1 to 7, then sota, caballo, rey. No 8, no 9 — the 7 runs straight into the 10.\n\n' +
+    'Play one card. Same rank as one on the table and you take both, plus any unbroken run climbing from it. No match and it stays there.\n\n' +
+    (v.variant === 'ronda'
+      ? 'Called on the deal: ronda (a pair) 1, tringa (three) 5.\nIn play: darba 1, b\'khamsa 5, b\'ashra 10, missa 1.\nAt the end: bawesh sweeps, then a point for every card over twenty. First to ' + v.target + '.'
+      : 'No calls, no missa, no running total. Play it out, sweep, and count. Twenty is a draw.'));
 };
 
 /* ---------------- hopping between the games ---------------- */
 const GAME_LINKS = [
   ['uno', '🎴', 'UNO', 'Official rules, every house rule as a switch, five ways to play.', '../'],
-  ['ronda', '🃏', 'RONDA', 'The Algerian game. Match a rank, sweep the run, count to 41.', '../ronda/'],
-  ['ludo', '🎲', 'LUDO', 'Four tokens home before anybody else. Six to get out.', './']
+  ['ronda', '🃏', 'RONDA', 'The Algerian game. Match a rank, sweep the run, count to 41.', './'],
+  ['ludo', '🎲', 'LUDO', 'Four tokens home before anybody else. Six to get out.', '../ludo/']
 ];
 $('#gamesChip').onclick = () => {
   const box = $('#pickCard');
   box.innerHTML = '<h2>PICK A GAME</h2>';
   const grid = el('div', 'gameGrid');
   GAME_LINKS.forEach(([id, icon, name, blurb, href]) => {
-    const a = el('a', id === 'ludo' ? 'here' : '', '<i>' + icon + '</i><div><b>' + name + '</b><span>' + blurb + '</span></div>');
+    const a = el('a', id === 'ronda' ? 'here' : '', '<i>' + icon + '</i><div><b>' + name + '</b><span>' + blurb + '</span></div>');
     a.href = href;
     grid.appendChild(a);
   });
@@ -1625,80 +1825,82 @@ $('#gamesChip').onclick = () => {
 };
 
 $('#quitChip').onclick = () => { if (confirm('Leave the game?')) { if (NET) netLeave(); location.reload(); } };
-$('#die').onclick = () => play({ type: 'roll' });
-addEventListener('keydown', e => {
-  if (!G || animating) return;
-  if (e.key === ' ' || e.key === 'Enter') { if (!$('#die').disabled) { e.preventDefault(); play({ type: 'roll' }); } }
-});
 
 /* ---------------- the end of a round ---------------- */
 function showRoundEnd() {
+  clearCallOuts();
   music.tense(false); music.sting();
-  for (let i = 0; i < 6; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 140);
   const v = myView();
   const gameOver = G.phase === 'gameEnd';
+  for (let i = 0; i < 6; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 140);
   const box = $('#roundCard');
-  const champ = playerById(G, gameOver ? G.winner : G.roundWinner);
+  const won = gameOver ? G.winner : G.roundWinner;
+  const mine = v.you.team;
+  const headline = won === null ? 'A DRAW' : (won === mine ? 'YOU TAKE IT' : 'THEY TAKE IT');
   box.innerHTML =
-    '<div style="font-size:52px">' + (gameOver ? '🏆' : '🏁') + '</div>' +
-    '<div class="bigName">' + esc(champ ? champ.name : '—') + '</div>' +
-    '<h2>' + (gameOver ? 'WINS THE MATCH' : 'TAKES THE ROUND') + '</h2>';
+    '<div style="font-size:52px">' + (won === null ? '🤝' : gameOver ? '🏆' : '🧺') + '</div>' +
+    '<div class="bigName">' + (won === null ? 'LEVEL' : 'TEAM ' + won) + '</div>' +
+    '<h2>' + (gameOver ? headline : 'TAKES THE ROUND') + '</h2>';
+
+  const counts = { A: 0, B: 0 };
+  G.players.forEach(p => { counts[p.team] += p.pile.length; });
   const list = el('div', 'scoreList');
-  (G.finished.length ? G.finished : G.order).forEach((id, i) => {
-    const p = playerById(G, id);
+  ['A', 'B'].forEach(t => {
+    const who = G.players.filter(p => p.team === t).map(p => p.name).join(' + ');
     list.appendChild(el('div', null,
-      '<span style="width:10px;height:10px;border-radius:3px;background:' + CVAR[p.color] + ';display:inline-block"></span>' +
-      '<span>' + ['🥇', '🥈', '🥉', '4th'][i] + ' ' + esc(p.name) + '</span><span>' + p.score + '</span>'));
+      '<span style="width:10px;height:10px;border-radius:3px;background:' +
+      (t === 'A' ? 'var(--cyan)' : 'var(--orange)') + ';display:inline-block"></span>' +
+      '<span>TEAM ' + t + ' · ' + esc(who) + '</span>' +
+      '<span>' + counts[t] + ' cards' + (v.variant === 'ronda' ? ' · ' + G.teamScores[t] + 'p' : '') + '</span>'));
   });
   box.appendChild(list);
+  if (v.variant === 'ronda') box.appendChild(el('div', null,
+    '<div style="font-size:10px;color:var(--dim);font-weight:700;margin-top:2px">' +
+    'A point a card over twenty, plus everything called along the way.</div>'));
+
   const b = el('button', 'go', gameOver ? 'PLAY AGAIN' : 'NEXT ROUND ▶');
-  if (NET && !NET.isHost) {
-    b.textContent = 'WAITING FOR THE HOST…';
-    b.style.opacity = '.55'; b.style.cursor = 'default';
-  } else {
-    b.onclick = () => {
-      $('#roundOvl').classList.remove('show');
-      if (NET) { netSend({ t: gameOver ? 'again' : 'next' }); return; }
-      if (gameOver) { location.reload(); return; }
-      G = nextRound(G);
-      logLine('— round ' + G.round + ' —');
-      render(); tickBots();
-    };
-  }
+  if (NET && !NET.isHost) { b.textContent = 'WAITING FOR THE HOST…'; b.style.opacity = '.55'; b.style.cursor = 'default'; }
+  else b.onclick = () => {
+    $('#roundOvl').classList.remove('show');
+    if (NET) { netSend({ t: gameOver ? 'again' : 'next' }); return; }
+    if (gameOver) { location.reload(); return; }
+    G = nextRound(G);
+    logLine('— round ' + G.round + ' —');
+    showEvents(G.openingEvents || []);
+    render(); tickBots();
+  };
   box.appendChild(b);
   $('#roundOvl').classList.add('show');
 }
 
-/* ---------------- solo start ---------------- */
+/* ---------------- solo ---------------- */
 $('#startBtn').onclick = () => {
   ac(); loadSamples();
   const name = ($('#myName').value || 'YOU').trim().slice(0, 14).toUpperCase();
   try { localStorage.setItem('cybergrill_uno_name', name); } catch (e) { }
   const players = [{ id: ME, name }];
-  for (let i = 0; i < cfg.bots; i++) players.push({ id: 'bot' + i, name: BOT_NAMES[i] });
+  for (let i = 0; i < cfg.seats - 1; i++) players.push({ id: 'bot' + i, name: BOT_NAMES[i] });
   try {
-    G = createGame({ players, seed: (Math.random() * 1e9) | 0, house: cfg.house, target: cfg.target });
+    G = createGame({ players, seed: (Math.random() * 1e9) | 0, house: { variant: cfg.variant } });
   } catch (err) { alert(err.message); return; }
-  drawBoard();
   $('#setup').classList.add('gone');
   $('#table').classList.add('live');
   $('#log').innerHTML = '';
-  logLine('🎲 Four tokens each. Six to get out.');
+  logLine(cfg.variant === 'makla' ? '☕ Makla. Play it out and count.' : '🃏 Ronda. First to ' + G.target + '.');
+  showEvents(G.openingEvents || []);
   render();
   tickBots();
 };
 
 /* ==========================================================================
    ONLINE
-   The board has nothing to hide, so a view is simply the whole state and this
-   layer is thinner than UNO's — no shadow hands, no redaction to undo.
    ========================================================================== */
 const SERVER = (window.CG_SERVER || '').replace(/\/+$/, '');
 const netMsg = t => { const e = $('#netMsg'); if (e) e.textContent = t || ''; };
 function pill(cls, text) { const p = $('#netPill'); p.className = 'netPill on ' + cls; p.textContent = text; }
 function netSend(m) { if (!NET || !NET.ws || NET.ws.readyState !== 1) return false; NET.ws.send(JSON.stringify(m)); return true; }
 function netLeave() { if (!NET) return; NET.closing = true; try { NET.ws.close(); } catch (e) { } NET = null; }
-const seatKey = c => 'cybergrill_ludo_seat_' + c;
+const seatKey = c => 'cybergrill_ronda_seat_' + c;
 const loadSeat = c => { try { return JSON.parse(localStorage.getItem(seatKey(c)) || 'null'); } catch (e) { return null; } };
 const saveSeat = (c, s) => { try { localStorage.setItem(seatKey(c), JSON.stringify(s)); } catch (e) { } };
 
@@ -1722,8 +1924,7 @@ function netConnect(code, name) {
   ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handleNet(m); };
   ws.onclose = () => {
     if (!NET || NET.closing) return;
-    pill('down', 'RECONNECTING…');
-    NET.tries++;
+    pill('down', 'RECONNECTING…'); NET.tries++;
     setTimeout(() => { if (NET && !NET.closing) netConnect(code, name); }, Math.min(8000, 500 * Math.pow(1.7, NET.tries)));
   };
   ws.onerror = () => { };
@@ -1743,30 +1944,30 @@ function handleNet(m) {
       break;
     case 'lobby':
       NET.lobby = m; NET.isHost = m.hostId === ME;
-      if (m.gameId && m.gameId !== 'ludo') { netMsg('That room is playing ' + m.gameId + ', not Ludo.'); }
+      if (m.gameId && m.gameId !== 'ronda') netMsg('That room is playing ' + m.gameId + ', not Ronda.');
       if (!m.started) { G = null; showLobby(); } else $('#lobbyOvl').classList.remove('show');
       break;
     case 'state': {
       const v = m.v;
       const first = !G;
       NET.view = v;
-      /* the view is the board — no reconstruction needed */
       G = {
         order: v.players.map(p => p.id),
         turn: Math.max(0, v.players.findIndex(p => p.id === v.turn)),
-        dir: v.dir, phase: v.phase, house: v.house, die: v.die,
-        round: v.round, target: v.target, finished: v.finished,
-        roundWinner: v.roundWinner, winner: v.winner,
-        players: v.players.map(p => ({ ...p }))
+        phase: v.phase, variant: v.variant, target: v.target, round: v.round,
+        teamScores: v.teamScores, roundWinner: v.roundWinner, winner: v.winner,
+        players: v.players.map(p => ({ ...p, pile: { length: p.pile } }))
       };
+      /* the round-end card counts piles, and online we only have the numbers */
+      G.players = v.players.map(p => ({ id: p.id, name: p.name, team: p.team, pile: { length: p.pile } }));
+      Object.defineProperty(G, '_counts', { value: true, enumerable: false });
       if (first) {
-        drawBoard();
         $('#lobbyOvl').classList.remove('show');
         $('#setup').classList.add('gone');
         $('#table').classList.add('live');
         pill('live', 'ROOM ' + NET.code);
         $('#log').innerHTML = '';
-        logLine('🎲 Four tokens each. Six to get out.');
+        logLine(v.variant === 'makla' ? '☕ Makla.' : '🃏 Ronda. First to ' + v.target + '.');
       }
       showEvents(m.events || []);
       render();
@@ -1782,8 +1983,8 @@ function showLobby() {
   box.innerHTML =
     '<h2>ROOM CODE</h2><div class="codeBig">' + esc(L.code) + '</div>' +
     '<div class="codeHint">READ IT OUT — THEY TYPE IT IN AND JOIN</div>' +
-    '<div style="font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px">🎲 LUDO · ' +
-    (L.players.length) + ' OF 4 SEATS</div>';
+    '<div style="font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px">🃏 RONDA · ' +
+    L.players.length + ' AT THE TABLE · NEEDS TWO OR FOUR</div>';
   const list = el('div', 'lobList');
   L.players.forEach(p => {
     list.appendChild(el('div', null,
@@ -1798,8 +1999,9 @@ function showLobby() {
       bots.onclick = () => { netSend({ t: 'addBot' }); SFX.tick(); };
       box.appendChild(bots);
     }
-    const go = el('button', 'go', L.players.length < 2 ? 'WAITING FOR ONE MORE…' : 'THROW ▶');
-    if (L.players.length >= 2) go.onclick = () => { ac(); netSend({ t: 'start' }); };
+    const ready = L.players.length === 2 || L.players.length === 4;
+    const go = el('button', 'go', ready ? 'DEAL ▶' : 'TWO OR FOUR ONLY…');
+    if (ready) go.onclick = () => { ac(); netSend({ t: 'start' }); };
     else { go.style.opacity = '.5'; go.style.cursor = 'default'; }
     box.appendChild(go);
   } else {
@@ -1839,7 +2041,7 @@ $('#createBtn').onclick = async () => {
     const { code } = await r.json();
     netConnect(code, myName());
     const send = () => {
-      if (!netSend({ t: 'cfg', gameId: 'ludo', cfg: { target: cfg.target, house: cfg.house, skill: cfg.skill, speed: cfg.speed } }))
+      if (!netSend({ t: 'cfg', gameId: 'ronda', cfg: { house: { variant: cfg.variant }, skill: cfg.skill, speed: cfg.speed } }))
         setTimeout(send, 250);
     };
     setTimeout(send, 400);

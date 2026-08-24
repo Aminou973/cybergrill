@@ -188,7 +188,8 @@ function buildDashboard() {
    src would be CORS-blocked from disk. */
 const TABLES = [
   { id: 'uno',  page: ['game', 'index.html'],         engine: ['game', 'engine.js'],         out: ['game'] },
-  { id: 'ludo', page: ['game', 'ludo', 'index.html'], engine: ['game', 'ludo', 'engine.js'], out: ['game', 'ludo'] }
+  { id: 'ludo', page: ['game', 'ludo', 'index.html'], engine: ['game', 'ludo', 'engine.js'], out: ['game', 'ludo'] },
+  { id: 'ronda', page: ['game', 'ronda', 'index.html'], engine: ['game', 'ronda', 'engine.js'], out: ['game', 'ronda'] }
 ];
 
 function buildTables() {
