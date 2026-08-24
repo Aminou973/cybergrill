@@ -78,7 +78,9 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 .logo{font-size:17px;font-weight:900;letter-spacing:2px;
   background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
 .chip{padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
-  font-size:10.5px;font-weight:800;letter-spacing:1.2px;color:var(--dim);cursor:pointer;white-space:nowrap}
+  font-size:10.5px;font-weight:800;letter-spacing:1.2px;color:var(--dim);cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.chip i{font-style:normal;font-size:13px;line-height:1}
 .chip:hover{color:#fff;border-color:var(--cyan)}
 .spacer{flex:1}
 .dirBadge{font-size:15px;filter:drop-shadow(0 0 8px var(--gold))}
@@ -97,8 +99,12 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 .seat .nm{font-size:11.5px;font-weight:900;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seat .cnt{font-size:10px;color:var(--dim);font-weight:800;letter-spacing:1px;margin-top:2px}
 .seat .backs{display:flex;justify-content:center;margin-top:5px;height:26px}
-.seat .backs i{display:block;width:16px;height:24px;border-radius:3px;margin-left:-9px;
-  background:linear-gradient(140deg,#2a3157,#151a33);border:1px solid rgba(255,255,255,.18)}
+.seat .backs i{display:block;width:16px;height:24px;border-radius:3px;margin-left:-9px;position:relative;
+  background:#16181f;border:1px solid rgba(255,255,255,.5);overflow:hidden}
+.seat .backs i::after{content:'';position:absolute;left:50%;top:50%;width:16px;height:8px;border-radius:50%;
+  background:#d7263d;transform:translate(-50%,-50%) rotate(-22deg)}
+body.th-neon .seat .backs i::after,body.th-neolit .seat .backs i::after{background:var(--pink)}
+body.th-neon .seat .backs i,body.th-neolit .seat .backs i{background:#141a3a}
 .seat .backs i:first-child{margin-left:0}
 .seat .uno{position:absolute;top:-8px;right:2px;font-size:9px;font-weight:900;letter-spacing:1px;
   padding:3px 6px;border-radius:6px;background:var(--gold);color:#120a02;animation:gpop .3s}
@@ -152,19 +158,145 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 .tA{background:rgba(34,230,255,.18);color:var(--cyan)}
 .tB{background:rgba(255,138,43,.18);color:var(--orange)}
 
+/* ---------------- cards ----------------
+   Every face is one inline SVG on a 100x150 grid, so the same markup is crisp
+   at any size and the three themes are just different palettes and filters. */
+.cf{display:block;width:100%;height:100%;border-radius:inherit}
+.cf text{font-family:'Segoe UI',system-ui,sans-serif;font-weight:900}
+#cgDefs{position:absolute;width:0;height:0;overflow:hidden}
+
+body.th-neon .card,body.th-neon .hcard{box-shadow:0 6px 20px rgba(0,0,0,.6),0 0 26px -8px var(--glowc,transparent)}
+body.th-neon .cf .body{filter:saturate(1.25)}
+body.th-neolit .card,body.th-neolit .hcard{box-shadow:0 6px 20px rgba(0,0,0,.6),0 0 30px -6px var(--glowc,transparent)}
+body.th-neolit .cf .rim{opacity:.9}
+
 .center{position:relative;display:flex;align-items:center;gap:20px;z-index:2}
-.pile{width:78px;height:116px;border-radius:11px;display:grid;place-items:center;cursor:pointer;
-  background:linear-gradient(140deg,#2a3157,#151a33);border:2px solid rgba(255,255,255,.2);
-  font-size:11px;font-weight:900;letter-spacing:1px;color:var(--dim);transition:.16s}
-.pile:hover{transform:translateY(-3px);border-color:var(--cyan)}
-.card{width:78px;height:116px;border-radius:11px;position:relative;display:grid;place-items:center;
-  font-weight:900;border:2px solid rgba(255,255,255,.85);box-shadow:0 6px 18px rgba(0,0,0,.55);
-  background:var(--cc);color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.4)}
-.card .big{font-size:34px;line-height:1}
-.card .big.sm{font-size:20px;letter-spacing:1px}
-.card .cnr{position:absolute;font-size:11px;font-weight:900}
-.card .cnr.tl{top:5px;left:7px} .card .cnr.br{bottom:5px;right:7px;transform:rotate(180deg)}
-.card.wild{background:conic-gradient(from 45deg,var(--cr),var(--cy),var(--cg),var(--cb),var(--cr))}
+.pile{width:78px;height:116px;border-radius:11px;position:relative;cursor:pointer;transition:.16s;
+  box-shadow:0 6px 18px rgba(0,0,0,.55)}
+.pile::before,.pile::after{content:'';position:absolute;inset:0;border-radius:11px;z-index:-1;
+  background:#0e1330;border:1px solid rgba(255,255,255,.14)}
+.pile::before{transform:translate(4px,4px)}
+.pile::after{transform:translate(8px,8px)}
+.pile:hover{transform:translateY(-3px)}
+.pileCount{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:10px;font-weight:900;
+  letter-spacing:1.5px;color:var(--dim);white-space:nowrap}
+.pileCount::after{content:' LEFT'}
+
+/* the discard is a real pile — the last few cards, each a little askew */
+.discWrap{position:relative;width:78px;height:116px}
+.discWrap .card{position:absolute;inset:0}
+.discWrap .card.old{filter:brightness(.82)}
+
+/* ---------------- the moments ---------------- */
+@keyframes shakeSeat{
+  0%,100%{transform:translate(-50%,-50%)}
+  15%{transform:translate(calc(-50% - 9px),-50%) rotate(-4deg)}
+  35%{transform:translate(calc(-50% + 9px),-50%) rotate(4deg)}
+  55%{transform:translate(calc(-50% - 6px),-50%) rotate(-3deg)}
+  78%{transform:translate(calc(-50% + 4px),-50%) rotate(2deg)}
+}
+.seat.hurt{animation:shakeSeat .5s ease-in-out}
+.seat.hurt .av{box-shadow:0 0 0 4px #ff4d5e,0 0 34px 0 #ff4d5e}
+
+/* a stamp that lands over a skipped seat */
+.stamp{position:absolute;left:50%;top:22px;transform:translate(-50%,-50%) rotate(-16deg) scale(2.4);
+  font-size:13px;font-weight:900;letter-spacing:2px;padding:5px 11px;border-radius:9px;pointer-events:none;
+  border:3px solid #ff4d5e;color:#ff4d5e;background:rgba(10,4,8,.75);opacity:0;z-index:6;
+  animation:stampIn 1.05s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes stampIn{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-16deg) scale(2.4)}
+  22%{opacity:1;transform:translate(-50%,-50%) rotate(-16deg) scale(1)}
+  75%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(-16deg) scale(1.05)}
+}
+
+/* the whole table flashes when the direction turns over */
+.revFlash{position:fixed;inset:0;pointer-events:none;z-index:78;
+  background:radial-gradient(ellipse at 50% 45%,rgba(165,91,255,.36),transparent 62%);
+  animation:revF .7s ease-out forwards}
+@keyframes revF{from{opacity:1}to{opacity:0}}
+.dirBadge.spin{animation:dirSpin .7s cubic-bezier(.3,1.4,.4,1)}
+@keyframes dirSpin{from{transform:rotate(0) scale(1)}50%{transform:rotate(320deg) scale(1.9)}to{transform:rotate(360deg) scale(1)}}
+
+/* the colour that was just called washes over the felt */
+.wave{position:fixed;left:50%;top:48%;width:40px;height:40px;border-radius:50%;pointer-events:none;z-index:76;
+  transform:translate(-50%,-50%);animation:waveOut .8s ease-out forwards}
+@keyframes waveOut{from{opacity:.55;transform:translate(-50%,-50%) scale(1)}
+  to{opacity:0;transform:translate(-50%,-50%) scale(60)}}
+
+/* UNO! shouted across the middle */
+.shout{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:79;pointer-events:none;
+  font-size:min(19vw,150px);font-weight:900;letter-spacing:6px;
+  background:linear-gradient(90deg,var(--gold),#fff,var(--orange));-webkit-background-clip:text;background-clip:text;
+  color:transparent;filter:drop-shadow(0 0 30px rgba(255,201,60,.75));animation:shoutIn .95s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes shoutIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-9deg)}
+  25%{opacity:1;transform:translate(-50%,-50%) scale(1.12) rotate(2deg)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.25)}}
+
+/* the colour picker, as a wheel */
+.wheel{position:relative;width:min(62vw,250px);height:min(62vw,250px);margin:6px auto 4px;border-radius:50%;
+  box-shadow:0 0 60px -10px var(--cyan);animation:wheelIn .5s cubic-bezier(.2,1.5,.4,1)}
+@keyframes wheelIn{from{transform:rotate(-90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+.wheel .q{position:absolute;width:50%;height:50%;cursor:pointer;transition:.16s;display:grid;place-items:center;
+  font-size:11px;font-weight:900;letter-spacing:2px;color:rgba(0,0,0,.55)}
+.wheel .q:hover{filter:brightness(1.25);transform:scale(1.05)}
+.wheel .q.q0{top:0;left:0;border-radius:100% 0 0 0;align-content:end;justify-content:end;padding:0 16px 16px 0}
+.wheel .q.q1{top:0;right:0;border-radius:0 100% 0 0;align-content:end;justify-content:start;padding:0 0 16px 16px}
+.wheel .q.q2{bottom:0;left:0;border-radius:0 0 0 100%;align-content:start;justify-content:end;padding:16px 16px 0 0}
+.wheel .q.q3{bottom:0;right:0;border-radius:0 0 100% 0;align-content:start;justify-content:start;padding:16px 0 0 16px}
+.wheel .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34%;height:34%;border-radius:50%;
+  background:rgba(8,11,26,.95);border:2px solid var(--line);display:grid;place-items:center;
+  font-size:9px;letter-spacing:2px;color:var(--dim);font-weight:900}
+
+/* ---------------- the intel panel ---------------- */
+.intel{position:fixed;right:0;top:46px;bottom:0;width:262px;z-index:44;overflow-y:auto;padding:12px 12px 24px;
+  background:#080b1a;backdrop-filter:blur(16px);border-left:1px solid var(--line);
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.3,.9,.3,1);scrollbar-width:thin}
+body.intelOn .intel{transform:none}
+body.intelOn #table{margin-right:262px}
+.iSec{margin-bottom:14px}
+.iSec h4{font-size:9px;letter-spacing:2.4px;color:var(--dim);font-weight:800;margin-bottom:7px}
+.iRow{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;padding:7px 9px;border-radius:9px;
+  background:rgba(255,255,255,.045);margin-bottom:5px}
+.iRow .r{margin-left:auto;color:var(--gold);font-weight:900}
+.iRow.me{border:1px solid rgba(34,230,255,.35)}
+.iRow.warn{border:1px solid rgba(255,201,60,.5);background:rgba(255,201,60,.09)}
+.iBars{display:flex;gap:4px;align-items:flex-end;height:52px;padding:0 2px;margin:18px 0 6px}
+.iBars div{flex:1;border-radius:5px 5px 2px 2px;position:relative;min-height:3px;transition:height .3s}
+.iBars div span{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:10px;font-weight:900;color:var(--txt)}
+.iBig{font-size:23px;font-weight:900;letter-spacing:-.5px}
+.iSub{font-size:10px;color:var(--dim);font-weight:700;line-height:1.55}
+.iFlag{font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.1)}
+.iMeter{height:6px;border-radius:4px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:5px}
+.iMeter i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--lime))}
+
+/* what a card does, on hover or a long press */
+.tip{position:fixed;z-index:95;max-width:250px;padding:10px 12px;border-radius:12px;pointer-events:none;
+  background:rgba(8,11,26,.97);border:1px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.7);
+  font-size:11px;font-weight:700;color:var(--txt);line-height:1.55;opacity:0;transform:translateY(6px);
+  transition:opacity .14s,transform .14s}
+.tip.on{opacity:1;transform:none}
+.tip b{display:block;font-size:12px;letter-spacing:1.4px;margin-bottom:3px;color:var(--gold)}
+.tip em{display:block;font-style:normal;color:var(--dim);font-size:10px;margin-top:5px}
+
+@media(max-width:860px){
+  .intel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:56vh;border-left:0;border-top:1px solid var(--line);
+    border-radius:18px 18px 0 0;transform:translateY(100%);box-shadow:0 -20px 50px rgba(0,0,0,.7)}
+  .intel::before{content:'';display:block;width:44px;height:4px;border-radius:3px;background:rgba(255,255,255,.25);
+    margin:0 auto 12px}
+  body.intelOn .log{display:none}
+  body.intelOn .intel{transform:none}
+  body.intelOn #table{margin-right:0}
+}
+
+/* the felt takes on the colour in play */
+.felt::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(74vw,760px);height:min(46vh,430px);border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,var(--wash,transparent) 0%,transparent 68%);
+  opacity:.5;transition:background .55s ease}
+.card{width:78px;height:116px;border-radius:11px;position:relative;
+  box-shadow:0 6px 18px rgba(0,0,0,.55);overflow:visible}
 .colorNow{position:absolute;left:50%;bottom:-26px;transform:translateX(-50%);font-size:9px;letter-spacing:2px;
   font-weight:900;padding:4px 10px;border-radius:8px;white-space:nowrap}
 
@@ -174,19 +306,19 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   scrollbar-width:none}
 .handWrap::-webkit-scrollbar{display:none}
 .hcard{width:72px;height:108px;border-radius:10px;flex:0 0 auto;margin-left:-14px;cursor:pointer;
-  transition:transform .16s,box-shadow .16s,filter .16s;position:relative;display:grid;place-items:center;
-  font-weight:900;border:2px solid rgba(255,255,255,.85);box-shadow:0 5px 14px rgba(0,0,0,.5);
-  background:var(--cc);color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.4)}
+  transition:transform .18s cubic-bezier(.2,.9,.3,1.2),box-shadow .16s,filter .16s;position:relative;
+  box-shadow:0 5px 14px rgba(0,0,0,.5)}
 .hcard:first-child{margin-left:0}
-.hcard.wild{background:conic-gradient(from 45deg,var(--cr),var(--cy),var(--cg),var(--cb),var(--cr))}
 .hcard.ok:hover{transform:translateY(-26px) scale(1.06);box-shadow:0 16px 30px rgba(0,0,0,.6);z-index:5}
 .hcard.ok{transform:translateY(-10px)}
-.hcard.no{filter:saturate(.5) brightness(.6);opacity:.82;cursor:default}
+.hcard.no{opacity:.5;cursor:default}
 .hcard.no:hover{transform:translateY(-6px)}
-.hcard .big{font-size:30px;line-height:1}
-.hcard .big.sm{font-size:17px;letter-spacing:1px}
-.hcard .cnr{position:absolute;font-size:10px;font-weight:900}
-.hcard .cnr.tl{top:4px;left:6px} .hcard .cnr.br{bottom:4px;right:6px;transform:rotate(180deg)}
+/* the hand fans out in an arc — each card is tilted and lifted by its
+   distance from the middle, which is set inline as --i (-1 .. 1) */
+.handWrap.fan .hcard{margin-left:-8px;transform:rotate(calc(var(--i) * 9deg)) translateY(calc(var(--lift) * 1px))}
+.handWrap.fan .hcard:first-child{margin-left:0}
+.handWrap.fan .hcard.ok{transform:rotate(calc(var(--i) * 9deg)) translateY(calc(var(--lift) * 1px - 10px))}
+.handWrap.fan .hcard.ok:hover{transform:rotate(0deg) translateY(-30px) scale(1.1);z-index:9}
 
 .acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 10px}
 .act{padding:13px 20px;border-radius:13px;border:0;cursor:pointer;font-family:inherit;font-weight:900;
@@ -206,6 +338,7 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   padding:5px 9px;border-radius:8px;border-left:2px solid var(--cyan);animation:logIn .3s}
 @keyframes logIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 @keyframes gpop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+@keyframes slam{0%{transform:scale(1.35) rotate(-14deg);opacity:.4}60%{transform:scale(.96) rotate(3deg)}100%{transform:none}}
 
 /* overlays */
 .ovl{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:rgba(3,4,12,.82);backdrop-filter:blur(8px)}
@@ -226,19 +359,57 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 .scoreList div span:last-child{margin-left:auto;font-weight:900;color:var(--gold)}
 
 @media(max-width:860px){
-  .seat{width:88px}
-  .seat .av{width:38px;height:38px;font-size:13px}
-  .pile,.card{width:62px;height:94px}
-  .card .big{font-size:26px}
-  .hcard{width:58px;height:88px;margin-left:-18px}
-  .hcard .big{font-size:24px}
-  .log{width:min(60vw,240px);max-height:18vh}
-  .act{padding:12px 15px;font-size:11px}
+  .seat{width:82px}
+  .seat .av{width:36px;height:36px;font-size:12px}
+  .pile,.card,.discWrap{width:60px;height:90px}
+  .hcard{width:56px;height:84px;margin-left:-16px}
+  .handWrap.fan .hcard{margin-left:-12px}
+  .handWrap{min-height:104px;padding:10px 4px 2px}
+  .log{width:min(58vw,230px);max-height:15vh}
+  .act{padding:11px 14px;font-size:11px}
+  .topline{padding:7px 9px;gap:6px}
+  .logo{font-size:14px;letter-spacing:1px}
+}
+/* below this the chip row has to collapse to icons or it wraps to three lines */
+@media(max-width:700px){
+  .logo{display:none}
+  .chip .cl{display:none}
+  /* the log moves out from under the hand */
+  .log{left:8px;right:8px;width:auto;top:52px;bottom:auto;max-height:none;flex-direction:column}
+  .log div{font-size:10px;padding:4px 8px;opacity:.85}
+  .seat .cnt{font-size:9px;white-space:nowrap}
+  .seat{width:96px}
+  .chip{padding:8px 10px}
+  .chip i{font-size:15px}
+  .topline{flex-wrap:nowrap;overflow:hidden}
+  .tip{max-width:min(78vw,270px);font-size:11px}
+}
+@media(max-height:700px){
+  .handWrap{min-height:92px}
+  .hcard{width:50px;height:75px}
+  .pile,.card,.discWrap{width:54px;height:80px}
 }
 </style>
 </head>
 <body>
 <canvas id="fx"></canvas>
+
+<!-- One set of shared SVG definitions. Ids are document-wide, so every card
+     face can point at these instead of carrying its own copy. -->
+<svg id="cgDefs" aria-hidden="true"><defs>
+  <clipPath id="cgOval" clipPathUnits="userSpaceOnUse">
+    <ellipse cx="50" cy="75" rx="41" ry="29" transform="rotate(-22 50 75)"/>
+  </clipPath>
+  <filter id="cgGlow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="2.4" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <linearGradient id="cgSheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#fff" stop-opacity=".30"/>
+    <stop offset="45%" stop-color="#fff" stop-opacity=".05"/>
+    <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+</defs></svg>
 
 <div id="setup"><div class="sBox">
   <h1>CYBERGRILL UNO</h1>
@@ -261,6 +432,11 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
       </div>
       <div id="netMsg" style="font-size:11px;font-weight:800;color:var(--dim);margin-top:9px;min-height:15px"></div>
     </div>
+  </div>
+
+  <div class="fld"><label>DECK</label>
+    <div class="row2" id="themeSel"></div>
+    <div id="themeBlurb" style="font-size:10px;color:var(--dim);font-weight:700;margin-top:7px"></div>
   </div>
 
   <div class="fld"><label>MODE</label>
@@ -304,16 +480,19 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
     <span class="dirBadge" id="dirBadge">↻</span>
     <div class="teamBar" id="teamBar" style="display:none"></div>
     <div class="spacer"></div>
-    <div class="chip" id="scoresChip">SCORES</div>
-    <div class="chip" id="rulesChip">RULES</div>
-    <div class="chip" id="quitChip">✕ QUIT</div>
+    <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
+    <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
+    <div class="chip" id="deckChip"><i>🂠</i><span class="cl">DECK</span></div>
+    <div class="chip" id="scoresChip"><i>🏅</i><span class="cl">SCORES</span></div>
+    <div class="chip" id="rulesChip"><i>📖</i><span class="cl">RULES</span></div>
+    <div class="chip" id="quitChip"><i>✕</i><span class="cl">QUIT</span></div>
   </div>
 
   <div class="felt">
     <div class="seats" id="seats"></div>
     <div class="center">
-      <div class="pile" id="drawPile">DRAW<br><span id="drawCount"></span></div>
-      <div id="discard"></div>
+      <div class="pile" id="drawPile"><span class="pileCount" id="drawCount"></span></div>
+      <div class="discWrap" id="discard"></div>
     </div>
   </div>
 
@@ -323,16 +502,20 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   </div>
 </div>
 
+<aside class="intel" id="intel"></aside>
+<div class="tip" id="tip"></div>
 <div class="log" id="log"></div>
 
 <div class="ovl" id="colorOvl"><div class="oCard">
-  <h2>CHOOSE THE COLOUR</h2>
-  <div class="swatches">
-    <div class="sw2" style="background:var(--cr)" data-c="r">RED</div>
-    <div class="sw2" style="background:var(--cg)" data-c="g">GREEN</div>
-    <div class="sw2" style="background:var(--cb)" data-c="b">BLUE</div>
-    <div class="sw2" style="background:var(--cy)" data-c="y">YELLOW</div>
+  <h2>CALL THE COLOUR</h2>
+  <div class="wheel">
+    <div class="q q0 sw2" style="background:var(--cr)" data-c="r">RED</div>
+    <div class="q q1 sw2" style="background:var(--cb)" data-c="b">BLUE</div>
+    <div class="q q2 sw2" style="background:var(--cy)" data-c="y">YELLOW</div>
+    <div class="q q3 sw2" style="background:var(--cg)" data-c="g">GREEN</div>
+    <div class="hub">PICK</div>
   </div>
+  <div style="font-size:10px;color:var(--dim);font-weight:700;letter-spacing:1px" id="wheelHint"></div>
 </div></div>
 
 <div class="ovl" id="roundOvl"><div class="oCard" id="roundCard"></div></div>
@@ -408,6 +591,161 @@ function burst(x, y, n, colors) {
   requestAnimationFrame(loop);
 })();
 
+/* ==========================================================================
+   CARD FACES
+   --------------------------------------------------------------------------
+   One inline SVG on a 100x150 grid per card. Three themes, same geometry:
+   the classic deck is the real thing, the neon deck is the real thing lit up,
+   and neon arcade drops the oval for a flat glowing slab.
+   ========================================================================== */
+const THEMES = {
+  real: {
+    key: 'real', icon: '🂠', name: 'CLASSIC DECK',
+    blurb: 'The real deck. White border, tilted oval, proper symbols.',
+    c: { r: '#d7263d', g: '#0d9b52', b: '#1367dd', y: '#f2c200' },
+    rim: '#ffffff', wildBody: '#16181f', glow: false, oval: true
+  },
+  neolit: {
+    key: 'neolit', icon: '✨', name: 'NEON DECK',
+    blurb: 'The same deck, lit for the arcade. Recognisable, brighter.',
+    c: { r: '#ff4d5e', g: '#9cff2e', b: '#22e6ff', y: '#ffc93c' },
+    rim: '#eef3ff', wildBody: '#0a0e22', glow: true, oval: true
+  },
+  neon: {
+    key: 'neon', icon: '🌈', name: 'NEON ARCADE',
+    blurb: 'No oval — glass slabs, big glyphs, holographic wilds.',
+    c: { r: '#ff4d5e', g: '#3ddc6d', b: '#3d8bff', y: '#ffd23d' },
+    rim: 'rgba(255,255,255,.85)', wildBody: '#0a0e22', glow: true, oval: false
+  }
+};
+let theme = 'real';
+const T = () => THEMES[theme] || THEMES.real;
+
+/* the four colours of a wild, in the order they sit on a real card */
+const quad = t => [t.c.r, t.c.b, t.c.y, t.c.g];
+
+const ARROW = 'M14,0 L28,15 L20,15 L20,40 L8,40 L8,15 L0,15 Z';
+
+/* the middle of a card: a numeral, or a symbol drawn in the card colour */
+function centreGlyph(kind, col, t) {
+  if (/^[0-9]$/.test(kind))
+    return '<text x="50" y="75" font-size="61" fill="' + col + '" text-anchor="middle" ' +
+      'dominant-baseline="central" stroke="rgba(0,0,0,.28)" stroke-width="1.6" paint-order="stroke">' + kind + '</text>';
+
+  if (kind === 'skip')
+    return '<g fill="none" stroke="' + col + '" stroke-width="8" stroke-linecap="round">' +
+      '<circle cx="50" cy="75" r="21"/><line x1="35" y1="60" x2="65" y2="90"/></g>';
+
+  if (kind === 'rev')
+    return '<g fill="' + col + '">' +
+      '<path d="' + ARROW + '" transform="translate(22,55)"/>' +
+      '<path d="' + ARROW + '" transform="translate(78,95) rotate(180)"/></g>';
+
+  if (kind === 'd2')
+    return '<g stroke="#fff" stroke-width="3.4">' +
+      '<rect x="31" y="56" width="25" height="35" rx="5" fill="' + col + '"/>' +
+      '<rect x="44" y="66" width="25" height="35" rx="5" fill="' + col + '"/></g>';
+
+  if (kind === 'wd4') {
+    const q = quad(t);
+    const mini = (x, y, r, f) => '<rect x="-9.5" y="-14" width="19" height="28" rx="3.5" fill="' + f +
+      '" transform="translate(' + x + ',' + y + ') rotate(' + r + ')"/>';
+    return '<g stroke="#ffffff" stroke-width="2.6">' +
+      mini(34, 79, -20, q[0]) + mini(45, 73, -7, q[1]) + mini(56, 73, 7, q[2]) + mini(67, 79, 20, q[3]) +
+      '</g>';
+  }
+  /* wild: the oval itself carries the four colours, nothing goes on top */
+  return '';
+}
+
+/* the same symbol, small, for the two corners */
+function cornerGlyph(kind, ink) {
+  if (/^[0-9]$/.test(kind))
+    return '<text x="0" y="0" font-size="21" fill="' + ink + '" text-anchor="middle" dominant-baseline="central">' + kind + '</text>';
+  if (kind === 'd2') return '<text x="0" y="0" font-size="17" fill="' + ink + '" text-anchor="middle" dominant-baseline="central">+2</text>';
+  if (kind === 'wd4') return '<text x="0" y="0" font-size="17" fill="' + ink + '" text-anchor="middle" dominant-baseline="central">+4</text>';
+  if (kind === 'skip')
+    return '<g fill="none" stroke="' + ink + '" stroke-width="3" stroke-linecap="round">' +
+      '<circle cx="0" cy="0" r="8"/><line x1="-5.6" y1="-5.6" x2="5.6" y2="5.6"/></g>';
+  if (kind === 'rev')
+    return '<g fill="' + ink + '" transform="scale(.34)"><path d="' + ARROW + '" transform="translate(-24,-20)"/>' +
+      '<path d="' + ARROW + '" transform="translate(24,20) rotate(180)"/></g>';
+  return '';   /* wild */
+}
+
+function cardSVG(card, t) {
+  t = t || T();
+  const wild = isWild(card.kind);
+  const body = wild ? t.wildBody : t.c[card.color];
+  const glyphCol = wild ? '#ffffff' : t.c[card.color];
+  const ink = '#ffffff';
+  const g = t.glow ? ' filter="url(#cgGlow)"' : '';
+  let out = '<svg class="cf" viewBox="0 0 100 150" preserveAspectRatio="none">' +
+    '<rect class="rim" x="0" y="0" width="100" height="150" rx="13" fill="' + t.rim + '"/>' +
+    '<rect class="body" x="5.5" y="5.5" width="89" height="139" rx="9.5" fill="' + body + '"/>';
+
+  if (t.oval) {
+    if (card.kind === 'wild') {
+      const q = quad(t);
+      out += '<g clip-path="url(#cgOval)">' +
+        '<rect x="0" y="0" width="50" height="75" fill="' + q[0] + '"/>' +
+        '<rect x="50" y="0" width="50" height="75" fill="' + q[1] + '"/>' +
+        '<rect x="0" y="75" width="50" height="75" fill="' + q[2] + '"/>' +
+        '<rect x="50" y="75" width="50" height="75" fill="' + q[3] + '"/></g>' +
+        '<ellipse cx="50" cy="75" rx="41" ry="29" transform="rotate(-22 50 75)" fill="none" stroke="#fff" stroke-width="3"/>';
+    } else {
+      out += '<ellipse cx="50" cy="75" rx="41" ry="29" transform="rotate(-22 50 75)" fill="#fff"/>';
+      out += '<g' + g + '>' + centreGlyph(card.kind, wild ? '#16181f' : glyphCol, t) + '</g>';
+    }
+  } else {
+    /* neon arcade: no oval, the glyph floats on glass */
+    out += '<rect x="5.5" y="5.5" width="89" height="139" rx="9.5" fill="url(#cgSheen)"/>';
+    out += '<g' + g + '>' + centreGlyph(card.kind, '#ffffff', t) + '</g>';
+    if (card.kind === 'wild')
+      out += '<g clip-path="url(#cgOval)" opacity=".95">' +
+        quad(t).map((c, i) => '<rect x="' + (i % 2) * 50 + '" y="' + ((i > 1) ? 75 : 0) + '" width="50" height="75" fill="' + c + '"/>').join('') +
+        '</g>';
+  }
+
+  out += '<g transform="translate(15,24)">' + cornerGlyph(card.kind, ink) + '</g>' +
+    '<g transform="translate(85,126) rotate(180)">' + cornerGlyph(card.kind, ink) + '</g>' +
+    '</svg>';
+  return out;
+}
+
+function cardBackSVG(t) {
+  t = t || T();
+  return '<svg class="cf" viewBox="0 0 100 150" preserveAspectRatio="none">' +
+    '<rect x="0" y="0" width="100" height="150" rx="13" fill="' + t.rim + '"/>' +
+    '<rect x="5.5" y="5.5" width="89" height="139" rx="9.5" fill="' + (t.key === 'real' ? '#16181f' : '#141a3a') + '"/>' +
+    '<ellipse cx="50" cy="75" rx="41" ry="29" transform="rotate(-22 50 75)" fill="' + (t.key === 'real' ? '#d7263d' : '#ff2fb9') + '"/>' +
+    '<text x="50" y="75" font-size="30" fill="#ffd93c" text-anchor="middle" dominant-baseline="central" ' +
+    'transform="rotate(-22 50 75)" stroke="#16181f" stroke-width="1.6" paint-order="stroke" letter-spacing="1">UNO</text>' +
+    '</svg>';
+}
+
+function cardFace(card, cls) {
+  const d = el('div', cls);
+  d.innerHTML = cardSVG(card);
+  const t = T();
+  if (!isWild(card.kind)) d.style.setProperty('--glowc', t.c[card.color]);
+  else d.style.setProperty('--glowc', 'var(--pink)');
+  d.dataset.kind = card.kind;
+  if (card.color) d.dataset.color = card.color;
+  return d;
+}
+
+function applyTheme(k) {
+  theme = THEMES[k] ? k : 'real';
+  /* classList, not className — the body also carries intelOn and friends */
+  Object.keys(THEMES).forEach(x => document.body.classList.remove('th-' + x));
+  document.body.classList.add('th-' + theme);
+  try { localStorage.setItem('cybergrill_uno_theme', theme); } catch (e) { }
+  if (G) { PILE = PILE.slice(-1); render(); }
+}
+try { const t0 = localStorage.getItem('cybergrill_uno_theme'); if (t0 && THEMES[t0]) theme = t0; } catch (e) { }
+document.body.classList.add('th-' + theme);
+
 /* ---------------- setup ---------------- */
 const HOUSE_UI = [
   ['stack', 'STACKING', 'Answer a +2 with a +2, pass the pile on'],
@@ -470,6 +808,17 @@ function buildSetup() {
     '<span style="font-size:10px;color:var(--dim);font-weight:700;line-height:2.6;display:block">' +
     'Teams need an even table — you and the seat opposite are partners.</span>'));
 
+  /* --- deck --- */
+  const th = $('#themeSel'); th.innerHTML = '';
+  ['real', 'neolit', 'neon'].forEach(k => {
+    const t = THEMES[k];
+    const p = el('div', 'pill' + (theme === k ? ' on' : ''),
+      t.icon + '<br><span style="font-size:9px;letter-spacing:1px">' + t.name + '</span>');
+    p.onclick = () => { applyTheme(k); buildSetup(); SFX.tick(); };
+    th.appendChild(p);
+  });
+  $('#themeBlurb').textContent = T().blurb;
+
   /* --- turn clock --- */
   const bs = $('#blitzSel'); bs.innerHTML = '';
   BLITZ_UI.forEach(([n, lbl]) => {
@@ -520,6 +869,7 @@ $('#startBtn').onclick = () => {
   KO = []; QUEUE = cfg.queue.slice(); seatColor = {}; nextSeatIx = 0;
   assignColors(players.map(p => p.id));
   try {
+    PILE = [];
     G = createGame({
       players, seed: (Math.random() * 1e9) | 0, house: cfg.house,
       target: cfg.target, mode: engineMode()
@@ -530,7 +880,7 @@ $('#startBtn').onclick = () => {
   $('#log').innerHTML = '';
   logLine(MODE_LINE[cfg.mode] || '');
   logLine('Cards dealt. ' + playerById(G, G.order[G.turn]).name + ' starts.');
-  render(); tickBots();
+  render(); dealSweep(); setTimeout(tickBots, 720);
 };
 const MODE_LINE = {
   classic: '🎴 Classic UNO. First to the target takes it.',
@@ -549,6 +899,131 @@ $('#rulesChip').onclick = () => {
     '\nHouse rules: ' + (on.length ? on.join(', ') : 'none — official rules'));
 };
 $('#scoresChip').onclick = showScores;
+$('#deckChip').onclick = () => {
+  const order = ['real', 'neolit', 'neon'];
+  applyTheme(order[(order.indexOf(theme) + 1) % order.length]);
+  logLine(T().icon + ' deck: ' + T().name.toLowerCase());
+  SFX.tick();
+};
+
+
+/* ==========================================================================
+   THE BED
+   --------------------------------------------------------------------------
+   A four-bar loop built out of oscillators, scheduled a beat ahead so it does
+   not stutter. It sits almost out of hearing until somebody drops to one
+   card, and then a second layer creeps in on top.
+   ========================================================================== */
+const music = (() => {
+  const BPM = 88, BEAT = 60 / BPM, BAR = BEAT * 4;
+  /* Am - F - C - G, an old friend, transposed low */
+  const PROG = [
+    { root: 55.00, ch: [220.00, 261.63, 329.63] },   /* A minor  */
+    { root: 43.65, ch: [174.61, 220.00, 261.63] },   /* F major  */
+    { root: 65.41, ch: [196.00, 261.63, 329.63] },   /* C major  */
+    { root: 49.00, ch: [196.00, 246.94, 293.66] }    /* G major  */
+  ];
+  let on = false, master = null, bedGain = null, tenseGain = null,
+      timer = null, next = 0, bar = 0, tenseWanted = false;
+
+  function build() {
+    const c = ac(); if (!c) return false;
+    master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
+    bedGain = c.createGain(); bedGain.gain.value = 1; bedGain.connect(master);
+    tenseGain = c.createGain(); tenseGain.gain.value = 0; tenseGain.connect(master);
+    return true;
+  }
+
+  function voice(dest, type, freq, at, dur, peak, detune) {
+    const c = ac(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    if (detune) o.detune.value = detune;
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(peak, at + dur * .22);
+    g.gain.exponentialRampToValueAtTime(.0001, at + dur);
+    o.connect(g); g.connect(dest); o.start(at); o.stop(at + dur + .05);
+  }
+
+  function scheduleBar(at) {
+    const c = ac(); if (!c) return;
+    const P = PROG[bar % PROG.length];
+
+    /* bass, on the one and the three */
+    voice(bedGain, 'sine', P.root, at, BEAT * 1.7, .10);
+    voice(bedGain, 'sine', P.root, at + BEAT * 2, BEAT * 1.7, .075);
+    voice(bedGain, 'triangle', P.root * 2, at, BEAT * 1.2, .022);
+
+    /* a pad that just hangs there */
+    P.ch.forEach((f, i) => {
+      voice(bedGain, 'triangle', f, at, BAR * .96, .018, i * 4 - 4);
+      voice(bedGain, 'sine', f * 2, at, BAR * .9, .006);
+    });
+
+    /* the tense layer: an eighth-note arpeggio that only gets through when
+       tenseGain is open */
+    for (let i = 0; i < 8; i++) {
+      const f = P.ch[i % P.ch.length] * (i > 4 ? 2 : 1);
+      voice(tenseGain, 'square', f, at + i * BEAT / 2, BEAT * .34, .028);
+    }
+    /* and a quiet tick on every beat, so the loop has a pulse */
+    for (let i = 0; i < 4; i++) voice(bedGain, 'sine', 1800, at + i * BEAT, .035, i === 0 ? .012 : .006);
+
+    bar++;
+  }
+
+  function pump() {
+    const c = ac(); if (!c) return;
+    while (next < c.currentTime + .6) {
+      if (next < c.currentTime) next = c.currentTime + .06;
+      scheduleBar(next);
+      next += BAR;
+    }
+  }
+
+  return {
+    get on() { return on; },
+    toggle() { on ? this.stop() : this.start(); return on; },
+    start() {
+      const c = ac(); if (!c) return;
+      if (!master && !build()) return;
+      on = true;
+      master.gain.cancelScheduledValues(c.currentTime);
+      master.gain.setValueAtTime(master.gain.value, c.currentTime);
+      master.gain.linearRampToValueAtTime(.6, c.currentTime + 1.4);
+      next = c.currentTime + .08;
+      pump();
+      clearInterval(timer); timer = setInterval(pump, 200);
+    },
+    stop() {
+      const c = ac(); if (!c || !master) { on = false; return; }
+      on = false;
+      master.gain.cancelScheduledValues(c.currentTime);
+      master.gain.setValueAtTime(master.gain.value, c.currentTime);
+      master.gain.linearRampToValueAtTime(0, c.currentTime + .5);
+      clearInterval(timer); timer = null;
+    },
+    /* somebody is one card away — lean on it */
+    tense(v) {
+      tenseWanted = !!v;
+      const c = ac(); if (!c || !tenseGain) return;
+      tenseGain.gain.cancelScheduledValues(c.currentTime);
+      tenseGain.gain.setValueAtTime(tenseGain.gain.value, c.currentTime);
+      tenseGain.gain.linearRampToValueAtTime(v ? 1 : 0, c.currentTime + (v ? 1.6 : 1.1));
+    },
+    sting() {   /* a short lift at the end of a round */
+      [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', .08, i * .09));
+    }
+  };
+})();
+
+$('#musicChip').onclick = () => {
+  const nowOn = music.toggle();
+  $('#musicChip').querySelector('i').textContent = nowOn ? '🎵' : '🔇';
+  $('#musicChip').style.opacity = nowOn ? '1' : '.5';
+  logLine(nowOn ? '🎵 music on' : '🔇 music off');
+};
+$('#musicChip').style.opacity = '.5';
 
 /* ---------------- render ---------------- */
 function colorOf(pid) { return seatColor[pid] || PALETTE[Math.max(0, G.order.indexOf(pid)) % PALETTE.length]; }
@@ -560,17 +1035,6 @@ function teamTag(pid) {
     (t === 'A' ? 'var(--cyan)' : 'var(--orange)') + '">' + t + '</div>';
 }
 function initials(n) { return String(n).slice(0, 2).toUpperCase(); }
-
-function cardFace(card, cls) {
-  const wild = isWild(card.kind);
-  const d = el('div', cls + (wild ? ' wild' : ''));
-  if (!wild) d.style.setProperty('--cc', CVAR[card.color]);
-  const lbl = cardLabel(card);
-  const small = lbl.length > 2 ? ' sm' : '';
-  d.innerHTML = '<span class="cnr tl">' + lbl + '</span><span class="big' + small + '">' + lbl +
-    '</span><span class="cnr br">' + lbl + '</span>';
-  return d;
-}
 
 function render() {
   if (!G || !playerById(G, ME)) return;
@@ -642,27 +1106,60 @@ function render() {
   } else tb.style.display = 'none';
 
   /* discard */
-  const dis = $('#discard'); dis.innerHTML = '';
+  /* the discard is drawn as a pile: the last few cards, each nudged and
+     turned by a hash of its own id so it never jitters between renders */
   const top = topCard(G);
-  const face = cardFace(top, 'card');
+  if (!PILE.length || PILE[PILE.length - 1].id !== top.id) {
+    PILE.push(top);
+    while (PILE.length > 5) PILE.shift();
+  }
+  const dis = $('#discard'); dis.innerHTML = '';
+  PILE.forEach((c, i) => {
+    const last = i === PILE.length - 1;
+    const f = cardFace(c, 'card' + (last ? '' : ' old'));
+    const h = hash(c.id);
+    f.style.transform = last ? 'rotate(' + ((h % 9) - 4) + 'deg)'
+      : 'translate(' + ((h % 13) - 6) + 'px,' + ((h % 11) - 5) + 'px) rotate(' + ((h % 31) - 15) + 'deg)';
+    f.style.zIndex = String(i);
+    if (last && landed) { f.style.animation = 'slam .34s cubic-bezier(.2,1.6,.4,1)'; landed = false; }
+    if (last) { f.style.pointerEvents = 'auto'; wireTip(f, c); }
+    dis.appendChild(f);
+  });
   if (v.color) {
     const tag = el('div', 'colorNow', COLOR_NAME[v.color]);
     tag.style.background = CVAR[v.color]; tag.style.color = '#fff';
-    face.appendChild(tag);
+    tag.style.zIndex = '9';
+    dis.appendChild(tag);
   }
-  if (landed) { face.style.animation = 'gpop .3s'; landed = false; }
-  dis.appendChild(face);
+  const dp = $('#drawPile');
+  if (dp.dataset.th !== theme) {
+    dp.dataset.th = theme;
+    dp.querySelectorAll('svg').forEach(x => x.remove());
+    dp.insertAdjacentHTML('afterbegin', cardBackSVG());
+  }
   $('#drawCount').textContent = v.drawCount;
   $('#dirBadge').textContent = G.dir === 1 ? '↻' : '↺';
+  const felt = document.querySelector('.felt');
+  if (felt) felt.style.setProperty('--wash', v.color ? CVAR[v.color] : 'transparent');
 
   /* my hand */
   const hw = $('#hand'); hw.innerHTML = '';
   const me = playerById(G, ME);
   const myTurn = G.order[G.turn] === ME;
   const playable = new Set(v.moves.filter(m => m.type === 'play').map(m => m.cardId));
-  me.hand.forEach(card => {
+  hw.classList.toggle('fan', me.hand.length <= 12);
+  const n2 = Math.max(1, me.hand.length - 1);
+  me.hand.forEach((card, i) => {
     const c = cardFace(card, 'hcard ' + (playable.has(card.id) ? 'ok' : 'no'));
-    if (playable.has(card.id)) c.onclick = () => { flySrc = c.getBoundingClientRect(); tryPlay(card); };
+    const rel = me.hand.length === 1 ? 0 : (i / n2) * 2 - 1;      /* -1 .. 1 */
+    c.style.setProperty('--i', rel.toFixed(3));
+    c.style.setProperty('--lift', (Math.abs(rel) * Math.abs(rel) * 13).toFixed(1));
+    c.style.zIndex = String(10 + i);
+    wireTip(c, card);
+    if (playable.has(card.id)) c.onclick = () => {
+      if (tipHeld) return;                        /* that was a long press, not a play */
+      flySrc = c.getBoundingClientRect(); tryPlay(card);
+    };
     hw.appendChild(c);
   });
 
@@ -696,12 +1193,33 @@ function render() {
     const a = el('button', 'act good', '👉 CATCH ' + esc(p.name));
     a.onclick = () => doMove(m); acts.appendChild(a);
   });
+  if (G.order[G.turn] === ME && G.phase === 'playing') {
+    const hb = el('button', 'act', '💡 HINT');
+    hb.onclick = () => {
+      const [what, why] = suggest(v);
+      const box = $('#pickCard');
+      box.innerHTML = '<h2>TRY THIS</h2><div class="bigName" style="font-size:min(8vw,34px)">' + esc(what) + '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:var(--dim);line-height:1.6;margin-top:6px">' + esc(why) + '</div>';
+      const b = el('button', 'act', 'GOT IT');
+      b.onclick = () => $('#pickOvl').classList.remove('show');
+      box.appendChild(b);
+      $('#pickOvl').classList.add('show');
+      SFX.tick();
+    };
+    acts.appendChild(hb);
+  }
   $('#drawPile').onclick = () => { if (has('draw')) doMove({ type: 'draw' }); };
+  buildIntel(v);
+  music.tense(G.phase === 'playing' && G.order.some(id => {
+    const p = playerById(G, id); return p && p.hand.length <= 1;
+  }));
   syncClock();
 }
 
 /* ---------------- a card flying to the discard ---------------- */
 let landed = false;
+let PILE = [];
+const hash = str => { let h = 0; for (let i = 0; i < String(str).length; i++) h = (h * 31 + String(str).charCodeAt(i)) | 0; return Math.abs(h); };
 function rectOf(sel) { const e = typeof sel === 'string' ? document.querySelector(sel) : sel; return e ? e.getBoundingClientRect() : null; }
 function seatRect(pid) {
   const s = document.querySelector('#seats [data-pid="' + pid + '"]');
@@ -809,13 +1327,212 @@ function blitzTimeout() {
   if (has('pass')) doMove({ type: 'pass' });
 }
 
+
+/* ==========================================================================
+   WHAT THE TABLE TELLS YOU
+   --------------------------------------------------------------------------
+   Four things, all built from what this player is allowed to see:
+   what a card does, what is in your hand, what the others are holding, and
+   one suggestion when you are stuck.
+   ========================================================================== */
+const CARD_HELP = {
+  skip: ['SKIP', 'The next player loses their turn. With two players it comes straight back to you.'],
+  rev: ['REVERSE', 'Play turns around. With two players it works like a skip.'],
+  d2: ['DRAW TWO', 'The next player takes two cards and loses their turn.'],
+  wild: ['WILD', 'Play it on anything and name the colour that carries on.'],
+  wd4: ['WILD DRAW FOUR', 'Name the colour and the next player takes four and loses their turn.']
+};
+function cardHelp(card) {
+  const h = CARD_HELP[card.kind];
+  let title, body, note = '';
+  if (h) { title = h[0]; body = h[1]; }
+  else {
+    title = COLOR_NAME[card.color] + ' ' + card.kind;
+    body = 'A number card. It goes on any ' + COLOR_NAME[card.color].toLowerCase() +
+      ' card, or on any other ' + card.kind + '.';
+  }
+  const H = (G && G.house) || {};
+  if (card.kind === 'd2' && H.stack) note = 'Stacking is on: they can answer with a +2 of their own and pass it along.';
+  if (card.kind === 'wd4') note = H.noBluff
+    ? 'No-bluff is on: it always just works, nobody can challenge it.'
+    : 'Officially you should only play this with no card of the colour in play. You can play it anyway — and they can challenge you. Bluff caught, you take four; challenge wrong, they take six.';
+  if (card.kind === '7' && H.seven0) note = '7-0 is on: playing a 7 swaps your whole hand with someone.';
+  if (card.kind === '0' && H.seven0) note = '7-0 is on: playing a 0 passes every hand around the table.';
+  if (!note && !h) note = 'Worth ' + cardValue(card.kind) + ' points to whoever wins the round.';
+  else if (!note) note = 'Worth ' + cardValue(card.kind) + ' points to whoever wins the round.';
+  return { title, body, note };
+}
+
+let tipT = null, tipHeld = false;
+function showTip(card, rect) {
+  const h = cardHelp(card);
+  const t = $('#tip');
+  t.innerHTML = '<b>' + esc(h.title) + '</b>' + esc(h.body) + '<em>' + esc(h.note) + '</em>';
+  t.classList.add('on');
+  const w = t.offsetWidth, hh = t.offsetHeight;
+  let x = rect.left + rect.width / 2 - w / 2;
+  let y = rect.top - hh - 12;
+  if (y < 8) y = rect.bottom + 12;
+  t.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px';
+  t.style.top = Math.max(8, Math.min(innerHeight - hh - 8, y)) + 'px';
+}
+function hideTip() { $('#tip').classList.remove('on'); }
+/* hover on a mouse, long-press on a finger — and a long press must not also
+   play the card, so it sets a flag the click handler checks */
+function wireTip(elm, card) {
+  elm.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') showTip(card, elm.getBoundingClientRect()); });
+  elm.addEventListener('pointerleave', () => { if (!tipHeld) hideTip(); });
+  elm.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse') return;
+    clearTimeout(tipT);
+    tipT = setTimeout(() => { tipHeld = true; showTip(card, elm.getBoundingClientRect()); }, 380);
+  });
+  const up = () => { clearTimeout(tipT); if (tipHeld) { setTimeout(() => { tipHeld = false; hideTip(); }, 1600); } };
+  elm.addEventListener('pointerup', up);
+  elm.addEventListener('pointercancel', up);
+}
+
+/* ---- what the table has been doing, gathered from the event stream ---- */
+const INTEL = { drew: {}, last: {} };
+function noteEvent(e) {
+  if (e.t === 'drew' || e.t === 'drewUntil') { INTEL.drew[e.who] = (INTEL.drew[e.who] || 0) + (e.n || 1); INTEL.last[e.who] = 'drew'; }
+  else if (e.t === 'played') { INTEL.drew[e.who] = 0; INTEL.last[e.who] = 'played'; }
+  else if (e.t === 'forceDraw') { INTEL.drew[e.who] = (INTEL.drew[e.who] || 0) + (e.n || 0); INTEL.last[e.who] = 'hit'; }
+  else if (e.t === 'passed') INTEL.last[e.who] = 'passed';
+}
+
+/* ---- the panel ---- */
+function buildIntel(v) {
+  const box = $('#intel');
+  if (!document.body.classList.contains('intelOn')) return;
+  const me = playerById(G, ME);
+  if (!me) return;
+
+  const counts = { r: 0, g: 0, b: 0, y: 0, w: 0 };
+  me.hand.forEach(c => counts[c.color === 'w' ? 'w' : c.color]++);
+  const worth = handVal(me);
+  const playable = v.moves.filter(m => m.type === 'play').length;
+  const maxC = Math.max(1, counts.r, counts.g, counts.b, counts.y, counts.w);
+
+  let html = '<div class="iSec"><h4>YOUR HAND</h4><div class="iBars">';
+  [['r', CVAR.r], ['g', CVAR.g], ['b', CVAR.b], ['y', CVAR.y], ['w', 'linear-gradient(180deg,var(--pink),var(--violet))']]
+    .forEach(([k, col]) => {
+      const n = counts[k];
+      html += '<div style="height:' + (8 + (n / maxC) * 44) + 'px;background:' + col + ';opacity:' + (n ? 1 : .22) + '">' +
+        '<span>' + n + '</span></div>';
+    });
+  html += '</div><div class="iSub" style="text-align:center;margin-bottom:8px">RED · GREEN · BLUE · YELLOW · WILD</div>';
+  html += '<div class="iRow"><span>Worth if you lose</span><span class="r">' + worth + '</span></div>';
+  html += '<div class="iRow"><span>Playable right now</span><span class="r">' + playable + ' / ' + me.hand.length + '</span></div>';
+  const shortOf = ['r', 'g', 'b', 'y'].filter(k => !counts[k]);
+  if (shortOf.length) html += '<div class="iSub">You hold no ' + shortOf.map(k => COLOR_NAME[k].toLowerCase()).join(', ') +
+    '. That is the colour to steer away from — and the honest ground for a +4.</div>';
+  html += '</div>';
+
+  /* ---- the others ---- */
+  html += '<div class="iSec"><h4>THE TABLE</h4>';
+  G.order.filter(id => id !== ME).forEach(id => {
+    const p = playerById(G, id);
+    const flags = [];
+    if (p.hand.length === 1) flags.push('<span class="iFlag" style="background:var(--gold);color:#120a02">1 CARD</span>');
+    if (p.hand.length === 1 && !p.said) flags.push('<span class="iFlag" style="background:var(--lime);color:#04120a">CATCHABLE</span>');
+    if ((INTEL.drew[id] || 0) >= 2) flags.push('<span class="iFlag">🎣 ' + INTEL.drew[id] + '</span>');
+    if (p.connected === false) flags.push('<span class="iFlag">📴</span>');
+    const away = G.mode === 'elimination' ? null : Math.max(0, G.target - p.score);
+    html += '<div class="iRow' + (p.hand.length === 1 ? ' warn' : '') + '">' +
+      '<span style="width:9px;height:9px;border-radius:3px;background:' + colorOf(id) + '"></span>' +
+      '<span>' + esc(p.name) + '</span><span class="r">' + p.hand.length + '</span></div>' +
+      '<div class="iSub" style="margin:-3px 0 7px 9px">' +
+      (away !== null ? away + ' to win · ' : '') +
+      (INTEL.last[id] === 'drew' ? 'drew last turn' : INTEL.last[id] === 'passed' ? 'passed' : 'played') +
+      (flags.length ? '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">' + flags.join('') + '</div>' : '') +
+      '</div>';
+  });
+  html += '</div>';
+
+  /* ---- the deck ---- */
+  const dealt = G.order.reduce((a, id) => a + playerById(G, id).hand.length, 0);
+  html += '<div class="iSec"><h4>THE DECK</h4>' +
+    '<div class="iRow"><span>Face down</span><span class="r">' + v.drawCount + '</span></div>' +
+    '<div class="iRow"><span>In hands</span><span class="r">' + dealt + '</span></div>' +
+    '<div class="iRow"><span>Played</span><span class="r">' + Math.max(0, 108 - v.drawCount - dealt) + '</span></div>' +
+    '<div class="iSub">When the deck runs out the pile is shuffled back, so nothing is ever really gone.</div>' +
+    '</div>';
+
+  box.innerHTML = html;
+}
+
+/* ---- one suggestion, with the reason ---- */
+function suggest(v) {
+  const me = playerById(G, ME);
+  const plays = v.moves.filter(m => m.type === 'play');
+  const card = id => me.hand.find(c => c.id === id);
+  const counts = {}; me.hand.forEach(c => { if (c.color !== 'w') counts[c.color] = (counts[c.color] || 0) + 1; });
+  const best = COLORS.slice().sort((a, b) => (counts[b] || 0) - (counts[a] || 0))[0];
+
+  if (v.moves.some(m => m.type === 'sayUno'))
+    return ['🗣️ SAY UNO', 'You are down to one card. Shout before anyone notices, or it costs you four.'];
+  const catchIt = v.moves.find(m => m.type === 'catch');
+  if (catchIt) return ['👉 CATCH ' + (playerById(G, catchIt.targetId) || {}).name,
+    'They are on one card and never called it. Four cards, right now, free.'];
+
+  if (v.moves.some(m => m.type === 'challenge')) {
+    return ['🕵️ THINK ABOUT CHALLENGING', 'They played a +4. If they had a card of the old colour they were bluffing and they take the four instead — but guess wrong and you take six.'];
+  }
+  if (v.moves.some(m => m.type === 'takeStack') && !plays.length)
+    return ['TAKE THE ' + v.pending, 'Nothing in your hand answers it. Take them and move on.'];
+
+  if (!plays.length) return ['🂠 DRAW', 'Nothing you hold is legal. Draw one — if it plays, you may play it straight away.'];
+
+  /* somebody is one card away: hurt them if you can */
+  const nextId = G.order[(G.turn + (G.dir === 1 ? 1 : G.order.length - 1) + G.order.length) % G.order.length];
+  const nextP = playerById(G, nextId);
+  if (nextP && nextP.hand.length <= 2) {
+    const nasty = plays.map(m => card(m.cardId)).find(c => c && (c.kind === 'd2' || c.kind === 'wd4' || c.kind === 'skip' || c.kind === 'rev'));
+    if (nasty) return [cardLabel(nasty) + (nasty.color !== 'w' ? ' (' + COLOR_NAME[nasty.color] + ')' : ''),
+      nextP.name + ' is on ' + nextP.hand.length + '. Put this in front of them before they get the chance.'];
+  }
+  /* otherwise get rid of the expensive stuff while keeping your best colour */
+  const scored = plays.map(m => {
+    const c = card(m.cardId); if (!c) return null;
+    let sc = cardValue(c.kind);
+    if (c.color === best) sc += 6;               /* stay in the colour you own */
+    if (isWild(c.kind)) sc -= 34;                /* wilds are the last resort */
+    return { m, c, sc };
+  }).filter(Boolean).sort((a, b) => b.sc - a.sc);
+  const pick = scored[0];
+  if (!pick) return ['🂠 DRAW', 'Nothing sensible to do.'];
+  if (isWild(pick.c.kind))
+    return [cardLabel(pick.c), 'Only the wild is legal. Call ' + COLOR_NAME[best].toLowerCase() +
+      ' — it is the colour you hold most of.'];
+  return [COLOR_NAME[pick.c.color] + ' ' + cardLabel(pick.c),
+    'Worth ' + cardValue(pick.c.kind) + ' points if you get caught holding it' +
+    (pick.c.color === best ? ', and it keeps you in your strongest colour.' : '. Get rid of it while you can.')];
+}
+
+$('#infoChip').onclick = () => {
+  document.body.classList.toggle('intelOn');
+  SFX.tick();
+  if (G) render();
+};
+
 /* ---------------- moves ---------------- */
 let flySrc = null;
 function tryPlay(card) {
   if (busy) return;
-  if (isWild(card.kind)) { pendingWild = card; $('#colorOvl').classList.add('show'); return; }
+  if (isWild(card.kind)) { pendingWild = card; openWheel(); return; }
   if (card.kind === '7' && G.house.seven0 && G.order.length > 2) { pickSwapTarget(card); return; }
   doMove({ type: 'play', cardId: card.id });
+}
+function openWheel() {
+  const me = playerById(G, ME);
+  const n = { r: 0, g: 0, b: 0, y: 0 };
+  me.hand.forEach(c => { if (c.color !== 'w') n[c.color]++; });
+  const best = COLORS.slice().sort((a, b) => n[b] - n[a])[0];
+  $('#wheelHint').textContent = n[best]
+    ? 'You hold ' + n[best] + ' ' + COLOR_NAME[best].toLowerCase() + (n[best] === 1 ? ' card' : ' cards') + ' — the most of any colour.'
+    : 'Nothing but wilds left. Call whatever hurts most.';
+  $('#colorOvl').classList.add('show');
 }
 document.querySelectorAll('.sw2').forEach(s => {
   s.onclick = () => {
@@ -840,6 +1557,7 @@ function pickSwapTarget(card) {
 
 function doMove(move) {
   if (busy || !G) return;
+  tipHeld = false; hideTip();
   if (NET) { netSend({ t: 'move', move }); return; }
   try {
     const r = applyMove(G, ME, move);
@@ -890,15 +1608,87 @@ function maybeBotCatchMe() {
   }, 1500 + Math.random() * 1200);
 }
 
+/* ==========================================================================
+   THE MOMENTS
+   Small, cheap DOM animations bolted onto the events the engine already
+   emits, so the table reacts to what happened rather than just redrawing.
+   ========================================================================== */
+function seatEl(pid) { return document.querySelector('#seats [data-pid="' + pid + '"]'); }
+
+function hurt(pid) {
+  const s = seatEl(pid); if (!s) return;
+  s.classList.remove('hurt'); void s.offsetWidth; s.classList.add('hurt');
+  const r = s.getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2, 18, ['#ff4d5e', '#ff8a2b']);
+}
+function stamp(pid, text) {
+  const s = seatEl(pid); if (!s) return;
+  const d = el('div', 'stamp', text);
+  s.appendChild(d);
+  setTimeout(() => d.remove(), 1100);
+}
+function flash(cls) {
+  const d = el('div', cls);
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 900);
+}
+function wave(color) {
+  const d = el('div', 'wave');
+  d.style.background = CVAR[color] || 'var(--cyan)';
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 850);
+}
+function shout(text) {
+  const d = el('div', 'shout', esc(text));
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1000);
+}
+/* a card sliding out of the deck and into your hand */
+function drawFly(pid, n) {
+  const from = rectOf('#drawPile');
+  const to = pid === ME ? rectOf('#hand') : (seatEl(pid) ? seatEl(pid).getBoundingClientRect() : null);
+  if (!from || !to) return;
+  for (let i = 0; i < Math.min(n || 1, 4); i++) {
+    setTimeout(() => {
+      const f = el('div', 'flyer');
+      f.style.width = from.width + 'px'; f.style.height = from.height + 'px';
+      f.style.left = from.left + 'px'; f.style.top = from.top + 'px';
+      f.innerHTML = cardBackSVG();
+      f.style.border = '0'; f.style.background = 'transparent'; f.style.boxShadow = 'none';
+      f.style.transition = 'transform .3s cubic-bezier(.3,.9,.3,1),opacity .3s';
+      document.body.appendChild(f);
+      const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+      const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+      requestAnimationFrame(() => {
+        f.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(.62) rotate(' + (((i * 37) % 20) - 10) + 'deg)';
+        f.style.opacity = '.15';
+      });
+      setTimeout(() => f.remove(), 320);
+    }, i * 90);
+  }
+}
+/* the deal at the start of a round: one card at a time, round the table */
+function dealSweep() {
+  if (!G) return;
+  const from = rectOf('#drawPile'); if (!from) return;
+  let k = 0;
+  for (let round = 0; round < 3; round++) {
+    G.order.forEach(pid => {
+      setTimeout(() => drawFly(pid, 1), (k++) * 55);
+    });
+  }
+}
+
 /* ---------------- events → log, sound, confetti ---------------- */
 function nameOf(id) { const p = playerById(G, id); return p ? p.name : '?'; }
 function logLine(t) {
   const l = $('#log');
   l.insertBefore(el('div', null, t), l.firstChild);
-  while (l.children.length > 9) l.removeChild(l.lastChild);
+  while (l.children.length > (innerWidth < 700 ? 3 : 6)) l.removeChild(l.lastChild);
 }
 function showEvents(evs) {
   evs.forEach(e => {
+    noteEvent(e);
     switch (e.t) {
       case 'played':
         SFX.play(); landed = true;
@@ -906,20 +1696,28 @@ function showEvents(evs) {
         logLine(nameOf(e.who) + ' played ' + (e.color !== 'w' ? COLOR_NAME[e.color] + ' ' : '') + cardLabel({ kind: e.kind }));
         break;
       case 'eliminated': SFX.hit(); logLine('💀 ' + nameOf(e.who) + ' is out — ' + e.value + ' left in hand'); break;
-      case 'color': logLine(nameOf(e.who) + ' called ' + COLOR_NAME[e.color]); break;
-      case 'drew': SFX.draw(); logLine(nameOf(e.who) + ' drew a card'); break;
-      case 'drewUntil': SFX.draw(); logLine(nameOf(e.who) + ' drew ' + e.n + ' until playable'); break;
-      case 'forceDraw': SFX.hit(); logLine('💥 ' + nameOf(e.who) + ' picks up ' + e.n); break;
-      case 'skip': SFX.skip(); logLine('⛔ ' + nameOf(e.who) + ' is skipped'); break;
-      case 'reverse': SFX.rev(); logLine('🔄 direction reversed'); break;
-      case 'uno': SFX.uno(); logLine('🗣️ ' + nameOf(e.who) + ' calls UNO!'); burst(innerWidth / 2, innerHeight - 120, 24, ['#ffc93c']); break;
-      case 'caught': SFX.hit(); logLine('👉 ' + nameOf(e.who) + ' was caught by ' + nameOf(e.by) + ' — 4 cards'); break;
+      case 'color': wave(e.color); logLine(nameOf(e.who) + ' called ' + COLOR_NAME[e.color]); break;
+      case 'drew': SFX.draw(); drawFly(e.who, 1); logLine(nameOf(e.who) + ' drew a card'); break;
+      case 'drewUntil': SFX.draw(); drawFly(e.who, e.n); logLine(nameOf(e.who) + ' drew ' + e.n + ' until playable'); break;
+      case 'forceDraw':
+        SFX.hit(); drawFly(e.who, e.n); setTimeout(() => hurt(e.who), 120);
+        logLine('💥 ' + nameOf(e.who) + ' picks up ' + e.n); break;
+      case 'skip': SFX.skip(); stamp(e.who, 'SKIPPED'); logLine('⛔ ' + nameOf(e.who) + ' is skipped'); break;
+      case 'reverse':
+        SFX.rev(); flash('revFlash');
+        { const db = $('#dirBadge'); db.classList.remove('spin'); void db.offsetWidth; db.classList.add('spin'); }
+        logLine('🔄 direction reversed'); break;
+      case 'uno':
+        SFX.uno(); shout('UNO!'); music.tense(true);
+        logLine('🗣️ ' + nameOf(e.who) + ' calls UNO!');
+        burst(innerWidth / 2, innerHeight * .45, 40, ['#ffc93c', '#ff8a2b', '#fff']); break;
+      case 'caught': SFX.hit(); hurt(e.who); stamp(e.who, 'CAUGHT'); logLine('👉 ' + nameOf(e.who) + ' was caught by ' + nameOf(e.by) + ' — 4 cards'); break;
       case 'challengeOpen': logLine('🕵️ ' + nameOf(e.by) + ' may challenge that +4'); break;
       case 'challengeWon': SFX.hit(); logLine('✅ ' + nameOf(e.by) + ' called the bluff — ' + nameOf(e.from) + ' draws 4'); break;
       case 'challengeLost': SFX.hit(); logLine('❌ ' + nameOf(e.by) + ' challenged wrongly — draws 6'); break;
       case 'swap': logLine('🔀 ' + nameOf(e.a) + ' swapped hands with ' + nameOf(e.b)); break;
       case 'rotate': logLine('🔁 everyone passed their hand along'); break;
-      case 'jumpIn': logLine('⚡ ' + nameOf(e.who) + ' jumped in!'); break;
+      case 'jumpIn': flash('revFlash'); logLine('⚡ ' + nameOf(e.who) + ' jumped in!'); break;
       case 'passed': logLine(nameOf(e.who) + ' passed'); break;
     }
   });
@@ -934,6 +1732,7 @@ let guestIx = 0;
 
 function showRoundEnd() {
   stopClock();
+  music.tense(false); music.sting();
   const winner = playerById(G, G.roundWinner) || playerById(G, G.winner);
   SFX.win();
   for (let i = 0; i < 6; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 140);
@@ -1039,13 +1838,13 @@ function showRoundEnd() {
       });
       QUEUE.shift(); QUEUE.push(swap.out.name);
       assignColors(roster.map(p => p.id));
-      G = nextRound(G, { players: roster });
+      PILE = []; G = nextRound(G, { players: roster });
       logLine('🔁 ' + swap.out.name + ' out, ' + swap.in + ' in. Waiting: ' + (QUEUE.join(', ') || 'nobody'));
     } else {
-      G = nextRound(G);
+      PILE = []; G = nextRound(G);
     }
     logLine('— round ' + G.round + ' —');
-    render(); tickBots();
+    render(); dealSweep(); setTimeout(tickBots, 720);
   };
   box.appendChild(b);
   $('#roundOvl').classList.add('show');
@@ -1223,11 +2022,14 @@ function handleNet(m) {
       });
       (m.events || []).forEach(e => { if (e.t === 'roundEnd') NET.detail = e.detail || null; });
       showEvents((m.events || []).filter(e => e.t !== 'dealt'));
-      if ((m.events || []).some(e => e.t === 'dealt')) {
+      if ((m.events || []).some(e => e.t === 'dealt' || e.t === 'newRound')) PILE = [];
+      const dealt = (m.events || []).some(e => e.t === 'dealt');
+      if (dealt) {
         $('#log').innerHTML = '';
         logLine('Cards dealt. ' + (playerById(G, G.order[G.turn]) || {}).name + ' starts.');
       }
       render();
+      if (dealt || (m.events || []).some(e => e.t === 'newRound')) dealSweep();
       if (v.phase !== 'playing') showRoundEnd(); else $('#roundOvl').classList.remove('show');
       break;
     }

@@ -152,6 +152,20 @@ a switch, refereed by `game/engine.js`, which has 109 tests behind it.
 | 🤝 **Teams 2v2** | Alternate seats, one score per team. The round winner's team banks everything the other team is holding. |
 | 💀 **Elimination** | Nobody scores. Whoever is left holding the most goes out, and stays at the table as a ghost until one player is standing. |
 
+**Three decks.** 🂠 Classic is the real thing — white border, tilted oval,
+proper symbols for skip, reverse and draw two, quartered wilds. ✨ Neon deck is
+the same deck lit for the arcade. 🌈 Neon arcade drops the oval for glowing
+glass slabs. Every face is drawn as SVG, so it stays sharp at any size. Pick one
+on the setup screen; the 🂠 DECK chip switches it mid-game and remembers.
+
+**📊 INFO** opens a panel that tells you what you are allowed to know: the
+colour breakdown of your hand, what it is worth if you lose the round, how many
+of your cards are actually playable, what every opponent is holding and how far
+they are from the target, who has been drawing, who is one card away and
+catchable, and how much of the deck is left. Hold a card (or hover it) and it
+explains itself — including the awkward bits, like why a +4 can be challenged.
+**💡 HINT** names one reasonable move and says why.
+
 **Solo** deals you a table of bots and needs nothing but the page — it works
 offline, and from a file:// double-click.
 
@@ -159,6 +173,10 @@ offline, and from a file:// double-click.
 Turn it on by deploying the Worker in `server/` once and pasting its URL into
 `config.yml` as `uno_server` — see [server/README.md](server/README.md). It is
 free to run.
+
+🎵 is a four-bar loop built from oscillators, not a file — it sits almost out
+of hearing until somebody drops to one card, then a second layer creeps in on
+top. Off by default.
 
 The room is authoritative: it holds the only complete game and sends each
 player a redacted view, so a hand cannot be read out of somebody else's
