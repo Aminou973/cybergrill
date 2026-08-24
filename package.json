@@ -11,7 +11,7 @@
     "all": "npm run build && npm run cards",
     "passcode": "node scripts/passcode.mjs",
     "night": "node scripts/night.mjs",
-    "test": "node game/engine.test.mjs"
+    "test": "node game/engine.test.mjs && node game/ludo/engine.test.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1"

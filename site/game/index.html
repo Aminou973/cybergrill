@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#05060f">
 <title>CYBERGRILL UNO</title>
 <style>
+/* ==========================================================================
+   TABLE — the furniture every CyberGrill game sits on.
+
+   Colours, the setup panel, the top bar, buttons, overlays, the log, the
+   online chrome and the info panel. Inlined into each table page at build time
+   (look for the TABLECSS markers), so a game page only has to describe the
+   thing that makes it different: a hand of cards, or a board.
+   ========================================================================== */
 :root{
   --bg:#05060f;--panel:rgba(16,20,44,.72);--line:rgba(120,140,255,.18);
   --txt:#e8ecff;--dim:#8b93c4;--cyan:#22e6ff;--pink:#ff2fb9;--lime:#9cff2e;
@@ -57,6 +65,115 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
   font-family:inherit;font-weight:900;letter-spacing:5px;font-size:15px;transition:.18s}
 .go:hover{background:var(--lime);color:#04120a;transform:scale(1.02)}
 
+/* ---------------- table ---------------- */
+#table{position:fixed;inset:0;display:none;flex-direction:column}
+#table.live{display:flex}
+.topline{display:flex;align-items:center;gap:9px;padding:9px 13px;flex:0 0 auto;flex-wrap:wrap}
+.logo{font-size:17px;font-weight:900;letter-spacing:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.chip{padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
+  font-size:10.5px;font-weight:800;letter-spacing:1.2px;color:var(--dim);cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.chip i{font-style:normal;font-size:13px;line-height:1}
+.chip:hover{color:#fff;border-color:var(--cyan)}
+.spacer{flex:1}
+.dirBadge{font-size:15px;filter:drop-shadow(0 0 8px var(--gold))}
+
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+  cursor:pointer;text-align:center;font-size:12px;font-weight:900;letter-spacing:1px;transition:.18s}
+.tab.on{border-color:var(--gold);background:rgba(255,217,60,.12);color:var(--gold);box-shadow:0 0 22px -8px var(--gold)}
+.netBox{display:none} .netBox.on{display:block}
+.soloOnly.hide{display:none}
+.codeBig{font-size:min(17vw,64px);font-weight:900;letter-spacing:10px;text-align:center;margin:6px 0 2px;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.codeHint{text-align:center;font-size:10px;letter-spacing:2px;color:var(--dim);font-weight:800;margin-bottom:14px}
+.lobList{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}
+.lobList div{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;background:rgba(255,255,255,.05);font-size:13px;font-weight:800}
+.lobList .dot{width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
+.lobList .dot.off{background:#666;box-shadow:none}
+.lobList .tagH{margin-left:auto;font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:var(--gold);color:#120a02}
+.lobList .tagB{margin-left:auto;font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:var(--dim)}
+.netPill{position:fixed;left:12px;bottom:12px;z-index:80;font-size:10px;font-weight:900;letter-spacing:1.5px;
+  padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.6);border:1px solid var(--line);color:var(--dim);display:none}
+.netPill.on{display:block}
+.netPill.live{color:var(--lime);border-color:rgba(156,255,46,.4)}
+.netPill.down{color:#ff4d5e;border-color:rgba(255,77,94,.4);animation:critPulse 1s ease-in-out infinite}
+
+.acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 10px}
+.act{padding:13px 20px;border-radius:13px;border:0;cursor:pointer;font-family:inherit;font-weight:900;
+  letter-spacing:2px;font-size:12px;transition:.16s;background:rgba(255,255,255,.07);color:var(--txt);
+  border:1px solid var(--line)}
+.act:hover{transform:translateY(-2px)}
+.act.draw{background:linear-gradient(90deg,var(--cyan),#4df3d0);color:#04121a;border-color:transparent}
+.act.uno{background:linear-gradient(90deg,var(--gold),var(--orange));color:#120a02;border-color:transparent;
+  animation:unoPulse 1s ease-in-out infinite}
+@keyframes unoPulse{50%{box-shadow:0 0 26px -3px var(--gold)}}
+.act.warn{background:linear-gradient(90deg,var(--pink),var(--violet));color:#fff;border-color:transparent}
+.act.good{background:linear-gradient(90deg,var(--lime),#25e6a0);color:#04120a;border-color:transparent}
+
+.log{position:fixed;left:12px;bottom:12px;width:min(38vw,300px);max-height:26vh;overflow:hidden;
+  display:flex;flex-direction:column-reverse;gap:4px;pointer-events:none;z-index:30}
+.log div{font-size:11px;font-weight:700;color:var(--dim);background:rgba(10,14,32,.75);
+  padding:5px 9px;border-radius:8px;border-left:2px solid var(--cyan);animation:logIn .3s}
+@keyframes logIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes gpop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+
+/* overlays */
+.ovl{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:rgba(3,4,12,.82);backdrop-filter:blur(8px)}
+.ovl.show{display:grid;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.oCard{width:min(94vw,460px);background:rgba(12,16,38,.98);border:1px solid var(--line);border-radius:20px;
+  padding:26px;text-align:center;animation:pop .4s cubic-bezier(.16,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+.oCard h2{font-size:13px;letter-spacing:4px;color:var(--dim);font-weight:800;margin-bottom:18px}
+.swatches{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.sw2{padding:26px;border-radius:15px;cursor:pointer;font-weight:900;font-size:13px;letter-spacing:2px;
+  color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);transition:.15s;border:2px solid rgba(255,255,255,.25)}
+.sw2:hover{transform:scale(1.06)}
+.bigName{font-size:min(11vw,54px);font-weight:900;letter-spacing:2px;line-height:1;margin:10px 0;
+  background:linear-gradient(90deg,var(--gold),#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.scoreList{display:flex;flex-direction:column;gap:6px;margin:16px 0}
+.scoreList div{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.04);font-size:13px}
+.scoreList div span:last-child{margin-left:auto;font-weight:900;color:var(--gold)}
+
+/* ---------------- the intel panel ---------------- */
+.intel{position:fixed;right:0;top:46px;bottom:0;width:262px;z-index:44;overflow-y:auto;padding:12px 12px 24px;
+  background:#080b1a;backdrop-filter:blur(16px);border-left:1px solid var(--line);
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.3,.9,.3,1);scrollbar-width:thin}
+body.intelOn .intel{transform:none}
+body.intelOn #table{margin-right:262px}
+.iSec{margin-bottom:14px}
+.iSec h4{font-size:9px;letter-spacing:2.4px;color:var(--dim);font-weight:800;margin-bottom:7px}
+.iRow{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;padding:7px 9px;border-radius:9px;
+  background:rgba(255,255,255,.045);margin-bottom:5px}
+.iRow .r{margin-left:auto;color:var(--gold);font-weight:900}
+.iRow.me{border:1px solid rgba(34,230,255,.35)}
+.iRow.warn{border:1px solid rgba(255,201,60,.5);background:rgba(255,201,60,.09)}
+.iBars{display:flex;gap:4px;align-items:flex-end;height:52px;padding:0 2px;margin:18px 0 6px}
+.iBars div{flex:1;border-radius:5px 5px 2px 2px;position:relative;min-height:3px;transition:height .3s}
+.iBars div span{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:10px;font-weight:900;color:var(--txt)}
+.iBig{font-size:23px;font-weight:900;letter-spacing:-.5px}
+.iSub{font-size:10px;color:var(--dim);font-weight:700;line-height:1.55}
+.iFlag{font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.1)}
+.iMeter{height:6px;border-radius:4px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:5px}
+.iMeter i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--lime))}
+
+/* what a card does, on hover or a long press */
+.tip{position:fixed;z-index:95;max-width:250px;padding:10px 12px;border-radius:12px;pointer-events:none;
+  background:rgba(8,11,26,.97);border:1px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.7);
+  font-size:11px;font-weight:700;color:var(--txt);line-height:1.55;opacity:0;transform:translateY(6px);
+  transition:opacity .14s,transform .14s}
+.tip.on{opacity:1;transform:none}
+.tip b{display:block;font-size:12px;letter-spacing:1.4px;margin-bottom:3px;color:var(--gold)}
+.tip em{display:block;font-style:normal;color:var(--dim);font-size:10px;margin-top:5px}
+
+/* a card flying from a hand to the discard */
+.flyer{position:fixed;z-index:75;pointer-events:none;border-radius:10px;border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 10px 30px rgba(0,0,0,.6);display:grid;place-items:center;font-weight:900;color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,.4)}
+
+
 /* mode picker */
 .modeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .modeCard{padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);
@@ -71,19 +188,6 @@ h1{font-size:min(9vw,44px);font-weight:900;letter-spacing:6px;text-align:center;
 .qTag{padding:7px 11px;border-radius:10px;background:var(--gold);color:#120a02;font-size:11px;font-weight:900;cursor:pointer}
 .qTag em{font-style:normal;opacity:.6;margin-left:5px}
 
-/* ---------------- table ---------------- */
-#table{position:fixed;inset:0;display:none;flex-direction:column}
-#table.live{display:flex}
-.topline{display:flex;align-items:center;gap:9px;padding:9px 13px;flex:0 0 auto;flex-wrap:wrap}
-.logo{font-size:17px;font-weight:900;letter-spacing:2px;
-  background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
-.chip{padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
-  font-size:10.5px;font-weight:800;letter-spacing:1.2px;color:var(--dim);cursor:pointer;white-space:nowrap;
-  display:inline-flex;align-items:center;gap:5px}
-.chip i{font-style:normal;font-size:13px;line-height:1}
-.chip:hover{color:#fff;border-color:var(--cyan)}
-.spacer{flex:1}
-.dirBadge{font-size:15px;filter:drop-shadow(0 0 8px var(--gold))}
 
 .felt{flex:1;position:relative;min-height:0;display:grid;place-items:center}
 .felt::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -127,38 +231,24 @@ body.th-neon .seat .backs i,body.th-neolit .seat .backs i{background:#141a3a}
   color:var(--lime);text-shadow:0 0 12px currentColor}
 .blitzNum.warn{color:var(--gold)} .blitzNum.crit{color:#ff4d5e}
 
-/* a card flying from a hand to the discard */
-.flyer{position:fixed;z-index:75;pointer-events:none;border-radius:10px;border:2px solid rgba(255,255,255,.85);
-  box-shadow:0 10px 30px rgba(0,0,0,.6);display:grid;place-items:center;font-weight:900;color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,.4)}
-.tabs{display:flex;gap:8px;margin-bottom:14px}
-.tab{flex:1;padding:12px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);
-  cursor:pointer;text-align:center;font-size:12px;font-weight:900;letter-spacing:1px;transition:.18s}
-.tab.on{border-color:var(--gold);background:rgba(255,217,60,.12);color:var(--gold);box-shadow:0 0 22px -8px var(--gold)}
-.netBox{display:none} .netBox.on{display:block}
-.soloOnly.hide{display:none}
-.codeBig{font-size:min(17vw,64px);font-weight:900;letter-spacing:10px;text-align:center;margin:6px 0 2px;
-  background:linear-gradient(90deg,var(--cyan),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
-.codeHint{text-align:center;font-size:10px;letter-spacing:2px;color:var(--dim);font-weight:800;margin-bottom:14px}
-.lobList{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}
-.lobList div{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;background:rgba(255,255,255,.05);font-size:13px;font-weight:800}
-.lobList .dot{width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
-.lobList .dot.off{background:#666;box-shadow:none}
-.lobList .tagH{margin-left:auto;font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:var(--gold);color:#120a02}
-.lobList .tagB{margin-left:auto;font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:var(--dim)}
-.netPill{position:fixed;left:12px;bottom:12px;z-index:80;font-size:10px;font-weight:900;letter-spacing:1.5px;
-  padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.6);border:1px solid var(--line);color:var(--dim);display:none}
-.netPill.on{display:block}
-.netPill.live{color:var(--lime);border-color:rgba(156,255,46,.4)}
-.netPill.down{color:#ff4d5e;border-color:rgba(255,77,94,.4);animation:critPulse 1s ease-in-out infinite}
-/* The direction of play, marching round the table inside the rim. Drawn with
-   borders rather than a glyph so it is the same arrow in every font. */
-.chev{position:absolute;width:0;height:0;pointer-events:none;
-  border-left:15px solid var(--cyan);border-top:9px solid transparent;border-bottom:9px solid transparent;
-  transform:translate(-50%,-50%) rotate(var(--rot,0deg));
-  opacity:.2;animation:chevGo 2.2s ease-in-out infinite}
-@keyframes chevGo{0%,72%,100%{opacity:.2;filter:none}
-  32%{opacity:1;filter:drop-shadow(0 0 9px var(--cyan))}}
+/* Which way play is going: three bright waves chasing each other round the
+   rim of the table. A conic gradient rotating inside a ring-shaped mask, so
+   it is one element and costs nothing to animate. */
+.flow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
+  width:min(70vw,720px);height:min(43vh,404px);border-radius:50%;opacity:.62;
+  background:conic-gradient(from 0deg,
+    transparent 0deg, var(--cyan) 16deg, rgba(34,230,255,.15) 34deg, transparent 52deg,
+    transparent 120deg, var(--cyan) 136deg, rgba(34,230,255,.15) 154deg, transparent 172deg,
+    transparent 240deg, var(--cyan) 256deg, rgba(34,230,255,.15) 274deg, transparent 292deg,
+    transparent 360deg);
+  -webkit-mask:radial-gradient(closest-side, transparent 93%, #000 94.5%);
+  mask:radial-gradient(closest-side, transparent 93%, #000 94.5%);
+  animation:flowSpin 7s linear infinite}
+@keyframes flowSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.flow.rev{animation-direction:reverse}
+/* it flares for a moment when somebody turns the table around */
+.flow.turned{animation:flowSpin 7s linear infinite,flowFlare .8s ease-out}
+@keyframes flowFlare{0%{opacity:1;filter:drop-shadow(0 0 26px var(--cyan))}100%{opacity:.62;filter:none}}
 .seat.next .av{box-shadow:0 0 0 2px rgba(34,230,255,.55)}
 .dirWord{font-size:9px;letter-spacing:2px;font-weight:900;color:var(--gold);opacity:.8}
 .seat.gone{opacity:.5}
@@ -259,36 +349,6 @@ body.th-neolit .cf .rim{opacity:.9}
   background:rgba(8,11,26,.95);border:2px solid var(--line);display:grid;place-items:center;
   font-size:9px;letter-spacing:2px;color:var(--dim);font-weight:900}
 
-/* ---------------- the intel panel ---------------- */
-.intel{position:fixed;right:0;top:46px;bottom:0;width:262px;z-index:44;overflow-y:auto;padding:12px 12px 24px;
-  background:#080b1a;backdrop-filter:blur(16px);border-left:1px solid var(--line);
-  transform:translateX(100%);transition:transform .28s cubic-bezier(.3,.9,.3,1);scrollbar-width:thin}
-body.intelOn .intel{transform:none}
-body.intelOn #table{margin-right:262px}
-.iSec{margin-bottom:14px}
-.iSec h4{font-size:9px;letter-spacing:2.4px;color:var(--dim);font-weight:800;margin-bottom:7px}
-.iRow{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;padding:7px 9px;border-radius:9px;
-  background:rgba(255,255,255,.045);margin-bottom:5px}
-.iRow .r{margin-left:auto;color:var(--gold);font-weight:900}
-.iRow.me{border:1px solid rgba(34,230,255,.35)}
-.iRow.warn{border:1px solid rgba(255,201,60,.5);background:rgba(255,201,60,.09)}
-.iBars{display:flex;gap:4px;align-items:flex-end;height:52px;padding:0 2px;margin:18px 0 6px}
-.iBars div{flex:1;border-radius:5px 5px 2px 2px;position:relative;min-height:3px;transition:height .3s}
-.iBars div span{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:10px;font-weight:900;color:var(--txt)}
-.iBig{font-size:23px;font-weight:900;letter-spacing:-.5px}
-.iSub{font-size:10px;color:var(--dim);font-weight:700;line-height:1.55}
-.iFlag{font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.1)}
-.iMeter{height:6px;border-radius:4px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:5px}
-.iMeter i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--lime))}
-
-/* what a card does, on hover or a long press */
-.tip{position:fixed;z-index:95;max-width:250px;padding:10px 12px;border-radius:12px;pointer-events:none;
-  background:rgba(8,11,26,.97);border:1px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.7);
-  font-size:11px;font-weight:700;color:var(--txt);line-height:1.55;opacity:0;transform:translateY(6px);
-  transition:opacity .14s,transform .14s}
-.tip.on{opacity:1;transform:none}
-.tip b{display:block;font-size:12px;letter-spacing:1.4px;margin-bottom:3px;color:var(--gold)}
-.tip em{display:block;font-style:normal;color:var(--dim);font-size:10px;margin-top:5px}
 
 @media(max-width:860px){
   .intel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:56vh;border-left:0;border-top:1px solid var(--line);
@@ -330,43 +390,9 @@ body.intelOn #table{margin-right:262px}
 .handWrap.fan .hcard.ok{transform:rotate(calc(var(--i) * 9deg)) translateY(calc(var(--lift) * 1px - 10px))}
 .handWrap.fan .hcard.ok:hover{transform:rotate(0deg) translateY(-30px) scale(1.1);z-index:9}
 
-.acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 10px}
-.act{padding:13px 20px;border-radius:13px;border:0;cursor:pointer;font-family:inherit;font-weight:900;
-  letter-spacing:2px;font-size:12px;transition:.16s;background:rgba(255,255,255,.07);color:var(--txt);
-  border:1px solid var(--line)}
-.act:hover{transform:translateY(-2px)}
-.act.draw{background:linear-gradient(90deg,var(--cyan),#4df3d0);color:#04121a;border-color:transparent}
-.act.uno{background:linear-gradient(90deg,var(--gold),var(--orange));color:#120a02;border-color:transparent;
-  animation:unoPulse 1s ease-in-out infinite}
-@keyframes unoPulse{50%{box-shadow:0 0 26px -3px var(--gold)}}
-.act.warn{background:linear-gradient(90deg,var(--pink),var(--violet));color:#fff;border-color:transparent}
-.act.good{background:linear-gradient(90deg,var(--lime),#25e6a0);color:#04120a;border-color:transparent}
 
-.log{position:fixed;left:12px;bottom:12px;width:min(38vw,300px);max-height:26vh;overflow:hidden;
-  display:flex;flex-direction:column-reverse;gap:4px;pointer-events:none;z-index:30}
-.log div{font-size:11px;font-weight:700;color:var(--dim);background:rgba(10,14,32,.75);
-  padding:5px 9px;border-radius:8px;border-left:2px solid var(--cyan);animation:logIn .3s}
-@keyframes logIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
-@keyframes gpop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
 @keyframes slam{0%{transform:scale(1.35) rotate(-14deg);opacity:.4}60%{transform:scale(.96) rotate(3deg)}100%{transform:none}}
 
-/* overlays */
-.ovl{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:rgba(3,4,12,.82);backdrop-filter:blur(8px)}
-.ovl.show{display:grid;animation:fade .2s}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-.oCard{width:min(94vw,460px);background:rgba(12,16,38,.98);border:1px solid var(--line);border-radius:20px;
-  padding:26px;text-align:center;animation:pop .4s cubic-bezier(.16,1.5,.4,1)}
-@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
-.oCard h2{font-size:13px;letter-spacing:4px;color:var(--dim);font-weight:800;margin-bottom:18px}
-.swatches{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.sw2{padding:26px;border-radius:15px;cursor:pointer;font-weight:900;font-size:13px;letter-spacing:2px;
-  color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);transition:.15s;border:2px solid rgba(255,255,255,.25)}
-.sw2:hover{transform:scale(1.06)}
-.bigName{font-size:min(11vw,54px);font-weight:900;letter-spacing:2px;line-height:1;margin:10px 0;
-  background:linear-gradient(90deg,var(--gold),#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.scoreList{display:flex;flex-direction:column;gap:6px;margin:16px 0}
-.scoreList div{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.04);font-size:13px}
-.scoreList div span:last-child{margin-left:auto;font-weight:900;color:var(--gold)}
 
 @media(max-width:860px){
   .seat{width:82px}
@@ -501,6 +527,7 @@ body.intelOn #table{margin-right:262px}
     <span class="dirWord" id="dirWord"></span>
     <div class="teamBar" id="teamBar" style="display:none"></div>
     <div class="spacer"></div>
+    <a class="chip" href="ludo/" style="text-decoration:none"><i>🎲</i><span class="cl">LUDO</span></a>
     <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
     <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
     <div class="chip" id="deckChip"><i>🂠</i><span class="cl">DECK</span></div>
@@ -547,7 +574,7 @@ body.intelOn #table{margin-right:262px}
 window.CG_SERVER = "https://cybergrill-uno.cybergrill.workers.dev";
 </script>
 <script type="module">
-/* ---- engine.js, inlined at build time ---- */
+/* ---- uno engine, inlined at build time ---- */
 /* ==========================================================================
    CyberGrill — UNO rules engine
    --------------------------------------------------------------------------
@@ -565,6 +592,19 @@ window.CG_SERVER = "https://cybergrill-uno.cybergrill.workers.dev";
    Card ids are unique strings so a client can name exactly which card it means
    even when it holds two identical ones.
    ========================================================================== */
+
+/* What this game is, for anything that has to talk about games in the plural:
+   the lobby, the room server, the dashboard. See game/registry.js. */
+export const META = {
+  id: 'uno',
+  name: 'UNO',
+  icon: '🎴',
+  blurb: 'Official rules, every house rule as a switch, five ways to play.',
+  min: 2,
+  max: 8,
+  evenOnly: false,
+  path: ''
+};
 
 export const COLORS = ['r', 'g', 'b', 'y'];
 export const COLOR_NAME = { r: 'RED', g: 'GREEN', b: 'BLUE', y: 'YELLOW' };
@@ -1310,6 +1350,20 @@ const CVAR = { r: 'var(--cr)', g: 'var(--cg)', b: 'var(--cb)', y: 'var(--cy)' };
 const PALETTE = ['#22e6ff', '#ff2fb9', '#9cff2e', '#a55bff', '#ff8a2b', '#ffd93c'];
 
 /* ==========================================================================
+   PARTY — the things every CyberGrill table needs and none of them owns.
+
+   Sound, confetti and the music bed. This file is inlined into each table page
+   at build time (look for the PARTY markers), so it shares the page's scope
+   and can use $ and el directly. It is deliberately not an ES module: pasting
+   it in costs nothing at runtime, and one copy of a card snap serves UNO, Ludo
+   and whatever comes next.
+
+   What a page owes this file:
+     #fx          a full-screen canvas for the confetti
+     #musicChip   something to toggle the music with, wired up by the page
+   ========================================================================== */
+
+/* ==========================================================================
    SOUND
    --------------------------------------------------------------------------
    A card is not a beep. Everything here is built the way the real noise is
@@ -1492,21 +1546,34 @@ const SFX = {
    named after the events above into audio/ and they are picked up here; the
    game keeps working exactly as before if the folder is empty. */
 const SAMPLE_NAMES = ['play', 'draw', 'shuffle', 'skip', 'rev', 'hit', 'uno', 'win', 'bad', 'tick'];
+/* every table page sits one folder below the site root except the nested ones,
+   which say so by setting window.CG_AUDIO before this runs */
+const AUDIO_DIR = window.CG_AUDIO || '../audio/';
 /* A page opened straight off the disk cannot fetch its neighbours, and the
    browser logs a CORS complaint for every attempt. There is nothing to load
    there, so do not ask. */
 const canLoadFiles = () => location.protocol === 'http:' || location.protocol === 'https:';
+let audioManifest = null;
+async function getManifest() {
+  if (audioManifest) return audioManifest;
+  try {
+    const r = await fetch(AUDIO_DIR + 'manifest.json', { cache: 'force-cache' });
+    audioManifest = r.ok ? await r.json() : [];
+  } catch (e) { audioManifest = []; }
+  return audioManifest;
+}
 async function loadSamples() {
   const c = ac(); if (!c || !canLoadFiles()) return;
+  const have = await getManifest();
+  if (!have.length) return;
   await Promise.all(SAMPLE_NAMES.map(async n => {
-    for (const ext of ['mp3', 'ogg', 'wav']) {
-      try {
-        const r = await fetch('../audio/' + n + '.' + ext, { cache: 'force-cache' });
-        if (!r.ok) continue;
-        SAMPLES[n] = await c.decodeAudioData(await r.arrayBuffer());
-        return;
-      } catch (e) { /* no file, or we are on file:// — the generated one stands in */ }
-    }
+    const file = ['mp3', 'ogg', 'wav'].map(e => n + '.' + e).find(f => have.indexOf(f) !== -1);
+    if (!file) return;
+    try {
+      const r = await fetch(AUDIO_DIR + file, { cache: 'force-cache' });
+      if (!r.ok) return;
+      SAMPLES[n] = await c.decodeAudioData(await r.arrayBuffer());
+    } catch (e) { /* the generated one stands in */ }
   }));
 }
 
@@ -1536,6 +1603,145 @@ function burst(x, y, n, colors) {
   });
   requestAnimationFrame(loop);
 })();
+
+/* ==========================================================================
+   THE BED
+   --------------------------------------------------------------------------
+   A four-bar loop built out of oscillators, scheduled a beat ahead so it does
+   not stutter. It sits almost out of hearing until somebody drops to one
+   card, and then a second layer creeps in on top.
+   ========================================================================== */
+const music = (() => {
+  const BPM = 88, BEAT = 60 / BPM, BAR = BEAT * 4;
+  /* Am - F - C - G, an old friend, transposed low */
+  const PROG = [
+    { root: 55.00, ch: [220.00, 261.63, 329.63] },   /* A minor  */
+    { root: 43.65, ch: [174.61, 220.00, 261.63] },   /* F major  */
+    { root: 65.41, ch: [196.00, 261.63, 329.63] },   /* C major  */
+    { root: 49.00, ch: [196.00, 246.94, 293.66] }    /* G major  */
+  ];
+  let on = false, master = null, bedGain = null, tenseGain = null,
+      timer = null, next = 0, bar = 0, tenseWanted = false, fileBed;
+
+  function build() {
+    const c = ac(); if (!c) return false;
+    master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
+    bedGain = c.createGain(); bedGain.gain.value = 1; bedGain.connect(master);
+    tenseGain = c.createGain(); tenseGain.gain.value = 0; tenseGain.connect(master);
+    return true;
+  }
+
+  function voice(dest, type, freq, at, dur, peak, detune) {
+    const c = ac(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    if (detune) o.detune.value = detune;
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(peak, at + dur * .22);
+    g.gain.exponentialRampToValueAtTime(.0001, at + dur);
+    o.connect(g); g.connect(dest); o.start(at); o.stop(at + dur + .05);
+  }
+
+  function scheduleBar(at) {
+    const c = ac(); if (!c) return;
+    const P = PROG[bar % PROG.length];
+
+    /* bass, on the one and the three */
+    voice(bedGain, 'sine', P.root, at, BEAT * 1.7, .10);
+    voice(bedGain, 'sine', P.root, at + BEAT * 2, BEAT * 1.7, .075);
+    voice(bedGain, 'triangle', P.root * 2, at, BEAT * 1.2, .022);
+
+    /* a pad that just hangs there */
+    P.ch.forEach((f, i) => {
+      voice(bedGain, 'triangle', f, at, BAR * .96, .018, i * 4 - 4);
+      voice(bedGain, 'sine', f * 2, at, BAR * .9, .006);
+    });
+
+    /* the tense layer: an eighth-note arpeggio that only gets through when
+       tenseGain is open */
+    for (let i = 0; i < 8; i++) {
+      const f = P.ch[i % P.ch.length] * (i > 4 ? 2 : 1);
+      voice(tenseGain, 'square', f, at + i * BEAT / 2, BEAT * .34, .028);
+    }
+    /* and a quiet tick on every beat, so the loop has a pulse */
+    for (let i = 0; i < 4; i++) voice(bedGain, 'sine', 1800, at + i * BEAT, .035, i === 0 ? .012 : .006);
+
+    bar++;
+  }
+
+  function pump() {
+    const c = ac(); if (!c) return;
+    while (next < c.currentTime + .6) {
+      if (next < c.currentTime) next = c.currentTime + .06;
+      scheduleBar(next);
+      next += BAR;
+    }
+  }
+
+  return {
+    get on() { return on; },
+    toggle() { on ? this.stop() : this.start(); return on; },
+    /* If audio/music.mp3 is there, play that instead of building a loop out of
+       oscillators. audio/music-tense.mp3 becomes the layer that fades in when
+       somebody is one card away. */
+    async useFiles() {
+      const c = ac(); if (!c || !master) return false;
+      if (fileBed !== undefined) return !!fileBed;
+      fileBed = null;
+      if (!canLoadFiles()) return false;
+      const have = await getManifest();
+      for (const [name, dest] of [['music', 'bed'], ['music-tense', 'tense']]) {
+        for (const ext of ['mp3', 'ogg']) {
+          if (have.indexOf(name + '.' + ext) === -1) continue;
+          try {
+            const r = await fetch(AUDIO_DIR + name + '.' + ext, { cache: 'force-cache' });
+            if (!r.ok) continue;
+            const buf = await c.decodeAudioData(await r.arrayBuffer());
+            const src = c.createBufferSource();
+            src.buffer = buf; src.loop = true;
+            src.connect(dest === 'bed' ? bedGain : tenseGain);
+            src.start();
+            if (dest === 'bed') fileBed = src;
+            break;
+          } catch (e) { }
+        }
+      }
+      return !!fileBed;
+    },
+    start() {
+      const c = ac(); if (!c) return;
+      if (!master && !build()) return;
+      on = true;
+      this.useFiles().then(usingFiles => { if (usingFiles) { clearInterval(timer); timer = null; } });
+      master.gain.cancelScheduledValues(c.currentTime);
+      master.gain.setValueAtTime(master.gain.value, c.currentTime);
+      master.gain.linearRampToValueAtTime(.6, c.currentTime + 1.4);
+      next = c.currentTime + .08;
+      pump();
+      clearInterval(timer); timer = setInterval(pump, 200);
+    },
+    stop() {
+      const c = ac(); if (!c || !master) { on = false; return; }
+      on = false;
+      master.gain.cancelScheduledValues(c.currentTime);
+      master.gain.setValueAtTime(master.gain.value, c.currentTime);
+      master.gain.linearRampToValueAtTime(0, c.currentTime + .5);
+      clearInterval(timer); timer = null;
+    },
+    /* somebody is one card away — lean on it */
+    tense(v) {
+      tenseWanted = !!v;
+      const c = ac(); if (!c || !tenseGain) return;
+      tenseGain.gain.cancelScheduledValues(c.currentTime);
+      tenseGain.gain.setValueAtTime(tenseGain.gain.value, c.currentTime);
+      tenseGain.gain.linearRampToValueAtTime(v ? 1 : 0, c.currentTime + (v ? 1.6 : 1.1));
+    },
+    sting() {   /* a short lift at the end of a round */
+      [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', .08, i * .09));
+    }
+  };
+})();
+
 
 /* ==========================================================================
    CARD FACES
@@ -1886,142 +2092,6 @@ $('#deckChip').onclick = () => {
 };
 
 
-/* ==========================================================================
-   THE BED
-   --------------------------------------------------------------------------
-   A four-bar loop built out of oscillators, scheduled a beat ahead so it does
-   not stutter. It sits almost out of hearing until somebody drops to one
-   card, and then a second layer creeps in on top.
-   ========================================================================== */
-const music = (() => {
-  const BPM = 88, BEAT = 60 / BPM, BAR = BEAT * 4;
-  /* Am - F - C - G, an old friend, transposed low */
-  const PROG = [
-    { root: 55.00, ch: [220.00, 261.63, 329.63] },   /* A minor  */
-    { root: 43.65, ch: [174.61, 220.00, 261.63] },   /* F major  */
-    { root: 65.41, ch: [196.00, 261.63, 329.63] },   /* C major  */
-    { root: 49.00, ch: [196.00, 246.94, 293.66] }    /* G major  */
-  ];
-  let on = false, master = null, bedGain = null, tenseGain = null,
-      timer = null, next = 0, bar = 0, tenseWanted = false, fileBed;
-
-  function build() {
-    const c = ac(); if (!c) return false;
-    master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
-    bedGain = c.createGain(); bedGain.gain.value = 1; bedGain.connect(master);
-    tenseGain = c.createGain(); tenseGain.gain.value = 0; tenseGain.connect(master);
-    return true;
-  }
-
-  function voice(dest, type, freq, at, dur, peak, detune) {
-    const c = ac(); if (!c) return;
-    const o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.value = freq;
-    if (detune) o.detune.value = detune;
-    g.gain.setValueAtTime(0, at);
-    g.gain.linearRampToValueAtTime(peak, at + dur * .22);
-    g.gain.exponentialRampToValueAtTime(.0001, at + dur);
-    o.connect(g); g.connect(dest); o.start(at); o.stop(at + dur + .05);
-  }
-
-  function scheduleBar(at) {
-    const c = ac(); if (!c) return;
-    const P = PROG[bar % PROG.length];
-
-    /* bass, on the one and the three */
-    voice(bedGain, 'sine', P.root, at, BEAT * 1.7, .10);
-    voice(bedGain, 'sine', P.root, at + BEAT * 2, BEAT * 1.7, .075);
-    voice(bedGain, 'triangle', P.root * 2, at, BEAT * 1.2, .022);
-
-    /* a pad that just hangs there */
-    P.ch.forEach((f, i) => {
-      voice(bedGain, 'triangle', f, at, BAR * .96, .018, i * 4 - 4);
-      voice(bedGain, 'sine', f * 2, at, BAR * .9, .006);
-    });
-
-    /* the tense layer: an eighth-note arpeggio that only gets through when
-       tenseGain is open */
-    for (let i = 0; i < 8; i++) {
-      const f = P.ch[i % P.ch.length] * (i > 4 ? 2 : 1);
-      voice(tenseGain, 'square', f, at + i * BEAT / 2, BEAT * .34, .028);
-    }
-    /* and a quiet tick on every beat, so the loop has a pulse */
-    for (let i = 0; i < 4; i++) voice(bedGain, 'sine', 1800, at + i * BEAT, .035, i === 0 ? .012 : .006);
-
-    bar++;
-  }
-
-  function pump() {
-    const c = ac(); if (!c) return;
-    while (next < c.currentTime + .6) {
-      if (next < c.currentTime) next = c.currentTime + .06;
-      scheduleBar(next);
-      next += BAR;
-    }
-  }
-
-  return {
-    get on() { return on; },
-    toggle() { on ? this.stop() : this.start(); return on; },
-    /* If audio/music.mp3 is there, play that instead of building a loop out of
-       oscillators. audio/music-tense.mp3 becomes the layer that fades in when
-       somebody is one card away. */
-    async useFiles() {
-      const c = ac(); if (!c || !master) return false;
-      if (fileBed !== undefined) return !!fileBed;
-      fileBed = null;
-      if (!canLoadFiles()) return false;
-      for (const [name, dest] of [['music', 'bed'], ['music-tense', 'tense']]) {
-        for (const ext of ['mp3', 'ogg']) {
-          try {
-            const r = await fetch('../audio/' + name + '.' + ext, { cache: 'force-cache' });
-            if (!r.ok) continue;
-            const buf = await c.decodeAudioData(await r.arrayBuffer());
-            const src = c.createBufferSource();
-            src.buffer = buf; src.loop = true;
-            src.connect(dest === 'bed' ? bedGain : tenseGain);
-            src.start();
-            if (dest === 'bed') fileBed = src;
-            break;
-          } catch (e) { }
-        }
-      }
-      return !!fileBed;
-    },
-    start() {
-      const c = ac(); if (!c) return;
-      if (!master && !build()) return;
-      on = true;
-      this.useFiles().then(usingFiles => { if (usingFiles) { clearInterval(timer); timer = null; } });
-      master.gain.cancelScheduledValues(c.currentTime);
-      master.gain.setValueAtTime(master.gain.value, c.currentTime);
-      master.gain.linearRampToValueAtTime(.6, c.currentTime + 1.4);
-      next = c.currentTime + .08;
-      pump();
-      clearInterval(timer); timer = setInterval(pump, 200);
-    },
-    stop() {
-      const c = ac(); if (!c || !master) { on = false; return; }
-      on = false;
-      master.gain.cancelScheduledValues(c.currentTime);
-      master.gain.setValueAtTime(master.gain.value, c.currentTime);
-      master.gain.linearRampToValueAtTime(0, c.currentTime + .5);
-      clearInterval(timer); timer = null;
-    },
-    /* somebody is one card away — lean on it */
-    tense(v) {
-      tenseWanted = !!v;
-      const c = ac(); if (!c || !tenseGain) return;
-      tenseGain.gain.cancelScheduledValues(c.currentTime);
-      tenseGain.gain.setValueAtTime(tenseGain.gain.value, c.currentTime);
-      tenseGain.gain.linearRampToValueAtTime(v ? 1 : 0, c.currentTime + (v ? 1.6 : 1.1));
-    },
-    sting() {   /* a short lift at the end of a round */
-      [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', .08, i * .09));
-    }
-  };
-})();
-
 $('#musicChip').onclick = () => {
   const nowOn = music.toggle();
   $('#musicChip').querySelector('i').textContent = nowOn ? '🎵' : '🔇';
@@ -2110,21 +2180,12 @@ function render() {
     seats.appendChild(s0);
   }
 
-  /* Which way play is going, drawn on the table rather than hidden in a badge:
-     a chevron in each gap between seats, pointing the way the turn travels. */
+  /* Which way play is going, shown as movement rather than as a symbol: waves
+     travelling round the rim, the way the turn does. */
   {
-    const dir = G.dir === 1 ? 1 : -1;
-    for (let r = 0; r < n; r++) {
-      const a = seatAng(r + 0.5);
-      const c = el('div', 'chev');
-      c.style.left = (50 + Math.cos(a) * 24) + '%';
-      c.style.top = (50 + Math.sin(a) * 21) + '%';
-      /* the tangent, pointing the way the turn moves */
-      const tx = -Math.sin(a) * 24 * dir, ty = Math.cos(a) * 21 * dir;
-      c.style.setProperty('--rot', (Math.atan2(ty, tx) * 180 / Math.PI) + 'deg');
-      c.style.animationDelay = ((dir === 1 ? r : n - 1 - r) * 0.16) + 's';
-      seats.appendChild(c);
-    }
+    let fl = $('#flow');
+    if (!fl) { fl = el('div', 'flow'); fl.id = 'flow'; document.querySelector('.felt').appendChild(fl); }
+    fl.classList.toggle('rev', G.dir !== 1);
   }
   $('#dirWord').textContent = G.dir === 1 ? 'CLOCKWISE' : 'ANTI-CLOCKWISE';
 
@@ -2622,7 +2683,13 @@ function pickSwapTarget(card) {
 }
 
 function doMove(move) {
-  if (busy || !G) return;
+  if (!G) return;
+  /* Shouting UNO and catching somebody are the two things you do while it is
+     NOT your turn — the whole tension of the rule is that you can do them the
+     moment you spot them. `busy` guards against playing over a bot's think
+     time; it must not gag you as well. */
+  const interrupt = move.type === 'sayUno' || move.type === 'catch';
+  if (busy && !interrupt) return;
   tipHeld = false; hideTip();
   if (NET) { netSend({ t: 'move', move }); return; }
   try {
@@ -2631,7 +2698,7 @@ function doMove(move) {
     showEvents(r.events);
     render();
     if (G.phase !== 'playing') return showRoundEnd();
-    tickBots();
+    if (!busy) tickBots();          /* a bot is already mid-think; let it finish */
   } catch (e) { SFX.bad(); logLine('⚠ ' + e.message); }
 }
 
@@ -2774,6 +2841,7 @@ function showEvents(evs) {
       case 'reverse':
         SFX.rev(); flash('revFlash');
         { const db = $('#dirBadge'); db.classList.remove('spin'); void db.offsetWidth; db.classList.add('spin'); }
+        { const fl = $('#flow'); if (fl) { fl.classList.remove('turned'); void fl.offsetWidth; fl.classList.add('turned'); } }
         logLine('🔄 direction reversed'); break;
       case 'uno':
         SFX.uno(); shout('UNO!'); music.tense(true);
@@ -3215,7 +3283,7 @@ document.querySelectorAll('.ovl').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o && ['roundOvl','colorOvl','lobbyOvl'].indexOf(o.id) === -1) o.classList.remove('show'); });
 });
 addEventListener('keydown', e => {
-  if (!G || G.phase !== 'playing') return;
+  if (!G || G.phase !== 'playing' || !playerById(G, ME)) return;
   const k = e.key.toLowerCase();
   const v = viewFor(G, ME);
   if (k === 'd' && v.moves.some(m => m.type === 'draw')) doMove({ type: 'draw' });

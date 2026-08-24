@@ -181,18 +181,46 @@ function buildDashboard() {
   console.log(`✓ site/index.html  (${(html.length / 1024).toFixed(0)} KB, self-contained)`);
 }
 
-/* ---------- site/game/index.html — the playable UNO table ----------
-   The engine is inlined so the single file works both from GitHub Pages and
-   from a file:// double-click (an external module src would be CORS-blocked). */
-function buildGame() {
-  const src = join(ROOT, 'game', 'index.html');
-  const eng = join(ROOT, 'game', 'engine.js');
-  if (!existsSync(src) || !existsSync(eng)) { console.log('· no game/ folder, skipping the UNO table'); return; }
+/* ---------- the table pages ----------
+   Each game is one self-contained file: its rules engine and the shared party
+   code (sound, confetti, music) are inlined at build time, so a table works
+   from GitHub Pages and from a file:// double-click alike — an external module
+   src would be CORS-blocked from disk. */
+const TABLES = [
+  { id: 'uno',  page: ['game', 'index.html'],         engine: ['game', 'engine.js'],         out: ['game'] },
+  { id: 'ludo', page: ['game', 'ludo', 'index.html'], engine: ['game', 'ludo', 'engine.js'], out: ['game', 'ludo'] }
+];
+
+function buildTables() {
+  for (const t of TABLES) buildTable(t);
+  copyAudio();
+}
+
+function buildTable(t) {
+  const src = join(ROOT, ...t.page);
+  const eng = join(ROOT, ...t.engine);
+  if (!existsSync(src) || !existsSync(eng)) { console.log(`· no ${t.id} table, skipping`); return; }
   let html = readFileSync(src, 'utf8');
   const engine = readFileSync(eng, 'utf8');
   const re = /\/\* ENGINE:BEGIN \*\/[\s\S]*?\/\* ENGINE:END \*\//;
-  if (re.test(html)) html = html.replace(re, '/* ---- engine.js, inlined at build time ---- */\n' + engine);
-  else console.log('· ENGINE markers missing in game/index.html');
+  if (re.test(html)) html = html.replace(re, `/* ---- ${t.id} engine, inlined at build time ---- */\n` + engine);
+  else console.log(`· ENGINE markers missing in the ${t.id} table`);
+
+  /* the shared table furniture: colours, the setup panel, chrome, overlays */
+  const tcss = join(ROOT, 'shared', 'table.css');
+  const tre = /\/\* TABLECSS:BEGIN \*\/[\s\S]*?\/\* TABLECSS:END \*\//;
+  if (tre.test(html)) {
+    if (!existsSync(tcss)) console.log('· shared/table.css is missing — tables will look bare');
+    else html = html.replace(tre, readFileSync(tcss, 'utf8'));
+  }
+
+  /* the shared party code: sound, confetti, the music bed */
+  const party = join(ROOT, 'shared', 'party.js');
+  const pre = /\/\* PARTY:BEGIN \*\/[\s\S]*?\/\* PARTY:END \*\//;
+  if (pre.test(html)) {
+    if (!existsSync(party)) { console.log('· shared/party.js is missing — tables will be silent'); }
+    else html = html.replace(pre, readFileSync(party, 'utf8'));
+  }
 
   /* the multiplayer server address, so the table knows where to knock */
   const server = String(CFG.uno_server || '').trim().replace(/\/+$/, '');
@@ -200,12 +228,11 @@ function buildGame() {
   if (cre.test(html)) html = html.replace(cre,
     '/* GAMECFG — written by scripts/build.mjs from config.yml */\n' +
     'window.CG_SERVER = ' + JSON.stringify(server) + ';');
-  console.log(server ? `· online server: ${server}` : '· online play off (set uno_server in config.yml)');
-  const out = join(SITE, 'game');
+
+  const out = join(SITE, ...t.out);
   if (!existsSync(out)) mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'index.html'), html);
-  console.log(`✓ site/game/index.html  (${(html.length / 1024).toFixed(0)} KB, self-contained)`);
-  copyAudio();
+  console.log(`✓ site/${t.out.join('/')}/index.html  (${(html.length / 1024).toFixed(0)} KB, self-contained)`);
 }
 
 /* ---------- site/audio — real recordings, if any were dropped in ----------
@@ -213,17 +240,21 @@ function buildGame() {
    string, and a missing file just means the generated sound is used. */
 function copyAudio() {
   const from = join(ROOT, 'audio');
-  if (!existsSync(from)) return;
-  const files = readdirSync(from).filter(f => /\.(mp3|ogg|wav)$/i.test(f));
-  if (!files.length) { console.log('· audio/: no recordings, using the generated sounds'); return; }
   const to = join(SITE, 'audio');
+  const files = existsSync(from) ? readdirSync(from).filter(f => /\.(mp3|ogg|wav)$/i.test(f)) : [];
   if (!existsSync(to)) mkdirSync(to, { recursive: true });
   let bytes = 0;
   for (const f of files) {
     copyFileSync(join(from, f), join(to, f));
     bytes += readFileSync(join(from, f)).length;
   }
-  console.log(`✓ site/audio/  (${files.length} files, ${(bytes / 1024).toFixed(0)} KB)`);
+  /* Always write the list, even when it is empty. The tables read this first
+     and then ask only for files that exist, so a project with no recordings
+     produces no 404s in anybody's console. */
+  writeFileSync(join(to, 'manifest.json'), JSON.stringify(files));
+  console.log(files.length
+    ? `✓ site/audio/  (${files.length} recordings, ${(bytes / 1024).toFixed(0)} KB)`
+    : '· audio/: no recordings, using the generated sounds');
 }
 
 /* ---------- site/season.html ---------- */
@@ -386,5 +417,5 @@ for (const { scope, nights } of loaded) {
 }
 
 buildDashboard();
-buildGame();
+buildTables();
 console.log('\n✓ done');

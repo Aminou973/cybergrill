@@ -16,6 +16,19 @@
    even when it holds two identical ones.
    ========================================================================== */
 
+/* What this game is, for anything that has to talk about games in the plural:
+   the lobby, the room server, the dashboard. See game/registry.js. */
+export const META = {
+  id: 'uno',
+  name: 'UNO',
+  icon: '🎴',
+  blurb: 'Official rules, every house rule as a switch, five ways to play.',
+  min: 2,
+  max: 8,
+  evenOnly: false,
+  path: ''
+};
+
 export const COLORS = ['r', 'g', 'b', 'y'];
 export const COLOR_NAME = { r: 'RED', g: 'GREEN', b: 'BLUE', y: 'YELLOW' };
 

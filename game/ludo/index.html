@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060f">
+<title>CYBERGRILL LUDO</title>
+<style>
+/* TABLECSS:BEGIN */
+/* TABLECSS:END */
+
+/* ---------------- the board ---------------- */
+.felt{flex:1;position:relative;min-height:0;display:grid;place-items:center;padding:6px}
+.boardWrap{position:relative;width:min(88vw,min(72vh,620px));aspect-ratio:1;
+  filter:drop-shadow(0 26px 60px rgba(0,0,0,.65))}
+.boardWrap svg{display:block;width:100%;height:100%;border-radius:18px}
+.cell{stroke:rgba(255,255,255,.14);stroke-width:.03}
+.yard{stroke:rgba(255,255,255,.22);stroke-width:.06}
+.yardIn{fill:rgba(6,9,22,.82)}
+.star{fill:rgba(255,255,255,.55)}
+.midT{stroke:rgba(255,255,255,.25);stroke-width:.04}
+
+/* a token: an HTML disc over the board, so it can be clicked and can glide */
+.tok{position:absolute;width:5.6%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);
+  border:2px solid rgba(255,255,255,.9);box-shadow:0 3px 9px rgba(0,0,0,.6),inset 0 -3px 6px rgba(0,0,0,.35);
+  transition:left .11s linear,top .11s linear,box-shadow .2s,filter .2s;cursor:default;z-index:3;
+  display:grid;place-items:center;font-size:9px;font-weight:900;color:rgba(0,0,0,.55)}
+.tok.can{cursor:pointer;animation:tokReady 1.1s ease-in-out infinite;z-index:5}
+@keyframes tokReady{50%{box-shadow:0 0 0 4px rgba(255,255,255,.5),0 0 22px 2px currentColor}}
+.tok.can:hover{transform:translate(-50%,-50%) scale(1.18)}
+.tok.home{opacity:.92;width:4.4%}
+.tok.hit{animation:tokHit .5s ease-in-out}
+@keyframes tokHit{0%,100%{transform:translate(-50%,-50%)}
+  25%{transform:translate(-50%,-50%) scale(1.5) rotate(-18deg)}
+  60%{transform:translate(-50%,-50%) scale(.8)}}
+
+/* the seats, one per corner of the board */
+.pSeat{position:absolute;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:12px;
+  background:rgba(8,11,26,.8);border:1px solid var(--line);font-size:11px;font-weight:900;z-index:6;
+  transition:.2s;white-space:nowrap}
+.pSeat .dot{width:13px;height:13px;border-radius:4px}
+.pSeat .sc{color:var(--gold)}
+.pSeat.turn{border-color:var(--lime);box-shadow:0 0 22px -4px var(--lime)}
+.pSeat.done{opacity:.5}
+.pSeat.gone .nm::after{content:' 📴'}
+.pSeat.tl{left:-2%;top:-4%} .pSeat.tr{right:-2%;top:-4%}
+.pSeat.br{right:-2%;bottom:-4%} .pSeat.bl{left:-2%;bottom:-4%}
+
+/* the die */
+.diceRow{display:flex;gap:12px;align-items:center;justify-content:center;padding:8px 10px 12px;flex:0 0 auto}
+.die{width:72px;height:72px;border-radius:16px;background:linear-gradient(150deg,#fdfdfd,#d7dced);
+  border:0;cursor:pointer;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.55),inset 0 -5px 10px rgba(0,0,0,.16);
+  transition:transform .16s}
+.die:hover:not(:disabled){transform:translateY(-3px) scale(1.04)}
+.die:disabled{opacity:.4;cursor:default}
+.die.rolling{animation:dieRoll .55s cubic-bezier(.3,1.4,.4,1)}
+@keyframes dieRoll{0%{transform:rotate(0) scale(1)}
+  35%{transform:rotate(220deg) scale(1.22)}
+  70%{transform:rotate(400deg) scale(.94)}
+  100%{transform:rotate(360deg) scale(1)}}
+.die i{position:absolute;width:13px;height:13px;border-radius:50%;background:#151a33;
+  box-shadow:inset 0 -2px 3px rgba(0,0,0,.35)}
+.dieHint{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--dim);max-width:min(46vw,300px);line-height:1.6}
+
+.legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.legend span{font-size:9px;letter-spacing:1px;font-weight:900;padding:3px 8px;border-radius:7px;color:#04060f}
+
+@media(max-width:860px){
+  .boardWrap{width:min(95vw,min(56vh,520px))}
+  /* the slack in portrait goes under the board, where the die can use it */
+  .diceRow{flex-direction:column;gap:10px;padding-top:14px}
+  .die{width:86px;height:86px;border-radius:20px}
+  .die i{width:15px;height:15px}
+  .dieHint{display:block;text-align:center;max-width:82vw}
+  .pSeat{font-size:10px;padding:5px 8px;gap:5px}
+  .pSeat .dot{width:10px;height:10px}
+  .die{width:60px;height:60px}
+  .die i{width:11px;height:11px}
+  .topline{padding:7px 9px;gap:6px}
+  .logo{font-size:14px;letter-spacing:1px}
+}
+@media(max-width:700px){
+  .logo{display:none}
+  .chip .cl{display:none}
+  .chip{padding:8px 10px}
+  .chip i{font-size:15px}
+  .topline{flex-wrap:nowrap;overflow:hidden}
+  .log{left:8px;right:8px;width:auto;top:52px;bottom:auto;max-height:none;flex-direction:column}
+  .log div{font-size:10px;padding:4px 8px;opacity:.85}
+  .tip{max-width:min(78vw,270px);font-size:11px}
+}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+
+<div id="setup"><div class="sBox">
+  <h1>CYBERGRILL LUDO</h1>
+  <div class="sub">F O U R &nbsp; H O M E</div>
+
+  <div class="tabs">
+    <div class="tab on" id="tabSolo">🤖 SOLO VS BOTS</div>
+    <div class="tab" id="tabNet">🌍 ONLINE</div>
+  </div>
+
+  <div class="fld"><label>YOUR NAME</label><input id="myName" maxlength="14" placeholder="AMIN" autocomplete="off"></div>
+
+  <div class="netBox" id="netBox">
+    <div class="fld"><label>START A TABLE, OR JOIN ONE</label>
+      <button class="go" id="createBtn" style="margin:0 0 10px">🎲 CREATE A ROOM</button>
+      <div style="display:flex;gap:8px">
+        <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off"
+          style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;font-family:inherit;font-weight:900;font-size:20px;letter-spacing:6px;text-align:center;text-transform:uppercase">
+        <button id="joinBtn" style="padding:0 22px;border-radius:12px;border:0;cursor:pointer;font-weight:900;font-size:13px;letter-spacing:1px;background:linear-gradient(135deg,var(--cyan),#1e9bff);color:#02121a">JOIN</button>
+      </div>
+      <div id="netMsg" style="font-size:11px;font-weight:800;color:var(--dim);margin-top:9px;min-height:15px"></div>
+    </div>
+  </div>
+
+  <div class="fld soloOnly"><label>OPPONENTS</label>
+    <div class="row2" id="botCount"></div>
+  </div>
+
+  <div class="fld"><label>HOW GOOD ARE THEY</label>
+    <div class="row2" id="skillSel"></div>
+  </div>
+
+  <div class="fld"><label>HOW FAST THEY PLAY</label>
+    <div class="row2" id="speedSel"></div>
+  </div>
+
+  <div class="fld"><label>ROUNDS TO WIN THE MATCH</label>
+    <div class="row2" id="targetSel"></div>
+  </div>
+
+  <div class="fld"><label>HOUSE RULES</label>
+    <div id="houseList"></div>
+  </div>
+
+  <button class="go" id="startBtn">THROW ▶</button>
+</div></div>
+
+<div id="table">
+  <div class="topline">
+    <div class="logo">CYBERGRILL LUDO</div>
+    <span class="dirBadge" id="dirBadge">🎲</span>
+    <div class="spacer"></div>
+    <a class="chip" href="../" style="text-decoration:none"><i>🎴</i><span class="cl">UNO</span></a>
+    <div class="chip" id="musicChip"><i>🔇</i><span class="cl">MUSIC</span></div>
+    <div class="chip" id="infoChip"><i>📊</i><span class="cl">INFO</span></div>
+    <div class="chip" id="rulesChip"><i>📖</i><span class="cl">RULES</span></div>
+    <div class="chip" id="quitChip"><i>✕</i><span class="cl">QUIT</span></div>
+  </div>
+
+  <div class="felt">
+    <div class="boardWrap" id="boardWrap">
+      <svg id="board" viewBox="0 0 15 15" aria-label="Ludo board"></svg>
+    </div>
+  </div>
+
+  <div class="diceRow">
+    <button class="die" id="die" aria-label="Throw the die"></button>
+    <div class="dieHint" id="dieHint"></div>
+    <div class="acts" id="acts"></div>
+  </div>
+</div>
+
+<aside class="intel" id="intel"></aside>
+<div class="tip" id="tip"></div>
+<div class="log" id="log"></div>
+<div class="ovl" id="roundOvl"><div class="oCard" id="roundCard"></div></div>
+<div class="ovl" id="pickOvl"><div class="oCard" id="pickCard"></div></div>
+<div class="ovl" id="lobbyOvl"><div class="oCard" id="lobbyCard"></div></div>
+<div class="netPill" id="netPill"></div>
+
+<script>
+/* this table sits one folder deeper than the others */
+window.CG_AUDIO = '../../audio/';
+/* GAMECFG:BEGIN */
+window.CG_SERVER = '';
+/* GAMECFG:END */
+</script>
+<script type="module">
+/* ENGINE:BEGIN */
+import {
+  createGame, applyMove, legalMoves, viewFor, nextRound, botMove,
+  playerById, square, isSafe, atHome, inYard,
+  TRACK, HOME_RUN, GOAL, TOKENS, STARTS, SAFE, COLORS, COLOR_NAME, BOT_LEVELS, META
+} from './engine.js';
+/* ENGINE:END */
+
+const $ = s => document.querySelector(s);
+const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const CVAR = { r: '#ff4d5e', g: '#3ddc6d', y: '#ffd23d', b: '#3d8bff' };
+const PALETTE = [CVAR.r, CVAR.g, CVAR.y, CVAR.b];
+
+/* PARTY:BEGIN */
+/* PARTY:END */
+
+$('#musicChip').onclick = () => {
+  const nowOn = music.toggle();
+  $('#musicChip').querySelector('i').textContent = nowOn ? '🎵' : '🔇';
+  $('#musicChip').style.opacity = nowOn ? '1' : '.5';
+  logLine(nowOn ? '🎵 music on' : '🔇 music off');
+};
+$('#musicChip').style.opacity = '.5';
+
+/* ==========================================================================
+   THE BOARD, IN COORDINATES
+   --------------------------------------------------------------------------
+   Fifteen by fifteen. The loop is built once, in the order a token walks it,
+   so that every seat's 51st step lands on the middle cell of its own arm —
+   the one square from which it can turn into its home column. Get that wrong
+   and the tokens take a diagonal into the column, which looks like a bug
+   because it is one.
+   ========================================================================== */
+const PATH = [];
+{
+  const p = (r, c) => PATH.push([r, c]);
+  p(6, 0);
+  for (let c = 1; c <= 5; c++) p(6, c);
+  for (let r = 5; r >= 1; r--) p(r, 6);
+  p(0, 6); p(0, 7); p(0, 8);
+  for (let r = 1; r <= 5; r++) p(r, 8);
+  for (let c = 9; c <= 13; c++) p(6, c);
+  p(6, 14); p(7, 14); p(8, 14);
+  for (let c = 13; c >= 9; c--) p(8, c);
+  for (let r = 9; r <= 13; r++) p(r, 8);
+  p(14, 8); p(14, 7); p(14, 6);
+  for (let r = 13; r >= 9; r--) p(r, 6);
+  for (let c = 5; c >= 1; c--) p(8, c);
+  p(8, 0); p(7, 0);
+}
+if (PATH.length !== TRACK) console.warn('the loop is the wrong length', PATH.length);
+
+/* each colour's run in from the rim to the middle */
+const HOME_CELLS = [
+  [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5]],
+  [[1, 7], [2, 7], [3, 7], [4, 7], [5, 7]],
+  [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9]],
+  [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7]]
+];
+/* the corner each colour waits in, as the top-left cell of its 6x6 block */
+const YARDS = [[0, 0], [0, 9], [9, 9], [9, 0]];
+const YARD_SPOTS = [[1.5, 1.5], [1.5, 3.5], [3.5, 1.5], [3.5, 3.5]];
+/* where the four colours sit once they are home, so they do not stack up */
+const CENTRE = [[7.5, 6.9], [6.9, 7.5], [7.5, 8.1], [8.1, 7.5]];
+const SEAT_CORNER = ['tl', 'tr', 'br', 'bl'];
+
+/* row/col of a token, in board units, as a [r, c] pair */
+function cellOf(seat, pos, tokenIndex) {
+  if (pos === -1) {
+    const y = YARDS[seat], s = YARD_SPOTS[tokenIndex];
+    return [y[0] + s[0], y[1] + s[1]];
+  }
+  if (pos >= 0 && pos < TRACK) {
+    const cell = PATH[(STARTS[seat] + pos) % TRACK];
+    return [cell[0] + 0.5, cell[1] + 0.5];
+  }
+  if (pos < GOAL) {
+    const cell = HOME_CELLS[seat][pos - TRACK];
+    return [cell[0] + 0.5, cell[1] + 0.5];
+  }
+  const c = CENTRE[seat];
+  return [c[0] + (tokenIndex % 2) * 0.34 - 0.17, c[1] + (tokenIndex > 1 ? 0.34 : 0) - 0.17];
+}
+const pct = v => (v / 15 * 100) + '%';
+
+/* ---------------- the board, drawn once ---------------- */
+function drawBoard() {
+  const svg = $('#board');
+  const bits = [];
+  bits.push('<rect x="0" y="0" width="15" height="15" rx="0.5" fill="#070a18"/>');
+
+  /* the four yards */
+  YARDS.forEach((y, i) => {
+    const col = CVAR[COLORS[i]];
+    bits.push(`<rect class="yard" x="${y[1]}" y="${y[0]}" width="6" height="6" rx="0.6" fill="${col}" fill-opacity=".26"/>`);
+    bits.push(`<rect class="yardIn" x="${y[1] + 0.75}" y="${y[0] + 0.75}" width="4.5" height="4.5" rx="0.5"/>`);
+    YARD_SPOTS.forEach(sp => {
+      bits.push(`<circle cx="${y[1] + sp[1]}" cy="${y[0] + sp[0]}" r="0.36" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-opacity=".5" stroke-width=".05"/>`);
+    });
+  });
+
+  /* the loop */
+  PATH.forEach(([r, c], i) => {
+    const startSeat = STARTS.indexOf(i);
+    const fill = startSeat >= 0 ? CVAR[COLORS[startSeat]] : '#101532';
+    const op = startSeat >= 0 ? '.85' : '1';
+    bits.push(`<rect class="cell" x="${c}" y="${r}" width="1" height="1" rx=".14" fill="${fill}" fill-opacity="${op}"/>`);
+    if (startSeat < 0 && isSafe(i)) {
+      bits.push(`<path class="star" transform="translate(${c + 0.5} ${r + 0.5}) scale(0.030)" d="M0,-11 L3,-3.5 L11,-3.5 L4.6,1.4 L7,9 L0,4.4 L-7,9 L-4.6,1.4 L-11,-3.5 L-3,-3.5 Z"/>`);
+    }
+  });
+
+  /* the four runs in */
+  HOME_CELLS.forEach((run, i) => {
+    const col = CVAR[COLORS[i]];
+    run.forEach(([r, c]) => {
+      bits.push(`<rect class="cell" x="${c}" y="${r}" width="1" height="1" rx=".14" fill="${col}" fill-opacity=".62"/>`);
+    });
+  });
+
+  /* the middle, as four triangles meeting in the centre */
+  const T = [
+    [[6, 6], [6, 9], [7.5, 7.5]],      /* top    (row 6) */
+    [[6, 9], [9, 9], [7.5, 7.5]],      /* right  */
+    [[9, 9], [9, 6], [7.5, 7.5]],      /* bottom */
+    [[9, 6], [6, 6], [7.5, 7.5]]       /* left   */
+  ];
+  /* each triangle belongs to the colour whose run arrives at it */
+  const TRI_SEAT = [1, 2, 3, 0];
+  T.forEach((tri, i) => {
+    const col = CVAR[COLORS[TRI_SEAT[i]]];
+    const pts = tri.map(([r, c]) => `${c},${r}`).join(' ');
+    bits.push(`<polygon class="midT" points="${pts}" fill="${col}" fill-opacity=".72"/>`);
+  });
+
+  svg.innerHTML = bits.join('');
+}
+
+/* ==========================================================================
+   state
+   ========================================================================== */
+let G = null, ME = 'you', busy = false, NET = null, animating = false;
+const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU', 'BILLAL'];
+
+const HOUSE_UI = [
+  ['capture', 'CAPTURE', 'Land on somebody and they go back to the yard. Stars and starts stay safe.'],
+  ['sixAgain', 'A SIX ROLLS AGAIN', 'Throw a six and you go again.'],
+  ['threeSixes', 'THREE SIXES FORFEITS', 'Three in a row and you lose the turn.'],
+  ['exactFinish', 'EXACT ROLL TO FINISH', 'You must land on the middle exactly.'],
+  ['sixToLeave', 'SIX TO LEAVE THE YARD', 'Nothing comes out without a six.']
+];
+const SKILL_UI = [['easy', '🙂 EASY'], ['normal', '🙃 NORMAL'], ['sharp', '😈 SHARP']];
+const SPEED_UI = [['slow', '🐢 SLOW', 1500, 900], ['normal', 'NORMAL', 800, 520], ['fast', '⚡ FAST', 380, 260]];
+const cfg = {
+  bots: 3, skill: 'normal', speed: 'normal', target: 1,
+  house: { capture: false, sixAgain: true, threeSixes: true, exactFinish: true, sixToLeave: true }
+};
+const speedMs = () => { const r = SPEED_UI.find(x => x[0] === cfg.speed) || SPEED_UI[1]; return r[2] + Math.random() * r[3]; };
+
+function buildSetup() {
+  const bc = $('#botCount'); bc.innerHTML = '';
+  [1, 2, 3].forEach(n => {
+    const p = el('div', 'pill' + (cfg.bots === n ? ' on' : ''), n + ' BOT' + (n > 1 ? 'S' : ''));
+    p.onclick = () => { cfg.bots = n; buildSetup(); SFX.tick(); };
+    bc.appendChild(p);
+  });
+  const sk = $('#skillSel'); sk.innerHTML = '';
+  SKILL_UI.forEach(([k, name]) => {
+    const p = el('div', 'pill' + (cfg.skill === k ? ' on' : ''), name);
+    p.onclick = () => { cfg.skill = k; buildSetup(); SFX.tick(); };
+    sk.appendChild(p);
+  });
+  const sp = $('#speedSel'); sp.innerHTML = '';
+  SPEED_UI.forEach(([k, name]) => {
+    const p = el('div', 'pill' + (cfg.speed === k ? ' on' : ''), name);
+    p.onclick = () => { cfg.speed = k; buildSetup(); SFX.tick(); };
+    sp.appendChild(p);
+  });
+  const ts = $('#targetSel'); ts.innerHTML = '';
+  [1, 2, 3].forEach(n => {
+    const p = el('div', 'pill' + (cfg.target === n ? ' on' : ''), n === 1 ? 'ONE' : n + ' ROUNDS');
+    p.onclick = () => { cfg.target = n; buildSetup(); SFX.tick(); };
+    ts.appendChild(p);
+  });
+  const hl = $('#houseList'); hl.innerHTML = '';
+  HOUSE_UI.forEach(([k, name, desc]) => {
+    const d = el('div', 'hr2' + (cfg.house[k] ? ' on' : ''),
+      '<div class="sw"></div><div><b>' + name + '</b><br><span>' + desc + '</span></div>');
+    d.onclick = () => { cfg.house[k] = !cfg.house[k]; buildSetup(); SFX.tick(); };
+    hl.appendChild(d);
+  });
+}
+buildSetup();
+try { const n = localStorage.getItem('cybergrill_uno_name'); if (n) $('#myName').value = n; } catch (e) { }
+
+/* ==========================================================================
+   drawing the live board
+   ========================================================================== */
+function seatOf(pid) { const p = playerById(G, pid); return p ? p.seat : 0; }
+function colorOf(pid) { const p = playerById(G, pid); return p ? CVAR[p.color] : '#888'; }
+const myView = () => NET ? NET.view : viewFor(G, ME);
+
+function render() {
+  if (!G || !playerById(G, ME)) return;
+  const v = myView();
+  if (!v) return;
+  const wrap = $('#boardWrap');
+
+  /* seats */
+  wrap.querySelectorAll('.pSeat').forEach(e => e.remove());
+  v.players.forEach(p => {
+    const s = el('div', 'pSeat ' + SEAT_CORNER[p.seat] +
+      (v.turn === p.id ? ' turn' : '') +
+      (p.home === TOKENS ? ' done' : '') +
+      (p.connected === false ? ' gone' : ''));
+    s.innerHTML = '<span class="dot" style="background:' + CVAR[p.color] + '"></span>' +
+      '<span class="nm">' + esc(p.name) + (p.id === ME ? ' (you)' : '') + '</span>' +
+      '<span class="sc">' + p.home + '/4</span>' +
+      (v.target > 1 ? '<span style="color:var(--dim)">· ' + p.score + 'p</span>' : '');
+    wrap.appendChild(s);
+  });
+
+  /* tokens */
+  const movable = new Set(v.moves.filter(m => m.type === 'move').map(m => m.token));
+  v.players.forEach(p => {
+    p.tokens.forEach((pos, i) => {
+      const id = 'tok-' + p.id + '-' + i;
+      let t = document.getElementById(id);
+      if (!t) {
+        t = el('div', 'tok');
+        t.id = id;
+        t.style.background = CVAR[p.color];
+        t.style.color = CVAR[p.color];
+        wrap.appendChild(t);
+      }
+      const mine = p.id === ME;
+      t.className = 'tok' + (pos === GOAL ? ' home' : '') + (mine && movable.has(i) && !animating ? ' can' : '');
+      t.textContent = pos === GOAL ? '★' : '';
+      const [r, c] = cellOf(p.seat, pos, i);
+      t.style.left = pct(c); t.style.top = pct(r);
+      t.onclick = (mine && movable.has(i) && !animating) ? () => play({ type: 'move', token: i }) : null;
+    });
+  });
+
+  paintDie(v);
+  buildIntel(v);
+  const myTurn = v.turn === ME;
+  $('#dirBadge').textContent = myTurn ? '🎲' : '⏳';
+
+  /* actions */
+  const acts = $('#acts'); acts.innerHTML = '';
+  if (v.moves.some(m => m.type === 'pass')) {
+    const b = el('button', 'act warn', 'NOTHING TO MOVE — PASS');
+    b.onclick = () => play({ type: 'pass' });
+    acts.appendChild(b);
+  }
+}
+
+const PIPS = {
+  1: [[50, 50]],
+  2: [[28, 28], [72, 72]],
+  3: [[26, 26], [50, 50], [74, 74]],
+  4: [[28, 28], [72, 28], [28, 72], [72, 72]],
+  5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+  6: [[28, 24], [72, 24], [28, 50], [72, 50], [28, 76], [72, 76]]
+};
+function paintDie(v) {
+  const d = $('#die');
+  const myTurn = v.turn === ME;
+  const canRoll = myTurn && v.moves.some(m => m.type === 'roll') && !animating;
+  d.disabled = !canRoll;
+  const face = v.die;
+  d.innerHTML = face
+    ? PIPS[face].map(([x, y]) => `<i style="left:calc(${x}% - 6.5px);top:calc(${y}% - 6.5px)"></i>`).join('')
+    : '<span style="font-size:26px;color:#151a33;font-weight:900">?</span>';
+  const who = (v.players.find(p => p.id === v.turn) || {}).name || '';
+  $('#dieHint').textContent = !myTurn ? who + ' is throwing…'
+    : canRoll ? 'Tap the die'
+      : v.moves.some(m => m.type === 'move') ? 'Pick a token to move ' + v.die
+        : 'Nothing can use a ' + v.die;
+}
+
+/* ---------------- moving, with the token actually walking ---------------- */
+function play(move) {
+  if (!G || animating) return;
+  if (busy && NET === null) return;
+  if (NET) { netSend({ t: 'move', move }); return; }
+  try {
+    const before = snapshot();
+    const r = applyMove(G, ME, move);
+    G = r.state;
+    afterMove(r.events, before);
+  } catch (e) { SFX.bad(); logLine('⚠ ' + e.message); }
+}
+function snapshot() {
+  const out = {};
+  G.players.forEach(p => { out[p.id] = p.tokens.slice(); });
+  return out;
+}
+
+/* walk a token cell by cell so the eye can follow it round the board */
+function walk(pid, token, from, to, done) {
+  const seat = seatOf(pid);
+  const t = document.getElementById('tok-' + pid + '-' + token);
+  if (!t || from < 0 || to <= from) { done && done(); return; }
+  animating = true;
+  let step = from;
+  const tick = () => {
+    step++;
+    const [r, c] = cellOf(seat, step, token);
+    t.style.left = pct(c); t.style.top = pct(r);
+    SFX.tick();
+    if (step < to) setTimeout(tick, 115);
+    else { animating = false; done && done(); }
+  };
+  setTimeout(tick, 60);
+}
+
+function afterMove(events, before) {
+  showEvents(events);
+  const stepEv = events.find(e => e.t === 'step' && e.from >= 0 && e.to > e.from);
+  const finish = () => {
+    render();
+    if (G.phase !== 'playing') return showRoundEnd();
+    if (!busy) tickBots();
+  };
+  if (stepEv) {
+    render();
+    /* put it back where it started, then walk it */
+    const seat = seatOf(stepEv.who);
+    const t = document.getElementById('tok-' + stepEv.who + '-' + stepEv.token);
+    if (t) { const [r, c] = cellOf(seat, stepEv.from, stepEv.token); t.style.left = pct(c); t.style.top = pct(r); }
+    walk(stepEv.who, stepEv.token, stepEv.from, stepEv.to, finish);
+  } else finish();
+}
+
+/* ---------------- the machines ---------------- */
+function tickBots() {
+  if (NET) return;
+  if (!G || G.phase !== 'playing') return;
+  const who = G.order[G.turn];
+  if (who === ME) return;
+  busy = true;
+  setTimeout(() => {
+    if (!G || G.phase !== 'playing') { busy = false; return; }
+    const m = botMove(G, who, Math.random, cfg.skill);
+    if (!m) { busy = false; return; }
+    let r;
+    try { r = applyMove(G, who, m); }
+    catch (e) { busy = false; return; }
+    G = r.state;
+    busy = false;
+    afterMove(r.events, null);
+  }, speedMs());
+}
+
+/* ---------------- events ---------------- */
+function nameOf(id) { const p = playerById(G, id); return p ? p.name : '?'; }
+function logLine(t) {
+  const l = $('#log');
+  l.insertBefore(el('div', null, t), l.firstChild);
+  while (l.children.length > (innerWidth < 700 ? 3 : 6)) l.removeChild(l.lastChild);
+}
+function tokenEl(pid, i) { return document.getElementById('tok-' + pid + '-' + i); }
+
+function showEvents(evs) {
+  (evs || []).forEach(e => {
+    switch (e.t) {
+      case 'roll':
+        SFX.shuffle();
+        { const d = $('#die'); d.classList.remove('rolling'); void d.offsetWidth; d.classList.add('rolling'); }
+        logLine('🎲 ' + nameOf(e.who) + ' threw a ' + e.die);
+        break;
+      case 'leave': SFX.play(); logLine('🚪 ' + nameOf(e.who) + ' brings one out'); break;
+      case 'step': break;
+      case 'capture': {
+        SFX.hit();
+        const t = tokenEl(e.victim, e.token);
+        if (t) { t.classList.remove('hit'); void t.offsetWidth; t.classList.add('hit'); }
+        const r = t && t.getBoundingClientRect();
+        if (r) burst(r.left + r.width / 2, r.top + r.height / 2, 22, [colorOf(e.victim), '#fff']);
+        logLine('💥 ' + nameOf(e.who) + ' sends ' + nameOf(e.victim) + ' home');
+        break;
+      }
+      case 'home': {
+        SFX.uno();
+        const t = tokenEl(e.who, e.token);
+        const r = t && t.getBoundingClientRect();
+        if (r) burst(r.left + r.width / 2, r.top + r.height / 2, 26, [colorOf(e.who), '#ffd93c']);
+        logLine('🏠 ' + nameOf(e.who) + ' gets one home (' + e.count + '/4)');
+        break;
+      }
+      case 'allHome':
+        SFX.win();
+        logLine('🏁 ' + nameOf(e.who) + ' is all home — ' + ['1st', '2nd', '3rd', '4th'][e.place - 1]);
+        break;
+      case 'threeSixes': SFX.bad(); logLine('🚫 three sixes — ' + nameOf(e.who) + ' loses the turn'); break;
+      case 'stuck': logLine('😐 a ' + e.die + ' is no use to ' + nameOf(e.who)); break;
+      case 'passed': logLine(nameOf(e.who) + ' passes'); break;
+      case 'rollAgain': logLine('🔁 a six — ' + nameOf(e.who) + ' throws again'); break;
+      case 'left': logLine('📴 ' + nameOf(e.who) + ' dropped out'); break;
+    }
+  });
+}
+
+/* ---------------- the info panel ---------------- */
+function buildIntel(v) {
+  if (!document.body.classList.contains('intelOn')) return;
+  const box = $('#intel');
+  let html = '<div class="iSec"><h4>THE RACE</h4>';
+  v.players.slice().sort((a, b) => steps(b) - steps(a)).forEach(p => {
+    const done = p.tokens.reduce((t, x) => t + Math.max(0, x), 0);
+    const pctDone = Math.round(done / (GOAL * TOKENS) * 100);
+    html += '<div class="iRow' + (p.id === ME ? ' me' : '') + '">' +
+      '<span style="width:9px;height:9px;border-radius:3px;background:' + CVAR[p.color] + '"></span>' +
+      '<span>' + esc(p.name) + '</span><span class="r">' + p.home + '/4</span></div>' +
+      '<div class="iMeter" style="margin:-2px 0 7px"><i style="width:' + pctDone + '%;background:' + CVAR[p.color] + '"></i></div>';
+  });
+  html += '</div>';
+
+  const me = v.players.find(p => p.id === ME);
+  if (me) {
+    html += '<div class="iSec"><h4>YOUR FOUR</h4>';
+    me.tokens.forEach((pos, i) => {
+      const where = pos === -1 ? 'in the yard' : pos === GOAL ? 'home' :
+        pos >= TRACK ? 'in the run in, ' + (GOAL - pos) + ' to go' :
+          'on the track, ' + (GOAL - pos) + ' to go';
+      html += '<div class="iRow"><span style="width:9px;height:9px;border-radius:50%;background:' + CVAR[me.color] + '"></span>' +
+        '<span>Token ' + (i + 1) + '</span><span class="r" style="font-size:10px;color:var(--dim)">' + where + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="iSec"><h4>THE RULES IN PLAY</h4><div class="iSub">' +
+    HOUSE_UI.filter(([k]) => v.house[k]).map(([, n]) => n.toLowerCase()).join('<br>') +
+    '</div></div>';
+  if (NET) html += '<div class="iSec"><div class="iRow"><span>ROOM</span><span class="r">' + NET.code + '</span></div></div>';
+  box.innerHTML = html;
+}
+const steps = p => p.tokens.reduce((t, x) => t + Math.max(0, x), 0);
+
+$('#infoChip').onclick = () => { document.body.classList.toggle('intelOn'); SFX.tick(); if (G) render(); };
+$('#rulesChip').onclick = () => {
+  const on = HOUSE_UI.filter(([k]) => G.house[k]).map(([, n]) => n);
+  alert('🎲 LUDO\n\nFour tokens round the board and home before anybody else.\n\n' +
+    'A token walks ' + GOAL + ' steps: ' + TRACK + ' round the outside, then five up your own colour, then the middle.\n\n' +
+    'In play: ' + (on.length ? on.join(', ') : 'nothing but the basics') + '.');
+};
+$('#quitChip').onclick = () => { if (confirm('Leave the game?')) { if (NET) netLeave(); location.reload(); } };
+$('#die').onclick = () => play({ type: 'roll' });
+addEventListener('keydown', e => {
+  if (!G || animating) return;
+  if (e.key === ' ' || e.key === 'Enter') { if (!$('#die').disabled) { e.preventDefault(); play({ type: 'roll' }); } }
+});
+
+/* ---------------- the end of a round ---------------- */
+function showRoundEnd() {
+  music.tense(false); music.sting();
+  for (let i = 0; i < 6; i++) setTimeout(() => burst(Math.random() * innerWidth, innerHeight * .4, 40), i * 140);
+  const v = myView();
+  const gameOver = G.phase === 'gameEnd';
+  const box = $('#roundCard');
+  const champ = playerById(G, gameOver ? G.winner : G.roundWinner);
+  box.innerHTML =
+    '<div style="font-size:52px">' + (gameOver ? '🏆' : '🏁') + '</div>' +
+    '<div class="bigName">' + esc(champ ? champ.name : '—') + '</div>' +
+    '<h2>' + (gameOver ? 'WINS THE MATCH' : 'TAKES THE ROUND') + '</h2>';
+  const list = el('div', 'scoreList');
+  (G.finished.length ? G.finished : G.order).forEach((id, i) => {
+    const p = playerById(G, id);
+    list.appendChild(el('div', null,
+      '<span style="width:10px;height:10px;border-radius:3px;background:' + CVAR[p.color] + ';display:inline-block"></span>' +
+      '<span>' + ['🥇', '🥈', '🥉', '4th'][i] + ' ' + esc(p.name) + '</span><span>' + p.score + '</span>'));
+  });
+  box.appendChild(list);
+  const b = el('button', 'go', gameOver ? 'PLAY AGAIN' : 'NEXT ROUND ▶');
+  if (NET && !NET.isHost) {
+    b.textContent = 'WAITING FOR THE HOST…';
+    b.style.opacity = '.55'; b.style.cursor = 'default';
+  } else {
+    b.onclick = () => {
+      $('#roundOvl').classList.remove('show');
+      if (NET) { netSend({ t: gameOver ? 'again' : 'next' }); return; }
+      if (gameOver) { location.reload(); return; }
+      G = nextRound(G);
+      logLine('— round ' + G.round + ' —');
+      render(); tickBots();
+    };
+  }
+  box.appendChild(b);
+  $('#roundOvl').classList.add('show');
+}
+
+/* ---------------- solo start ---------------- */
+$('#startBtn').onclick = () => {
+  ac(); loadSamples();
+  const name = ($('#myName').value || 'YOU').trim().slice(0, 14).toUpperCase();
+  try { localStorage.setItem('cybergrill_uno_name', name); } catch (e) { }
+  const players = [{ id: ME, name }];
+  for (let i = 0; i < cfg.bots; i++) players.push({ id: 'bot' + i, name: BOT_NAMES[i] });
+  try {
+    G = createGame({ players, seed: (Math.random() * 1e9) | 0, house: cfg.house, target: cfg.target });
+  } catch (err) { alert(err.message); return; }
+  drawBoard();
+  $('#setup').classList.add('gone');
+  $('#table').classList.add('live');
+  $('#log').innerHTML = '';
+  logLine('🎲 Four tokens each. Six to get out.');
+  render();
+  tickBots();
+};
+
+/* ==========================================================================
+   ONLINE
+   The board has nothing to hide, so a view is simply the whole state and this
+   layer is thinner than UNO's — no shadow hands, no redaction to undo.
+   ========================================================================== */
+const SERVER = (window.CG_SERVER || '').replace(/\/+$/, '');
+const netMsg = t => { const e = $('#netMsg'); if (e) e.textContent = t || ''; };
+function pill(cls, text) { const p = $('#netPill'); p.className = 'netPill on ' + cls; p.textContent = text; }
+function netSend(m) { if (!NET || !NET.ws || NET.ws.readyState !== 1) return false; NET.ws.send(JSON.stringify(m)); return true; }
+function netLeave() { if (!NET) return; NET.closing = true; try { NET.ws.close(); } catch (e) { } NET = null; }
+const seatKey = c => 'cybergrill_ludo_seat_' + c;
+const loadSeat = c => { try { return JSON.parse(localStorage.getItem(seatKey(c)) || 'null'); } catch (e) { return null; } };
+const saveSeat = (c, s) => { try { localStorage.setItem(seatKey(c), JSON.stringify(s)); } catch (e) { } };
+
+function netConnect(code, name) {
+  if (!SERVER) { netMsg('No server is configured for this build yet.'); return; }
+  code = code.toUpperCase();
+  const seat = loadSeat(code);
+  NET = NET || { code, view: null, isHost: false, tries: 0, lobby: null };
+  NET.code = code; NET.closing = false;
+  pill('', 'CONNECTING…');
+  let ws;
+  try { ws = new WebSocket(SERVER.replace(/^http/, 'ws') + '/ws/' + code); }
+  catch (e) { netMsg('Could not reach the server.'); return; }
+  NET.ws = ws;
+  ws.onopen = () => {
+    NET.tries = 0; pill('live', 'ROOM ' + code);
+    const hello = { t: 'hello', name };
+    if (seat && seat.id) { hello.playerId = seat.id; hello.token = seat.token; }
+    ws.send(JSON.stringify(hello));
+  };
+  ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handleNet(m); };
+  ws.onclose = () => {
+    if (!NET || NET.closing) return;
+    pill('down', 'RECONNECTING…');
+    NET.tries++;
+    setTimeout(() => { if (NET && !NET.closing) netConnect(code, name); }, Math.min(8000, 500 * Math.pow(1.7, NET.tries)));
+  };
+  ws.onerror = () => { };
+}
+
+function handleNet(m) {
+  if (!NET) return;
+  switch (m.t) {
+    case 'error':
+      netMsg(m.msg);
+      if (!G) pill('down', m.msg.toUpperCase()); else logLine('⚠ ' + m.msg);
+      break;
+    case 'joined':
+      ME = m.you.id; NET.code = m.code; NET.isHost = m.hostId === m.you.id;
+      saveSeat(m.code, { id: m.you.id, token: m.you.token });
+      netMsg('');
+      break;
+    case 'lobby':
+      NET.lobby = m; NET.isHost = m.hostId === ME;
+      if (m.gameId && m.gameId !== 'ludo') { netMsg('That room is playing ' + m.gameId + ', not Ludo.'); }
+      if (!m.started) { G = null; showLobby(); } else $('#lobbyOvl').classList.remove('show');
+      break;
+    case 'state': {
+      const v = m.v;
+      const first = !G;
+      NET.view = v;
+      /* the view is the board — no reconstruction needed */
+      G = {
+        order: v.players.map(p => p.id),
+        turn: Math.max(0, v.players.findIndex(p => p.id === v.turn)),
+        dir: v.dir, phase: v.phase, house: v.house, die: v.die,
+        round: v.round, target: v.target, finished: v.finished,
+        roundWinner: v.roundWinner, winner: v.winner,
+        players: v.players.map(p => ({ ...p }))
+      };
+      if (first) {
+        drawBoard();
+        $('#lobbyOvl').classList.remove('show');
+        $('#setup').classList.add('gone');
+        $('#table').classList.add('live');
+        pill('live', 'ROOM ' + NET.code);
+        $('#log').innerHTML = '';
+        logLine('🎲 Four tokens each. Six to get out.');
+      }
+      showEvents(m.events || []);
+      render();
+      if (v.phase !== 'playing') showRoundEnd(); else $('#roundOvl').classList.remove('show');
+      break;
+    }
+  }
+}
+
+function showLobby() {
+  const L = NET && NET.lobby; if (!L) return;
+  const box = $('#lobbyCard');
+  box.innerHTML =
+    '<h2>ROOM CODE</h2><div class="codeBig">' + esc(L.code) + '</div>' +
+    '<div class="codeHint">READ IT OUT — THEY TYPE IT IN AND JOIN</div>' +
+    '<div style="font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px">🎲 LUDO · ' +
+    (L.players.length) + ' OF 4 SEATS</div>';
+  const list = el('div', 'lobList');
+  L.players.forEach(p => {
+    list.appendChild(el('div', null,
+      '<span class="dot' + (p.connected ? '' : ' off') + '"></span>' +
+      '<span>' + esc(p.name) + (p.id === ME ? ' (you)' : '') + '</span>' +
+      (p.id === L.hostId ? '<span class="tagH">HOST</span>' : p.bot ? '<span class="tagB">BOT</span>' : '')));
+  });
+  box.appendChild(list);
+  if (NET.isHost) {
+    if (L.players.length < 4) {
+      const bots = el('button', 'act', '🤖 ADD A BOT');
+      bots.onclick = () => { netSend({ t: 'addBot' }); SFX.tick(); };
+      box.appendChild(bots);
+    }
+    const go = el('button', 'go', L.players.length < 2 ? 'WAITING FOR ONE MORE…' : 'THROW ▶');
+    if (L.players.length >= 2) go.onclick = () => { ac(); netSend({ t: 'start' }); };
+    else { go.style.opacity = '.5'; go.style.cursor = 'default'; }
+    box.appendChild(go);
+  } else {
+    box.appendChild(el('div', null, '<div style="font-size:12px;font-weight:800;color:var(--dim);margin-top:6px">Waiting for ' +
+      esc((L.players.find(p => p.id === L.hostId) || {}).name || 'the host') + '…</div>'));
+  }
+  const leave = el('button', 'act', 'LEAVE');
+  leave.style.marginTop = '10px';
+  leave.onclick = () => { netLeave(); location.reload(); };
+  box.appendChild(leave);
+  $('#lobbyOvl').classList.add('show');
+}
+
+function setTable(net) {
+  $('#tabSolo').classList.toggle('on', !net);
+  $('#tabNet').classList.toggle('on', net);
+  $('#netBox').classList.toggle('on', net);
+  document.querySelectorAll('.soloOnly').forEach(e => e.classList.toggle('hide', net));
+  $('#startBtn').style.display = net ? 'none' : '';
+  netMsg(net && !SERVER ? 'This build has no server address yet — set uno_server in config.yml.' : '');
+}
+$('#tabSolo').onclick = () => { setTable(false); SFX.tick(); };
+$('#tabNet').onclick = () => { setTable(true); SFX.tick(); };
+setTable(false);
+
+const myName = () => {
+  const n = ($('#myName').value || 'YOU').trim().slice(0, 14).toUpperCase();
+  try { localStorage.setItem('cybergrill_uno_name', n); } catch (e) { }
+  return n;
+};
+$('#createBtn').onclick = async () => {
+  if (!SERVER) return netMsg('No server address is configured for this build.');
+  ac(); loadSamples(); netMsg('Making a room…');
+  try {
+    const r = await fetch(SERVER + '/api/room', { method: 'POST' });
+    if (!r.ok) throw new Error('the server said no (' + r.status + ')');
+    const { code } = await r.json();
+    netConnect(code, myName());
+    const send = () => {
+      if (!netSend({ t: 'cfg', gameId: 'ludo', cfg: { target: cfg.target, house: cfg.house, skill: cfg.skill, speed: cfg.speed } }))
+        setTimeout(send, 250);
+    };
+    setTimeout(send, 400);
+  } catch (e) { netMsg(e.message || 'could not reach the server'); }
+};
+$('#joinBtn').onclick = () => {
+  const code = ($('#joinCode').value || '').trim().toUpperCase();
+  if (code.length < 3) return netMsg('Type the four-letter code first.');
+  if (!SERVER) return netMsg('No server address is configured for this build.');
+  ac(); loadSamples(); netMsg('Knocking…');
+  netConnect(code, myName());
+};
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+{
+  const q = new URLSearchParams(location.search).get('room');
+  if (q) { setTable(true); $('#joinCode').value = q.toUpperCase(); }
+}
+document.querySelectorAll('.ovl').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o && ['roundOvl', 'lobbyOvl'].indexOf(o.id) === -1) o.classList.remove('show'); });
+});
+</script>
+</body>
+</html>

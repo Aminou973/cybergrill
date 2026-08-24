@@ -137,6 +137,53 @@ Press **S** at any point to save the night.
 
 ---
 
+## The games
+
+A game in CyberGrill is a plug-in. Each one is a module exporting the same five
+functions — `createGame`, `legalMoves`, `applyMove`, `viewFor`, `botMove` —
+plus a `META` block saying what it is called and how many can play. The room
+server imports [`game/registry.js`](game/registry.js) and dispatches; it has no
+idea whether the table is dealing cards or throwing dice. Two rules hold the
+whole thing up:
+
+* `applyMove` never mutates what it is given. It returns a new state.
+* `viewFor` is the **only** way a state reaches a player. If a game has hidden
+  information, that is where it stays hidden. UNO depends on this completely.
+  Ludo has nothing to hide and simply returns the board.
+
+| | | |
+|---|---|---|
+| 🎴 **UNO** | 2–8 | [`/game/`](https://aminou973.github.io/cybergrill/game/) |
+| 🎲 **Ludo** | 2–4 | [`/game/ludo/`](https://aminou973.github.io/cybergrill/game/ludo/) |
+
+Both run solo against bots with no server at all, or online in the same room
+with a four-letter code. The chrome they share — sound, confetti, the music
+bed, the setup panel, the overlays — lives in `shared/` and is inlined into
+each page at build time.
+
+---
+
+## Ludo
+
+Four tokens round the board and home before anybody else. A token walks 57
+steps: 52 round the outside, five up its own colour, then the middle.
+
+House rules, all switches: **six to leave the yard**, **a six rolls again**,
+**three sixes forfeits the turn**, **exact roll to finish**, and **capture** —
+land on somebody and they go back to the yard, unless they are on a star or a
+start square. Capture is off by default; turn it on for a meaner night.
+
+The board geometry is the fiddly part and it is worth knowing why: the loop is
+built so that every colour's 51st step lands on the middle cell of its own arm,
+the one square it can turn into its home column from. Get that wrong and the
+tokens take a diagonal into the column, which looks like a bug because it is
+one.
+
+Rounds score by finishing position — 10 / 6 / 3 / 1 — the same table the rest
+of the night uses.
+
+---
+
 ## The UNO table
 
 `/game/` is a real, playable UNO — the official rules plus every house rule as

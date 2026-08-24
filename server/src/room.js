@@ -8,10 +8,14 @@
    Sockets are hibernatable: an idle room costs nothing and wakes up with its
    state intact when somebody reconnects.
    =========================================================================== */
-import {
-  createGame, applyMove, legalMoves, viewFor, nextRound, botMove,
-  playerById, MODES, BOT_LEVELS
-} from '../../game/engine.js';
+import { GAMES, gameById, seatCheck, turnOf } from '../../game/registry.js';
+import { MODES, BOT_LEVELS } from '../../game/engine.js';
+
+/* The room does not know what game it is hosting. It knows a game is a module
+   with five functions on it, and it asks the registry which one. Everything
+   below — bots, the turn clock, reconnection, redacted views — works the same
+   whether the table is dealing cards or throwing dice. */
+const DEFAULT_GAME = 'uno';
 
 const BOT_NAMES = ['KAMEL', 'ILYES', 'ABDOU', 'BILLAL', 'SARA', 'YOUCEF'];
 const MAX_PLAYERS = 8;
@@ -27,6 +31,7 @@ function blankRoom(code) {
   return {
     code,
     createdAt: Date.now(),
+    gameId: DEFAULT_GAME,
     hostId: null,
     players: [],           /* {id, name, token, bot, connected, goneAt} */
     cfg: { mode: 'classic', target: 500, blitz: 0, house: {}, skill: 'normal', speed: 'normal' },
@@ -69,6 +74,7 @@ export class Room {
       if (!this.room) return Response.json({ error: 'no such room' }, { status: 404 });
       return Response.json({
         code: this.room.code,
+        gameId: this.room.gameId || DEFAULT_GAME,
         players: this.room.players.map(p => ({ name: p.name, bot: !!p.bot, connected: !!p.connected })),
         started: !!this.room.game,
         cfg: this.room.cfg
@@ -91,6 +97,9 @@ export class Room {
     return new Response('not found', { status: 404 });
   }
 
+  /* the module that knows the rules of whatever is being played here */
+  get E() { return gameById(this.room.gameId || DEFAULT_GAME) || GAMES[DEFAULT_GAME]; }
+
   /* ------------------------------------------------------------- socket i/o */
   who(ws) {
     try { return ws.deserializeAttachment(); } catch (e) { return null; }
@@ -106,6 +115,7 @@ export class Room {
     const payload = {
       t: 'lobby',
       code: this.room.code,
+      gameId: this.room.gameId || DEFAULT_GAME,
       hostId: this.room.hostId,
       cfg: this.room.cfg,
       started: !!this.room.game,
@@ -124,7 +134,8 @@ export class Room {
       if (!a) continue;
       this.sendTo(ws, {
         t: 'state',
-        v: viewFor(g, a.id),
+        gameId: this.room.gameId || DEFAULT_GAME,
+        v: this.E.viewFor(g, a.id),
         events: events || [],
         deadline: this.room.cfg.blitz
           ? this.room.turnStartedAt + this.room.cfg.blitz * 1000
@@ -194,7 +205,10 @@ export class Room {
 
       if (p) {                                   /* reconnect */
         p.connected = true; p.goneAt = 0; p.bot = false; p.name = name;
-        if (R.game) { const gp = playerById(R.game, p.id); if (gp) { gp.name = name; gp.connected = true; } }
+        if (R.game) {
+          const gp = (R.game.players || []).find(x => x.id === p.id);
+          if (gp) { gp.name = name; gp.connected = true; }
+        }
       } else {
         if (R.game) return this.err(ws, 'that game has already started');
         if (R.players.length >= MAX_PLAYERS) return this.err(ws, 'the room is full');
@@ -227,6 +241,7 @@ export class Room {
       if (!isHost) return this.err(ws, 'only the host changes the settings');
       if (R.game) return this.err(ws, 'the game has started');
       const c = m.cfg || {};
+      if (m.gameId && GAMES[m.gameId]) R.gameId = m.gameId;
       R.cfg = {
         mode: MODES.includes(c.mode) || c.mode === 'stayson' || c.mode === 'blitz' ? c.mode : 'classic',
         target: [200, 300, 500].includes(c.target) ? c.target : 500,
@@ -259,10 +274,13 @@ export class Room {
     if (m.t === 'start') {
       if (!isHost) return this.err(ws, 'only the host deals');
       if (R.game) return this.err(ws, 'already dealt');
-      if (R.players.length < 2) return this.err(ws, 'you need at least two players');
+      const seatErr = seatCheck(R.gameId || DEFAULT_GAME, R.players.length);
+      if (seatErr) return this.err(ws, seatErr);
       const engineMode = R.cfg.mode === 'teams' ? 'teams'
         : R.cfg.mode === 'elimination' ? 'elimination' : 'classic';
-      R.game = createGame({
+      /* Every engine takes the same bag of options and ignores what it does not
+         understand, so this call does not have to know which game it is. */
+      R.game = this.E.createGame({
         players: R.players.map(p => ({ id: p.id, name: p.name })),
         seed: (crypto.getRandomValues(new Uint32Array(1))[0]) >>> 0,
         house: R.cfg.house,
@@ -281,7 +299,7 @@ export class Room {
     if (m.t === 'move') {
       if (!R.game) return this.err(ws, 'nothing has been dealt yet');
       if (R.game.phase !== 'playing') return this.err(ws, 'the round is over');
-      const r = applyMove(R.game, me.id, m.move);   /* throws on anything illegal */
+      const r = this.E.applyMove(R.game, me.id, m.move);   /* throws on anything illegal */
       R.game = r.state;
       R.turnStartedAt = Date.now();
       await this.save();
@@ -294,7 +312,7 @@ export class Room {
     if (m.t === 'next') {
       if (!isHost) return this.err(ws, 'the host starts the next round');
       if (!R.game || R.game.phase !== 'roundEnd') return this.err(ws, 'the round is still going');
-      R.game = nextRound(R.game);
+      R.game = this.E.nextRound(R.game);
       R.turnStartedAt = Date.now();
       await this.save();
       this.broadcastState([{ t: 'newRound', round: R.game.round }]);
@@ -322,7 +340,7 @@ export class Room {
   autoActor() {
     const R = this.room, g = R.game;
     if (!g || g.phase !== 'playing') return null;
-    const actor = g.order[g.turn];
+    const actor = turnOf(g);
     const p = R.players.find(x => x.id === actor);
     if (!p) return null;
     if (p.bot) return { id: actor, at: Date.now() + (BOT_SPEED[R.cfg.speed] || BOT_SPEED.normal), why: 'bot' };
@@ -350,11 +368,11 @@ export class Room {
 
     const move = next.why === 'clock'
       ? this.clockMove(next.id)
-      : botMove(R.game, next.id, Math.random, R.cfg.skill || 'normal');
+      : this.E.botMove(R.game, next.id, Math.random, R.cfg.skill || 'normal');
     if (!move) { await this.schedule(); return; }
 
     try {
-      const r = applyMove(R.game, next.id, move);
+      const r = this.E.applyMove(R.game, next.id, move);
       R.game = r.state;
       R.turnStartedAt = Date.now();
       await this.save();
@@ -368,8 +386,9 @@ export class Room {
   /* Out of time: take the medicine, then pass. Never a random card — losing
      your turn is the penalty, losing a good card as well would be cruel. */
   clockMove(pid) {
-    const ms = legalMoves(this.room.game, pid);
+    const ms = this.E.legalMoves(this.room.game, pid);
     const pick = t => ms.find(x => x.type === t);
-    return pick('accept') || pick('takeStack') || pick('draw') || pick('pass') || null;
+    /* the harmless thing to do in each game when you run out of time */
+    return pick('accept') || pick('takeStack') || pick('draw') || pick('roll') || pick('pass') || ms[0] || null;
   }
 }
