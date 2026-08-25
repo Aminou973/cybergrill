@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cybergrill-uno",
+  "main": "src/index.js",
+  "compatibility_date": "2025-08-01",
+  "observability": { "enabled": true },
+
+  /* One Durable Object per room. SQLite-backed classes are the ones the free
+     plan allows, so this deploys without a paid Workers subscription. */
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] }
+  ],
+
+  "vars": {
+    /* Origins allowed to call the HTTP endpoints. The WebSocket itself is not
+       subject to CORS, this only covers room create / lookup. */
+    "ALLOWED_ORIGINS": "https://aminou973.github.io,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8787,null"
+  }
+}

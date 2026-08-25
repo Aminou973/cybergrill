@@ -1,0 +1,65 @@
+# CyberGrill configuration.
+#
+# Everything here is cosmetic or scoring. The dashboard itself needs nothing
+# from this file — it is read by scripts/build.mjs when it builds the season
+# page, bundle.json and the README table.
+
+title: "CyberGrill"
+subtitle: "Game Night Arcade"
+
+# Your GitHub Pages URL, once Pages is switched on. Shown on the season page.
+site_url: "https://aminou973.github.io/cybergrill/"
+
+# Placement points for a single match: 1st, 2nd, 3rd, 4th.
+# Anyone finishing below the last entry gets `tail`.
+points: [10, 6, 3, 1]
+tail: 1
+
+# A drawn head-to-head (FC 25 / eFootball) gives both players this.
+draw: 5
+
+# UNO official scoring: the target the winner races to. The dashboard can
+# override this per session with the 200 / 300 / 500 buttons.
+uno_target: 500
+
+# ---------------------------------------------------------------------------
+# GitHub — used by the dashboard's "Publish to GitHub" button so it knows
+# which repo to write data/nights/<date>.json into. Public info, not a secret.
+repo_owner: "Aminou973"
+repo_name: "cybergrill"
+repo_branch: "main"
+
+# ---------------------------------------------------------------------------
+# Admin passcode.
+#
+# Leave both blank and everyone who opens the dashboard can edit — which is
+# what you want while it lives only on your own machine.
+#
+# Set them and the site opens read-only for everyone: the board, the history
+# and the rules are all visible, but recording results, adding players,
+# resetting and publishing need the passcode. Generate the pair with:
+#
+#     npm run passcode -- yourpasscode
+#
+# and paste the two lines it prints in here.
+#
+# Be honest with yourself about what this is: the hash ships inside a public
+# page, so a determined person with a GPU could brute-force a weak passcode.
+# It stops your friends editing the board. It is not a security boundary.
+admin_salt: "ca0c14326ad3c530db682a174896b2c9"
+admin_hash: "d68731e66213d5403ec986a6f92515799147038f88dec9451781bcf3174d2138"
+
+# ---------------------------------------------------------------------------
+# Online UNO.
+#
+# The playable table can run two ways: solo against bots (works offline, no
+# server), or online in a room with friends. Online needs the little
+# Cloudflare Worker in server/ — deploy it once with:
+#
+#     cd server
+#     npx wrangler deploy
+#
+# Wrangler prints a URL like https://cybergrill-uno.<you>.workers.dev — paste
+# it below, commit, and the ONLINE tab lights up. Leave it blank and the table
+# stays solo-only, which is a perfectly good way to use it.
+uno_server: "https://cybergrill-uno.cybergrill.workers.dev"
