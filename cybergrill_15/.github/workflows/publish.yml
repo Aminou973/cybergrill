@@ -1,0 +1,67 @@
+name: publish
+
+# Rebuilds the season table, re-renders every night card and republishes the
+# dashboard. Runs whenever a night file or the app itself changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "index.html"
+      - "shared/**"
+      - "scripts/**"
+      - "game/**"
+      - "config.yml"
+      - ".github/workflows/publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cybergrill-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm }
+
+      - run: npm ci
+
+      # The recap card is drawn by headless Chromium so the committed PNG is
+      # identical to the one the dashboard's export button produces.
+      - name: Install Chromium and the colour emoji font
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-color-emoji
+          fc-cache -f
+
+      - name: Validate the night files
+        run: node scripts/build.mjs --check
+
+      - name: Build site and season table
+        run: node scripts/build.mjs
+
+      - name: Render the night cards
+        run: node scripts/render-card.mjs
+
+      - name: Commit site and README
+        run: |
+          git config user.name  "cybergrill"
+          git config user.email "cybergrill@users.noreply.github.com"
+          git add site/ README.md
+          git diff --staged --quiet || git commit -m "publish: rebuild site and cards"
+          git pull --rebase --autostash || true
+          git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+      - id: deployment
+        uses: actions/deploy-pages@v4
