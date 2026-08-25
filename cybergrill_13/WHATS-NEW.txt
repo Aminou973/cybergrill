@@ -1,0 +1,36 @@
+CyberGrill 13 - Ronda online, and the bot that never played
+===========================================================
+
+THIS ONE NEEDS A SERVER DEPLOY. The Worker changed, so after update.ps1:
+
+    cd server
+    npx wrangler deploy
+    cd ..
+
+WHAT CHANGED
+
+Ronda
+  * Play up to 21, 41 or 51 - a new choice on the setup screen, and the
+    online room now respects it instead of quietly using UNO's 500.
+  * Captured cards fly to the winner's pile ONLINE too, not just against
+    the bots, and the table waits a beat afterwards so you can read what
+    happened. States from the server queue up behind the animation, so
+    nothing changes underneath a card that is still moving.
+  * The end-of-round count line lists everyone. With three at the table it
+    reads "AMIN 7 cards - BILLAL 11 - KAMEL 22" instead of losing the third
+    player behind "A and B".
+
+Online, all games
+  * Bots online were frozen. Their wake-up time was recalculated from "now"
+    every time the server woke, so it was always another 800ms in the future
+    and the turn never came round. Anchored to the moment the turn started.
+  * A Ronda room deadlocked the moment anyone had a pair to call: the server
+    only accepted moves and only woke bots during the "playing" phase, and
+    the calling phase is not that. Each game now declares which phases still
+    owe the table a move.
+  * A bot that throws gets three goes at a turn and then the room sits still,
+    instead of spinning an alarm forever.
+
+Verified in a real browser: a three-player online round played from the deal
+to the count, two-, three- and four-handed solo games, UNO and Ludo online
+unaffected. All 366 engine tests pass.
